@@ -86,16 +86,16 @@ func handleInterruption(ctx wrapper.HttpContext, phase string, interruption *cty
 	log.Infof("Transaction interrupted at %s", phase)
 
 	ctx.SetContext("interruptionHandled", true)
-	if phase == "http_response_body" {
-		return replaceResponseBodyWhenInterrupted(log, replaceResponseBody)
-	}
+	//if phase == "http_response_body" {
+	//	return replaceResponseBodyWhenInterrupted(log, replaceResponseBody)
+	//}
 
 	statusCode := interruption.Status
 	//log.Infof("Status code is %d", statusCode)
 	if statusCode == 0 {
 		statusCode = 403
 	}
-	if err := proxywasm.SendHttpResponse(uint32(statusCode), nil, nil, noGRPCStream); err != nil {
+	if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by waf"), -1); err != nil {
 		panic(err)
 	}
 

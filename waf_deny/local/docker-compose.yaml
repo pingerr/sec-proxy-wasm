@@ -30,7 +30,7 @@ services:
     image: higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/envoy:1.20
     command:
       - -c
-      - /conf/envoy-config.yaml
+      - /conf/envoy-conf.yaml
       - --log-level
       - info
       - --component-log-level

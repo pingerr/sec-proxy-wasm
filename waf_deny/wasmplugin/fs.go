@@ -21,7 +21,7 @@ func init() {
 			"@recommended-conf":    "coraza.conf-recommended.conf",
 			"@demo-conf":           "coraza-demo.conf",
 			"@crs-setup-demo-conf": "crs-setup-demo.conf",
-			"@ftw-conf":            "ftw-config.conf",
+			"@ftw-conf":            "ftw-conf.conf",
 			"@crs-setup-conf":      "crs-setup.conf.example",
 		},
 		map[string]string{

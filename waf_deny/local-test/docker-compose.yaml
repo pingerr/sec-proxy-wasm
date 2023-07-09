@@ -1,0 +1,20 @@
+services:
+  httpbin:
+    image: mccutchen/go-httpbin:v2.5.0
+    environment:
+      - MAX_BODY_SIZE=15728640 # 15 MiB
+    ports:
+      - 12345:80
+
+  envoy:
+    depends_on:
+      - httpbin
+    image: higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/envoy:1.20
+    command:
+      - -c
+      - /conf/envoy.yaml
+    volumes:
+      - .:/build
+      - .:/conf
+    ports:
+      - 10000:10000

@@ -3,7 +3,6 @@ package wasmplugin
 import (
 	"errors"
 	"github.com/alibaba/higress/plugins/wasm-go/pkg/wrapper"
-	"github.com/corazawaf/coraza/v3"
 	ctypes "github.com/corazawaf/coraza/v3/types"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
@@ -46,7 +45,7 @@ func parseConfig(json gjson.Result, config *WafConfig, log wrapper.Log) error {
 		log.Errorf("Failed to create waf conf: %v", err)
 		return errors.New("failed to create waf conf")
 	}
-	//config.tx = config.waf.NewTransaction()
+	//conf.tx = conf.waf.NewTransaction()
 	return nil
 }
 
@@ -139,22 +138,22 @@ func onHttpRequestBody(ctx wrapper.HttpContext, config WafConfig, body []byte, l
 	}
 
 	// Do not perform any action related to request body data if SecRequestBodyAccess is set to false
-	if !tx.IsRequestBodyAccessible() {
-		log.Info("Skipping request body inspection, SecRequestBodyAccess is off.")
-		// ProcessRequestBody is still performed for phase 2 rules, checking already populated variables
-		ctx.SetContext("processedRequestBody", true)
-		interruption, err := tx.ProcessRequestBody()
-		if err != nil {
-			log.Error("Failed to process request body")
-			return types.ActionContinue
-		}
-
-		if interruption != nil {
-			return handleInterruption(ctx, "http_request_body", interruption, log)
-		}
-
-		return types.ActionContinue
-	}
+	//if !tx.IsRequestBodyAccessible() {
+	//	log.Info("Skipping request body inspection, SecRequestBodyAccess is off.")
+	//	// ProcessRequestBody is still performed for phase 2 rules, checking already populated variables
+	//	ctx.SetContext("processedRequestBody", true)
+	//	interruption, err := tx.ProcessRequestBody()
+	//	if err != nil {
+	//		log.Error("Failed to process request body")
+	//		return types.ActionContinue
+	//	}
+	//
+	//	if interruption != nil {
+	//		return handleInterruption(ctx, "http_request_body", interruption, log)
+	//	}
+	//
+	//	return types.ActionContinue
+	//}
 
 	interruption, _, err := tx.WriteRequestBody(body)
 	if err != nil {

@@ -15,7 +15,7 @@ import (
 func LoadTest() error {
 	for _, threads := range []int{1, 2, 4} {
 		for _, payloadSize := range []int{0, 100, 1000, 10000} {
-			for _, conf := range []string{"envoy-config.yaml", "envoy-config-nowasm.yaml"} {
+			for _, conf := range []string{"envoy-conf.yaml", "envoy-conf-nowasm.yaml"} {
 				if err := doLoadTest(conf, payloadSize, threads); err != nil {
 					return err
 				}
@@ -65,7 +65,7 @@ func doLoadTest(conf string, payloadSize int, threads int) error {
 		},
 	}
 
-	fmt.Printf("Running load test with config=%s, payloadSize=%d, threads=%d\n", conf, payloadSize, threads)
+	fmt.Printf("Running load test with conf=%s, payloadSize=%d, threads=%d\n", conf, payloadSize, threads)
 	res, err := fhttp.RunHTTPTest(opts)
 	if err != nil {
 		return err

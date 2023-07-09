@@ -219,7 +219,7 @@ func Ftw() error {
 		"ENVOY_IMAGE":   os.Getenv("ENVOY_IMAGE"),
 	}
 	if os.Getenv("ENVOY_NOWASM") == "true" {
-		env["ENVOY_CONFIG"] = "/conf/envoy-config-nowasm.yaml"
+		env["ENVOY_CONFIG"] = "/conf/envoy-conf-nowasm.yaml"
 	}
 	task := "ftw"
 	if os.Getenv("MEMSTATS") == "true" {
