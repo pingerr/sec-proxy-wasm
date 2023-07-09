@@ -32,10 +32,10 @@ static_resources:
                           route:
                             cluster: httpbin
                 http_filters:
-                  - name: waf_deny
+                  - name: wasmdemo
                     config_discovery:
                       config_source:
-                        path: /conf/waf_deny.yaml
+                        path: /etc/envoy/waf_deny.yaml
                         resource_api_version: V3
                       apply_default_config_without_warming: true
                       default_config:

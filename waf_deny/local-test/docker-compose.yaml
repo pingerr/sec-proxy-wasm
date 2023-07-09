@@ -1,20 +1,23 @@
+version: '3.7'
 services:
-  httpbin:
-    image: mccutchen/go-httpbin:v2.5.0
-    environment:
-      - MAX_BODY_SIZE=15728640 # 15 MiB
-    ports:
-      - 12345:80
-
   envoy:
+    image: higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/envoy:1.20
     depends_on:
       - httpbin
-    image: higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/envoy:1.20
-    command:
-      - -c
-      - /conf/envoy.yaml
-    volumes:
-      - .:/build
-      - .:/conf
+    networks:
+      - wasmtest
     ports:
-      - 10000:10000
+      - "10000:10000"
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
+      - ./main.wasm:/etc/envoy/main.wasm
+
+  httpbin:
+    image: kennethreitz/httpbin:latest
+    networks:
+      - wasmtest
+    ports:
+      - "12345:80"
+
+networks:
+  wasmtest: {}
