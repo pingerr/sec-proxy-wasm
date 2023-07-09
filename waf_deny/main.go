@@ -1,9 +1,8 @@
 package main
 
 import (
-	//"github.com/corazawaf/coraza-proxy-wasm/wasmplugin"
-	"waf_deny/wasmplugin"
 	wasilibs "github.com/corazawaf/coraza-wasilibs"
+	"waf_deny/wasmplugin"
 )
 
 func main() {
