@@ -89,9 +89,17 @@ func handleInterruption(ctx wrapper.HttpContext, phase string, interruption *cty
 	//if phase == "http_response_body" {
 	//	return replaceResponseBodyWhenInterrupted(log, replaceResponseBody)
 	//}
+	statusCode := interruption.Status
+	//log.Infof("Status code is %d", statusCode)
+	if statusCode == 0 {
+		statusCode = 403
+	}
+	if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by waf"), -1); err != nil {
+		panic(err)
+	}
 
 	// SendHttpResponse must be followed by ActionPause in order to stop malicious content
-	return types.ActionContinue
+	return types.ActionPause
 }
 
 // replaceResponseBodyWhenInterrupted address an interruption raised during phase 4.

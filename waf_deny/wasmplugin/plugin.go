@@ -114,9 +114,6 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config WafConfig, log wrapper
 
 	interruption := tx.ProcessRequestHeaders()
 	if interruption != nil {
-		if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by waf"), -1); err != nil {
-			panic(err)
-		}
 		return handleInterruption(ctx, "http_request_headers", interruption, log)
 	}
 
@@ -162,9 +159,6 @@ func onHttpRequestBody(ctx wrapper.HttpContext, config WafConfig, body []byte, l
 	}
 
 	if interruption != nil {
-		if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by waf"), -1); err != nil {
-			panic(err)
-		}
 		return handleInterruption(ctx, "http_request_body", interruption, log)
 	}
 
@@ -175,9 +169,6 @@ func onHttpRequestBody(ctx wrapper.HttpContext, config WafConfig, body []byte, l
 		return types.ActionContinue
 	}
 	if interruption != nil {
-		if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by waf"), -1); err != nil {
-			panic(err)
-		}
 		return handleInterruption(ctx, "http_request_body", interruption, log)
 	}
 
