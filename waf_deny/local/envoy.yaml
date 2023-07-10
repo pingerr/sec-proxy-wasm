@@ -42,7 +42,7 @@ static_resources:
                     runtime: envoy.wasm.runtime.v8
                     code:
                       local:
-                        filename: /etc/envoy/waf_deny.wasm
+                        filename: /etc/envoy/main.wasm
                   configuration:
                     "@type": "type.googleapis.com/google.protobuf.StringValue"
                     # 插件配置，是一个 json 字符串
