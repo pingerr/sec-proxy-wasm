@@ -1,6 +1,6 @@
-module magefiles
+module github.com/corazawaf/coraza-proxy-wasm/magefiles
 
-go 1.20
+go 1.19
 
 require (
 	fortio.org/fortio v1.57.0
