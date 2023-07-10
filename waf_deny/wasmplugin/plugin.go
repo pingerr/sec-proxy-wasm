@@ -13,7 +13,7 @@ import (
 
 func PluginStart() {
 	wrapper.SetCtx(
-		"waf-plugin-go",
+		"waf-deny",
 		wrapper.ParseConfigBy(parseConfig),
 		wrapper.ProcessRequestHeadersBy(onHttpRequestHeaders),
 		wrapper.ProcessRequestBodyBy(onHttpRequestBody),
