@@ -8,7 +8,6 @@ import (
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 	"github.com/tidwall/gjson"
-	"strconv"
 	"strings"
 )
 
@@ -17,7 +16,7 @@ func PluginStart() {
 		"waf-plugin-go",
 		wrapper.ParseConfigBy(parseConfig),
 		wrapper.ProcessRequestHeadersBy(onHttpRequestHeaders),
-		wrapper.ProcessRequestBodyBy(onHttpRequestBody)
+		wrapper.ProcessRequestBodyBy(onHttpRequestBody),
 	)
 }
 
