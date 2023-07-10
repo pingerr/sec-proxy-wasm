@@ -91,7 +91,7 @@ func handleInterruption(ctx wrapper.HttpContext, phase string, interruption *cty
 	//}
 
 	// SendHttpResponse must be followed by ActionPause in order to stop malicious content
-	return types.ActionPause
+	return types.ActionContinue
 }
 
 // replaceResponseBodyWhenInterrupted address an interruption raised during phase 4.
