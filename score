@@ -1,6 +1,35 @@
+                      功能  性能
+IP 黑名单功能	    20%   0.2  0.8
+CC 防护功能	    40%   0.4  0.6
+WAF 规则防护功能	40%   0.4  0.6
 
-20230711
-(ip-cidranger)
+2023-07-10 20:48:43 37.3300
+0.0.1 (waf)
+[ip deny]  1.33916 seconds
+[ip deny]  100, 83.2168
+[waf deny] 179.261921 seconds
+[waf deny] 50.0 , 50.24602633333334
+{'ip_deny': 86.33008, 'waf_deny': 50.147615800000004, 'cc_deny': 0}
+
+2023-07-10 23:12:24 37.8700、37.99
+0.0.2 (waf,ip-ipfilter)
+[ip deny] ip deny test finished, using 1.083446 seconds
+[ip deny] function score: 100, performance score: 88.33107999999999
+[waf deny] waf deny test finished, using 178.633502 seconds
+[waf deny] function score is 50.0 , performance score is 50.45549933333333
+{'ip_deny': 89.39864800000001, 'waf_deny': 50.273299599999994, 'cc_deny': 0}
+
+2023-07-11 00:34:28  37.6400
+0.0.4 (waf,ip-cuckoofilter)
+[ip deny] ip deny test finished, using 1.203676 seconds
+[ip deny] function score: 100, performance score: 85.92648
+[waf deny] waf deny test finished, using 179.427358 seconds
+[waf deny] function score is 50.0 , performance score is 50.19088066666667
+{'ip_deny': 87.95588799999999, 'waf_deny': 50.1145284, 'cc_deny': 0}
+
+
+2023-07-11 17:06:09  36.9100
+0.0.5 (ip-cidranger)
 [ip deny] ip deny test finished, using 1.414929 seconds
 [ip deny] function score: 100, performance score: 81.70142
 [waf deny] waf deny test start

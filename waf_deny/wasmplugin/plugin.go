@@ -1,13 +1,13 @@
 package wasmplugin
 
 import (
-	"errors"
 	"github.com/alibaba/higress/plugins/wasm-go/pkg/wrapper"
 	"github.com/corazawaf/coraza/v3"
 	ctypes "github.com/corazawaf/coraza/v3/types"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 	"github.com/tidwall/gjson"
+	"runtime"
 	"strings"
 )
 
@@ -22,34 +22,30 @@ func PluginStart() {
 
 type WafConfig struct {
 	waf coraza.WAF
-	//tx  ctypes.Transaction
 }
 
 func parseConfig(json gjson.Result, config *WafConfig, log wrapper.Log) error {
+
+	traceMemStats(log, "waf start")
+
 	var secRules []string
 	for _, item := range json.Get("secRules").Array() {
-		rule := item.String()
-		secRules = append(secRules, rule)
+		secRules = append(secRules, item.String())
 	}
-	log.Debugf("[rinfx log] %s", strings.Join(secRules, "\n"))
+
 	conf := coraza.NewWAFConfig().WithRootFS(root)
 	// error: Failed to load Wasm module due to a missing import: wasi_snapshot_preview1.fd_filestat_get
 	// because without fs.go
-	waf, err := coraza.NewWAF(conf.WithDirectives(strings.Join(secRules, "\n")))
-	//_, _ = coraza.NewWAF(coraza.NewWAFConfig().WithDirectives(`SecRule REMOTE_ADDR "@rx .*" "id:1,phase:1,deny,status:403"`))
+	waf, _ := coraza.NewWAF(conf.WithDirectives(strings.Join(secRules, "\n")))
 	config.waf = waf
-	if err != nil {
-		log.Errorf("Failed to create waf conf: %v", err)
-		return errors.New("failed to create waf conf")
-	}
-	//conf.tx = conf.waf.NewTransaction()
+
+	traceMemStats(log, "waf end")
+
 	return nil
 }
 
 func onHttpRequestHeaders(ctx wrapper.HttpContext, config WafConfig, log wrapper.Log) types.Action {
 	ctx.SetContext("interruptionHandled", false)
-	ctx.SetContext("processedRequestBody", false)
-	ctx.SetContext("processedResponseBody", false)
 	ctx.SetContext("tx", config.waf.NewTransaction())
 
 	tx := ctx.GetContext("tx").(ctypes.Transaction)
@@ -58,7 +54,6 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config WafConfig, log wrapper
 	// See https://httpwg.org/specs/rfc9113.html#rfc.section.8.3.1
 	uri, err := proxywasm.GetHttpRequestHeader(":path")
 	if err != nil {
-		log.Error("Failed to get :path")
 		return types.ActionContinue
 	}
 
@@ -67,7 +62,6 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config WafConfig, log wrapper
 	// proxy-wasm.
 
 	if tx.IsRuleEngineOff() {
-		log.Infof("[rinfx log] OnHttpRequestHeaders, RuleEngine Off, url = %s", uri)
 		return types.ActionContinue
 	}
 	// OnHttpRequestHeaders does not terminate if IP/Port retrieve goes wrong
@@ -124,7 +118,6 @@ func onHttpRequestBody(ctx wrapper.HttpContext, config WafConfig, body []byte, l
 	log.Info("[rinfx log] OnHttpRequestBody")
 
 	if ctx.GetContext("interruptionHandled").(bool) {
-		log.Error("OnHttpRequestBody, interruption already handled")
 		return types.ActionContinue
 	}
 
@@ -134,27 +127,8 @@ func onHttpRequestBody(ctx wrapper.HttpContext, config WafConfig, body []byte, l
 		return types.ActionContinue
 	}
 
-	// Do not perform any action related to request body data if SecRequestBodyAccess is set to false
-	//if !tx.IsRequestBodyAccessible() {
-	//	log.Info("Skipping request body inspection, SecRequestBodyAccess is off.")
-	//	// ProcessRequestBody is still performed for phase 2 rules, checking already populated variables
-	//	ctx.SetContext("processedRequestBody", true)
-	//	interruption, err := tx.ProcessRequestBody()
-	//	if err != nil {
-	//		log.Error("Failed to process request body")
-	//		return types.ActionContinue
-	//	}
-	//
-	//	if interruption != nil {
-	//		return handleInterruption(ctx, "http_request_body", interruption, log)
-	//	}
-	//
-	//	return types.ActionContinue
-	//}
-
 	interruption, _, err := tx.WriteRequestBody(body)
 	if err != nil {
-		log.Error("Failed to write request body")
 		return types.ActionContinue
 	}
 
@@ -162,7 +136,6 @@ func onHttpRequestBody(ctx wrapper.HttpContext, config WafConfig, body []byte, l
 		return handleInterruption(ctx, "http_request_body", interruption, log)
 	}
 
-	ctx.SetContext("processedRequestBody", true)
 	interruption, err = tx.ProcessRequestBody()
 	if err != nil {
 		log.Error("Failed to process request body")
@@ -196,4 +169,10 @@ func onHttpStreamDone(ctx wrapper.HttpContext, config WafConfig, log wrapper.Log
 
 	_ = tx.Close()
 	log.Info("Finished")
+}
+
+func traceMemStats(log wrapper.Log, name string) {
+	var ms runtime.MemStats
+	runtime.ReadMemStats(&ms)
+	log.Infof("[%s] Alloc:%d(bytes) HeapIdle:%d(bytes) HeapReleased:%d(bytes)", name, ms.Alloc, ms.HeapIdle, ms.HeapReleased)
 }
