@@ -7,6 +7,7 @@ require (
 	github.com/linvon/cuckoo-filter v0.4.0
 	github.com/tetratelabs/proxy-wasm-go-sdk v0.22.0
 	github.com/tidwall/gjson v1.14.4
+	github.com/yl2chen/cidranger v1.0.2
 )
 
 require (
