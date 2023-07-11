@@ -8,7 +8,6 @@ import (
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 	"github.com/tidwall/gjson"
 	"net"
-	"runtime"
 )
 
 type IPFilter struct {
@@ -29,35 +28,45 @@ func FilterStart() {
 }
 
 func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
-	traceMemStats(log, "ip start")
 	//获取黑名单配置
 	result := json.Get("ip_blacklist")
 	for _, ipBlack := range result.Array() {
 		if bytes.IndexByte([]byte(ipBlack.String()), '/') < 0 {
-			_ = config.f.AddIPString(ipBlack.String())
+			if err := config.f.AddIPString(ipBlack.String()); err != nil {
+				return err
+			}
 		} else {
-			_ = config.f.AddIPNetString(ipBlack.String())
+			if err := config.f.AddIPNetString(ipBlack.String()); err != nil {
+				return err
+			}
 		}
 	}
-	traceMemStats(log, "ip end")
 	return nil
 }
 
 func onHttpRequestHeaders(ctx wrapper.HttpContext, config IpConfig, log wrapper.Log) types.Action {
 	xRealIp, _ := proxywasm.GetHttpRequestHeader("x-real-ip")
-
+	if length := len(xRealIp); length > 15 {
+		log.Infof("[xRealIp: %s]", xRealIp)
+	}
 	if config.f.FilterIPString(xRealIp) {
-		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by ip"), -1)
+		if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by ip"), -1); err != nil {
+			panic(err)
+		}
 	}
 	return types.ActionContinue
 }
 
 func (f *IPFilter) FilterIP(ip net.IP) bool {
 	for _, item := range f.ipnets {
-		return item.Contains(ip)
+		if item.Contains(ip) {
+			return true
+		}
 	}
 	for _, item := range f.ips {
-		return item.Equal(ip)
+		if item.Equal(ip) {
+			return true
+		}
 	}
 	return false
 }
@@ -94,10 +103,4 @@ func (f *IPFilter) AddIPString(s string) error {
 	}
 	f.AddIP(ip)
 	return nil
-}
-
-func traceMemStats(log wrapper.Log, name string) {
-	var ms runtime.MemStats
-	runtime.ReadMemStats(&ms)
-	log.Infof("[%s] Alloc:%d(bytes) HeapIdle:%d(bytes) HeapReleased:%d(bytes)", name, ms.Alloc, ms.HeapIdle, ms.HeapReleased)
 }

@@ -1,6 +1,7 @@
 package wasmplugin
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -86,8 +87,25 @@ func handleInterruption(ctx wrapper.HttpContext, phase string, interruption *cty
 	statusCode := interruption.Status
 
 	if statusCode == 0 {
-		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by waf"), -1)
+		if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by waf"), -1); err != nil {
+			panic(err)
+		}
 	}
 
 	return types.ActionPause
+}
+
+// replaceResponseBodyWhenInterrupted address an interruption raised during phase 4.
+// At this phase, response headers are already sent downstream, therefore an interruption
+// can not change anymore the status code, but only tweak the response body
+func replaceResponseBodyWhenInterrupted(logger wrapper.Log, bodySize int) types.Action {
+	// TODO(M4tteoP): Update response body interruption logic after https://github.com/corazawaf/coraza-proxy-wasm/issues/26
+	// Currently returns a body filled with null bytes that replaces the sensitive data potentially leaked
+	err := proxywasm.ReplaceHttpResponseBody(bytes.Repeat([]byte("\x00"), bodySize))
+	if err != nil {
+		logger.Error("Failed to replace response body")
+		return types.ActionContinue
+	}
+	logger.Warn("Response body intervention occurred: body replaced")
+	return types.ActionContinue
 }
