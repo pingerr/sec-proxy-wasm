@@ -92,7 +92,7 @@ func handleInterruption(ctx wrapper.HttpContext, phase string, interruption *cty
 		}
 	}
 
-	return types.ActionPause
+	return types.ActionContinue
 }
 
 // replaceResponseBodyWhenInterrupted address an interruption raised during phase 4.
