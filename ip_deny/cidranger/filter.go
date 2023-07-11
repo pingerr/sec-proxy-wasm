@@ -51,12 +51,14 @@ func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
 				_, network, _ := net.ParseCIDR(ipBlack.String() + "/" + "32")
 				err := config.f.Insert(newCustomRangerEntry(*network))
 				if err != nil {
+					log.Errorf("[ipv4 insert error: %s]", ipBlack.String())
 					panic(err)
 				}
 			} else if bytes.IndexByte([]byte(ipBlack.String()), ':') < 0 {
 				_, network, _ := net.ParseCIDR(ipBlack.String() + "/" + "128")
 				err := config.f.Insert(newCustomRangerEntry(*network))
 				if err != nil {
+					log.Errorf("[ipv6 insert error: %s]", ipBlack.String())
 					panic(err)
 				}
 			}
@@ -64,6 +66,7 @@ func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
 			_, network, _ := net.ParseCIDR(ipBlack.String())
 			err := config.f.Insert(newCustomRangerEntry(*network))
 			if err != nil {
+				log.Errorf("[cidr insert error: %s]", ipBlack.String())
 				panic(err)
 			}
 		}
