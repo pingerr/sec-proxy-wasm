@@ -7,7 +7,6 @@ import (
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 	"github.com/tidwall/gjson"
-	"runtime"
 	"strings"
 )
 
@@ -25,9 +24,9 @@ type WafConfig struct {
 }
 
 func parseConfig(json gjson.Result, config *WafConfig, log wrapper.Log) error {
-	var ms runtime.MemStats
-	runtime.ReadMemStats(&ms)
-	log.Infof("[%s] Alloc:%d(bytes) HeapIdle:%d(bytes) HeapReleased:%d(bytes)", "waf start", ms.Alloc, ms.HeapIdle, ms.HeapReleased)
+	//var ms runtime.MemStats
+	//runtime.ReadMemStats(&ms)
+	//log.Infof("[%s] Alloc:%d(bytes) HeapIdle:%d(bytes) HeapReleased:%d(bytes)", "waf start", ms.Alloc, ms.HeapIdle, ms.HeapReleased)
 
 	var secRules []string
 	for _, item := range json.Get("secRules").Array() {
@@ -40,8 +39,8 @@ func parseConfig(json gjson.Result, config *WafConfig, log wrapper.Log) error {
 	waf, _ := coraza.NewWAF(conf.WithDirectives(strings.Join(secRules, "\n")))
 	config.waf = waf
 
-	runtime.ReadMemStats(&ms)
-	log.Infof("[%s] Alloc:%d(bytes) HeapIdle:%d(bytes) HeapReleased:%d(bytes)", "waf end", ms.Alloc, ms.HeapIdle, ms.HeapReleased)
+	//runtime.ReadMemStats(&ms)
+	//log.Infof("[%s] Alloc:%d(bytes) HeapIdle:%d(bytes) HeapReleased:%d(bytes)", "waf end", ms.Alloc, ms.HeapIdle, ms.HeapReleased)
 
 	return nil
 }

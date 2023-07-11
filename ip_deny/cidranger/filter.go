@@ -8,7 +8,6 @@ import (
 	"github.com/tidwall/gjson"
 	"github.com/yl2chen/cidranger"
 	"net"
-	"runtime"
 )
 
 type IpConfig struct {
@@ -42,9 +41,9 @@ func FilterStart() {
 }
 
 func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
-	var ms runtime.MemStats
-	runtime.ReadMemStats(&ms)
-	log.Infof("[%s] Alloc:%d(bytes) HeapIdle:%d(bytes) HeapReleased:%d(bytes)", "ip start (cidranger)", ms.Alloc, ms.HeapIdle, ms.HeapReleased)
+	//var ms runtime.MemStats
+	//runtime.ReadMemStats(&ms)
+	//log.Infof("[%s] Alloc:%d(bytes) HeapIdle:%d(bytes) HeapReleased:%d(bytes)", "ip start (cidranger)", ms.Alloc, ms.HeapIdle, ms.HeapReleased)
 
 	config.f = cidranger.NewPCTrieRanger()
 	//获取黑名单配置
@@ -66,8 +65,8 @@ func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
 			_ = config.f.Insert(newCustomRangerEntry(*network))
 		}
 	}
-	runtime.ReadMemStats(&ms)
-	log.Infof("[%s] Alloc:%d(bytes) HeapIdle:%d(bytes) HeapReleased:%d(bytes)", "ip end (cidranger)", ms.Alloc, ms.HeapIdle, ms.HeapReleased)
+	//runtime.ReadMemStats(&ms)
+	//log.Infof("[%s] Alloc:%d(bytes) HeapIdle:%d(bytes) HeapReleased:%d(bytes)", "ip end (cidranger)", ms.Alloc, ms.HeapIdle, ms.HeapReleased)
 	return nil
 }
 
