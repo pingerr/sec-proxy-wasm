@@ -1,0 +1,10 @@
+
+20230711
+(ip-cidranger)
+[ip deny] ip deny test finished, using 1.414929 seconds
+[ip deny] function score: 100, performance score: 81.70142
+[waf deny] waf deny test start
+[waf deny] waf deny test finished, using 182.191736 seconds
+[waf deny] function score is 50.0 , performance score is 49.269421333333334
+[cc deny] evaluation of cc deny is arriving...
+{'ip_deny': 85.420852, 'waf_deny': 49.5616528, 'cc_deny': 0}
