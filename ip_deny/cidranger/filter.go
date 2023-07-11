@@ -54,7 +54,7 @@ func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
 					panic(err)
 				}
 			} else if bytes.IndexByte([]byte(ipBlack.String()), ':') < 0 {
-				_, network, _ := net.ParseCIDR(ipBlack.String() + "/" + "32")
+				_, network, _ := net.ParseCIDR(ipBlack.String() + "/" + "128")
 				err := config.f.Insert(newCustomRangerEntry(*network))
 				if err != nil {
 					panic(err)
