@@ -84,12 +84,8 @@ func handleInterruption(ctx wrapper.HttpContext, phase string, interruption *cty
 
 	ctx.SetContext("interruptionHandled", true)
 
-	statusCode := interruption.Status
-
-	if statusCode == 0 {
-		if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by waf"), -1); err != nil {
-			panic(err)
-		}
+	if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by waf"), -1); err != nil {
+		panic(err)
 	}
 
 	return types.ActionContinue
