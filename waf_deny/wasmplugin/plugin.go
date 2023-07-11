@@ -25,8 +25,9 @@ type WafConfig struct {
 }
 
 func parseConfig(json gjson.Result, config *WafConfig, log wrapper.Log) error {
-
-	traceMemStats(log, "waf start")
+	var ms runtime.MemStats
+	runtime.ReadMemStats(&ms)
+	log.Infof("[%s] Alloc:%d(bytes) HeapIdle:%d(bytes) HeapReleased:%d(bytes)", "waf start", ms.Alloc, ms.HeapIdle, ms.HeapReleased)
 
 	var secRules []string
 	for _, item := range json.Get("secRules").Array() {
@@ -39,7 +40,8 @@ func parseConfig(json gjson.Result, config *WafConfig, log wrapper.Log) error {
 	waf, _ := coraza.NewWAF(conf.WithDirectives(strings.Join(secRules, "\n")))
 	config.waf = waf
 
-	traceMemStats(log, "waf end")
+	runtime.ReadMemStats(&ms)
+	log.Infof("[%s] Alloc:%d(bytes) HeapIdle:%d(bytes) HeapReleased:%d(bytes)", "waf end", ms.Alloc, ms.HeapIdle, ms.HeapReleased)
 
 	return nil
 }
@@ -171,8 +173,8 @@ func onHttpStreamDone(ctx wrapper.HttpContext, config WafConfig, log wrapper.Log
 	log.Info("Finished")
 }
 
-func traceMemStats(log wrapper.Log, name string) {
-	var ms runtime.MemStats
-	runtime.ReadMemStats(&ms)
-	log.Infof("[%s] Alloc:%d(bytes) HeapIdle:%d(bytes) HeapReleased:%d(bytes)", name, ms.Alloc, ms.HeapIdle, ms.HeapReleased)
-}
+//func traceMemStats(log wrapper.Log, name string) {
+//	var ms runtime.MemStats
+//	runtime.ReadMemStats(&ms)
+//	log.Infof("[%s] Alloc:%d(bytes) HeapIdle:%d(bytes) HeapReleased:%d(bytes)", name, ms.Alloc, ms.HeapIdle, ms.HeapReleased)
+//}

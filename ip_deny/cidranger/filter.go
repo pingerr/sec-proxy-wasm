@@ -42,7 +42,9 @@ func FilterStart() {
 }
 
 func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
-	traceMemStats(log, "ip start (cidranger)")
+	var ms runtime.MemStats
+	runtime.ReadMemStats(&ms)
+	log.Infof("[%s] Alloc:%d(bytes) HeapIdle:%d(bytes) HeapReleased:%d(bytes)", "ip start (cidranger)", ms.Alloc, ms.HeapIdle, ms.HeapReleased)
 
 	config.f = cidranger.NewPCTrieRanger()
 	//获取黑名单配置
@@ -64,7 +66,8 @@ func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
 			_ = config.f.Insert(newCustomRangerEntry(*network))
 		}
 	}
-	traceMemStats(log, "ip end (cidranger)")
+	runtime.ReadMemStats(&ms)
+	log.Infof("[%s] Alloc:%d(bytes) HeapIdle:%d(bytes) HeapReleased:%d(bytes)", "ip end (cidranger)", ms.Alloc, ms.HeapIdle, ms.HeapReleased)
 	return nil
 }
 
@@ -78,8 +81,8 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config IpConfig, log wrapper.
 	return types.ActionContinue
 }
 
-func traceMemStats(log wrapper.Log, name string) {
-	var ms runtime.MemStats
-	runtime.ReadMemStats(&ms)
-	log.Infof("[%s] Alloc:%d(bytes) HeapIdle:%d(bytes) HeapReleased:%d(bytes)", name, ms.Alloc, ms.HeapIdle, ms.HeapReleased)
-}
+//func traceMemStats(log wrapper.Log, name string) {
+//	var ms runtime.MemStats
+//	runtime.ReadMemStats(&ms)
+//	log.Infof("[%s] Alloc:%d(bytes) HeapIdle:%d(bytes) HeapReleased:%d(bytes)", name, ms.Alloc, ms.HeapIdle, ms.HeapReleased)
+//}
