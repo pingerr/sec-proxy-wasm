@@ -1,6 +1,7 @@
 package wasmplugin
 
 import (
+	"errors"
 	"github.com/alibaba/higress/plugins/wasm-go/pkg/wrapper"
 	"github.com/corazawaf/coraza/v3"
 	ctypes "github.com/corazawaf/coraza/v3/types"
@@ -33,17 +34,19 @@ func parseConfig(json gjson.Result, config *WafConfig, log wrapper.Log) error {
 	conf := coraza.NewWAFConfig().WithRootFS(root)
 	// error: Failed to load Wasm module due to a missing import: wasi_snapshot_preview1.fd_filestat_get
 	// because without fs.go
-	waf, _ := coraza.NewWAF(conf.WithDirectives(strings.Join(secRules, "\n")))
+	waf, err := coraza.NewWAF(conf.WithDirectives(strings.Join(secRules, "\n")))
 	config.waf = waf
-	//if err != nil {
-	//	//log.Errorf("Failed to create waf conf: %v", err)
-	//	return errors.New("failed to create waf conf")
-	//}
+	if err != nil {
+		//log.Errorf("Failed to create waf conf: %v", err)
+		return errors.New("failed to create waf conf")
+	}
 	return nil
 }
 
 func onHttpRequestHeaders(ctx wrapper.HttpContext, config WafConfig, log wrapper.Log) types.Action {
 	ctx.SetContext("interruptionHandled", false)
+	ctx.SetContext("processedRequestBody", false)
+	ctx.SetContext("processedResponseBody", false)
 	ctx.SetContext("tx", config.waf.NewTransaction())
 
 	tx := ctx.GetContext("tx").(ctypes.Transaction)
@@ -68,9 +71,11 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config WafConfig, log wrapper
 
 	tx.ProcessConnection(srcIP, srcPort, dstIP, dstPort)
 
+	proxywasm.LogInfof("[rinfx log] OnHttpRequestHeaders, RuleEngine On, url = %s", uri)
+
 	method, err := proxywasm.GetHttpRequestHeader(":method")
 	if err != nil {
-		//log.Error("Failed to get :method")
+		log.Error("Failed to get :method")
 		return types.ActionContinue
 	}
 
@@ -87,7 +92,7 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config WafConfig, log wrapper
 
 	hs, err := proxywasm.GetHttpRequestHeaders()
 	if err != nil {
-		//log.Error("Failed to get request headers")
+		log.Error("Failed to get request headers")
 		return types.ActionContinue
 	}
 
@@ -121,9 +126,9 @@ func onHttpRequestBody(ctx wrapper.HttpContext, config WafConfig, body []byte, l
 
 	tx := ctx.GetContext("tx").(ctypes.Transaction)
 
-	//if tx.IsRuleEngineOff() {
-	//	return types.ActionContinue
-	//}
+	if tx.IsRuleEngineOff() {
+		return types.ActionContinue
+	}
 
 	interruption, _, err := tx.WriteRequestBody(body)
 	if err != nil {
@@ -136,14 +141,12 @@ func onHttpRequestBody(ctx wrapper.HttpContext, config WafConfig, body []byte, l
 
 	interruption, err = tx.ProcessRequestBody()
 	if err != nil {
-		//log.Error("Failed to process request body")
+		log.Error("Failed to process request body")
 		return types.ActionContinue
 	}
 	if interruption != nil {
-		log.Infof("[it-body]= %s", string(body))
 		return handleInterruption(ctx, "http_request_body", interruption, log)
 	}
-	log.Infof("[body]= %s", string(body))
 
 	return types.ActionContinue
 }
