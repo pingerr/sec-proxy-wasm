@@ -33,11 +33,11 @@ func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
 	for _, ipBlack := range result.Array() {
 		if bytes.IndexByte([]byte(ipBlack.String()), '/') < 0 {
 			if err := config.f.AddIPString(ipBlack.String()); err != nil {
-				return err
+				panic(err)
 			}
 		} else {
 			if err := config.f.AddIPNetString(ipBlack.String()); err != nil {
-				return err
+				panic(err)
 			}
 		}
 	}
@@ -46,9 +46,7 @@ func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
 
 func onHttpRequestHeaders(ctx wrapper.HttpContext, config IpConfig, log wrapper.Log) types.Action {
 	xRealIp, _ := proxywasm.GetHttpRequestHeader("x-real-ip")
-	if length := len(xRealIp); length > 15 {
-		log.Infof("[xRealIp: %s]", xRealIp)
-	}
+
 	if config.f.FilterIPString(xRealIp) {
 		if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by ip"), -1); err != nil {
 			panic(err)
@@ -59,14 +57,10 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config IpConfig, log wrapper.
 
 func (f *IPFilter) FilterIP(ip net.IP) bool {
 	for _, item := range f.ipnets {
-		if item.Contains(ip) {
-			return true
-		}
+		return item.Contains(ip)
 	}
 	for _, item := range f.ips {
-		if item.Equal(ip) {
-			return true
-		}
+		return item.Equal(ip)
 	}
 	return false
 }
