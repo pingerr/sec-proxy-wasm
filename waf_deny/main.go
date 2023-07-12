@@ -7,6 +7,7 @@ import (
 
 func main() {
 	wasilibs.RegisterRX()
+	//plugins.RegisterOperator("rx", newRX)
 	wasilibs.RegisterPM()
 	wasilibs.RegisterSQLi()
 	wasilibs.RegisterXSS()
