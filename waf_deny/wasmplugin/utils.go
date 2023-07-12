@@ -14,8 +14,8 @@ import (
 	"strconv"
 )
 
-//const noGRPCStream int32 = -1
-//const replaceResponseBody int = 10
+const noGRPCStream int32 = -1
+const replaceResponseBody int = 10
 
 // retrieveAddressInfo retrieves address properties from the proxy
 // Expected targets are "source" or "destination"
