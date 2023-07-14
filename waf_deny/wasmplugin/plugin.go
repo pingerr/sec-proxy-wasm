@@ -25,9 +25,10 @@ type WafConfig struct {
 
 func parseConfig(json gjson.Result, config *WafConfig, log wrapper.Log) error {
 	var secRules []string
-	for _, item := range json.Get("secRules").Array() {
+	rules := json.Get("secRules").Array()
+	for i := range rules {
 		//rule := item.String()
-		secRules = append(secRules, item.String())
+		secRules = append(secRules, rules[i].String())
 	}
 	//log.Debugf("[rinfx log] %s", strings.Join(secRules, "\n"))
 	conf := coraza.NewWAFConfig().WithRootFS(root)
