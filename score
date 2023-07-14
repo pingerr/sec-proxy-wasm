@@ -48,3 +48,19 @@ WAF 规则防护功能	40%   0.4  0.6
 [waf deny] function score is 50.0 , performance score is 50.53249333333333
 [cc deny] evaluation of cc deny is arriving...
 {'ip_deny': 89.951404, 'waf_deny': 50.319495999999994, 'cc_deny': 0}
+
+2023-07-12 14:53:54 38.37
+0.0.9 (ip:cidranger-nolog, waf: lfi + logoff)
+[ip deny] ip deny test finished, using 1.044549 seconds
+[ip deny] function score: 100, performance score: 89.10902
+[waf deny] waf deny test finished, using 180.233801 seconds
+[waf deny] function score is 52.6 , performance score is 49.92206633333333
+{'ip_deny': 89.86541199999999, 'waf_deny': 50.9932398, 'cc_deny': 0}
+
+2023-07-14 16:54:36 38.5700
+0.0.13 (ip:cidranger-go优化, waf: lfi go优化)
+[ip deny] ip deny test finished, using 1.009677 seconds
+[ip deny] function score: 100, performance score: 89.80646
+[waf deny] waf deny test finished, using 178.805966 seconds
+[waf deny] function score is 52.6 , performance score is 50.39801133333333
+{'ip_deny': 90.28387599999999, 'waf_deny': 51.2788068, 'cc_deny': 0}
