@@ -1,7 +1,6 @@
 package wasmplugin
 
 import (
-	"errors"
 	"github.com/alibaba/higress/plugins/wasm-go/pkg/wrapper"
 	"github.com/corazawaf/coraza/v3"
 	ctypes "github.com/corazawaf/coraza/v3/types"
@@ -27,29 +26,27 @@ type WafConfig struct {
 func parseConfig(json gjson.Result, config *WafConfig, log wrapper.Log) error {
 	var secRules []string
 	for _, item := range json.Get("secRules").Array() {
-		rule := item.String()
-		secRules = append(secRules, rule)
+		//rule := item.String()
+		secRules = append(secRules, item.String())
 	}
-	log.Debugf("[rinfx log] %s", strings.Join(secRules, "\n"))
+	//log.Debugf("[rinfx log] %s", strings.Join(secRules, "\n"))
 	conf := coraza.NewWAFConfig().WithRootFS(root)
 	// error: Failed to load Wasm module due to a missing import: wasi_snapshot_preview1.fd_filestat_get
 	// because without fs.go
-	waf, err := coraza.NewWAF(conf.WithDirectives(strings.Join(secRules, "\n")))
-	config.waf = waf
-	if err != nil {
-		log.Errorf("Failed to create waf conf: %v", err)
-		return errors.New("failed to create waf conf")
-	}
+	config.waf, _ = coraza.NewWAF(conf.WithDirectives(strings.Join(secRules, "\n")))
+	//if err != nil {
+	//	//log.Errorf("Failed to create waf conf: %v", err)
+	//	return errors.New("failed to create waf conf")
+	//}
 	return nil
 }
 
 func onHttpRequestHeaders(ctx wrapper.HttpContext, config WafConfig, log wrapper.Log) types.Action {
 	ctx.SetContext("interruptionHandled", false)
-	ctx.SetContext("processedRequestBody", false)
-	ctx.SetContext("processedResponseBody", false)
-	ctx.SetContext("tx", config.waf.NewTransaction())
-
-	tx := ctx.GetContext("tx").(ctypes.Transaction)
+	//ctx.SetContext("processedRequestBody", false)
+	//ctx.SetContext("processedResponseBody", false)
+	tx := config.waf.NewTransaction()
+	ctx.SetContext("tx", tx)
 
 	// Note the pseudo-header :path includes the query.
 	// See https://httpwg.org/specs/rfc9113.html#rfc.section.8.3.1
@@ -62,20 +59,20 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config WafConfig, log wrapper
 	// and its request properties, but they may not be true of other proxies implementing
 	// proxy-wasm.
 
-	if tx.IsRuleEngineOff() {
-		return types.ActionContinue
-	}
+	//if tx.IsRuleEngineOff() {
+	//	return types.ActionContinue
+	//}
 	// OnHttpRequestHeaders does not terminate if IP/Port retrieve goes wrong
 	srcIP, srcPort := retrieveAddressInfo(log, "source")
 	dstIP, dstPort := retrieveAddressInfo(log, "destination")
 
 	tx.ProcessConnection(srcIP, srcPort, dstIP, dstPort)
 
-	proxywasm.LogInfof("[rinfx log] OnHttpRequestHeaders, RuleEngine On, url = %s", uri)
+	//proxywasm.LogInfof("[rinfx log] OnHttpRequestHeaders, RuleEngine On, url = %s", uri)
 
 	method, err := proxywasm.GetHttpRequestHeader(":method")
 	if err != nil {
-		log.Error("Failed to get :method")
+		//log.Error("Failed to get :method")
 		return types.ActionContinue
 	}
 
@@ -92,7 +89,7 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config WafConfig, log wrapper
 
 	hs, err := proxywasm.GetHttpRequestHeaders()
 	if err != nil {
-		log.Error("Failed to get request headers")
+		//log.Error("Failed to get request headers")
 		return types.ActionContinue
 	}
 
@@ -116,7 +113,7 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config WafConfig, log wrapper
 }
 
 func onHttpRequestBody(ctx wrapper.HttpContext, config WafConfig, body []byte, log wrapper.Log) types.Action {
-	log.Info("[rinfx log] OnHttpRequestBody")
+	//log.Info("[rinfx log] OnHttpRequestBody")
 
 	if ctx.GetContext("interruptionHandled").(bool) {
 		return types.ActionContinue
@@ -124,9 +121,9 @@ func onHttpRequestBody(ctx wrapper.HttpContext, config WafConfig, body []byte, l
 
 	tx := ctx.GetContext("tx").(ctypes.Transaction)
 
-	if tx.IsRuleEngineOff() {
-		return types.ActionContinue
-	}
+	//if tx.IsRuleEngineOff() {
+	//	return types.ActionContinue
+	//}
 
 	interruption, _, err := tx.WriteRequestBody(body)
 	if err != nil {
@@ -136,10 +133,10 @@ func onHttpRequestBody(ctx wrapper.HttpContext, config WafConfig, body []byte, l
 	if interruption != nil {
 		return handleInterruption(ctx, "http_request_body", interruption, log)
 	}
-	ctx.SetContext("processedRequestBody", true)
+	//ctx.SetContext("processedRequestBody", true)
 	interruption, err = tx.ProcessRequestBody()
 	if err != nil {
-		log.Error("Failed to process request body")
+		//log.Error("Failed to process request body")
 		return types.ActionContinue
 	}
 	if interruption != nil {
@@ -149,25 +146,25 @@ func onHttpRequestBody(ctx wrapper.HttpContext, config WafConfig, body []byte, l
 	return types.ActionContinue
 }
 
-func onHttpStreamDone(ctx wrapper.HttpContext, config WafConfig, log wrapper.Log) {
-	log.Info("[rinfx log] OnHttpStreamDone")
-
-	tx := ctx.GetContext("tx").(ctypes.Transaction)
-
-	if !tx.IsRuleEngineOff() {
-		// Responses without body won't call OnHttpResponseBody, but there are rules in the response body
-		// phase that still need to be executed. If they haven't been executed yet, now is the time.
-		if !ctx.GetContext("processedResponseBody").(bool) {
-			ctx.SetContext("processedResponseBody", true)
-			_, err := tx.ProcessResponseBody()
-			if err != nil {
-				log.Error("Failed to process response body")
-			}
-		}
-	}
-
-	tx.ProcessLogging()
-
-	_ = tx.Close()
-	log.Info("Finished")
-}
+//func onHttpStreamDone(ctx wrapper.HttpContext, config WafConfig, log wrapper.Log) {
+//	log.Info("[rinfx log] OnHttpStreamDone")
+//
+//	tx := ctx.GetContext("tx").(ctypes.Transaction)
+//
+//	if !tx.IsRuleEngineOff() {
+//		// Responses without body won't call OnHttpResponseBody, but there are rules in the response body
+//		// phase that still need to be executed. If they haven't been executed yet, now is the time.
+//		if !ctx.GetContext("processedResponseBody").(bool) {
+//			ctx.SetContext("processedResponseBody", true)
+//			_, err := tx.ProcessResponseBody()
+//			if err != nil {
+//				log.Error("Failed to process response body")
+//			}
+//		}
+//	}
+//
+//	tx.ProcessLogging()
+//
+//	_ = tx.Close()
+//	log.Info("Finished")
+//}
