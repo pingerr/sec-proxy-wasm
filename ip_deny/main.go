@@ -1,7 +1,7 @@
 package main
 
 import (
-	"ip_deny/hs"
+	"ip_deny/ac"
 )
 
 //"ip_deny/cuckoofilter"
@@ -10,5 +10,5 @@ import (
 func main() {
 	//ipfilter.FilterStart()
 	//cuckoofilter.FilterStart()
-	hs.FilterStart()
+	ac.FilterStart()
 }
