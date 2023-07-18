@@ -24,7 +24,7 @@ func FilterStart() {
 }
 
 func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
-	var dict [][]rune
+	dict := [][]rune{}
 
 	//获取黑名单配置
 	result := json.Get("ip_blacklist").Array()
