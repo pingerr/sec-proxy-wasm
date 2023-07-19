@@ -85,12 +85,12 @@ xss2 ip(cidranger,go)+waf(xss)
 [cc deny] evaluation of cc deny is arriving...
 {'ip_deny': 89.462512, 'waf_deny': 54.4401448, 'cc_deny': 0}
 
-2023-07-20 00:41:58 score:38.3100
-0.2.3 ip(cidranger,go)+waf(xss,lfi)
-[ip deny] ip deny test finished, using 1.036183 seconds
-[ip deny] function score: 100, performance score: 89.27633999999999
+2023-07-20 00:59:23 score:39.9800
+0.2.4 ip(cidranger,go)+waf(xss,lfi)
+[ip deny] ip deny test finished, using 1.043924 seconds
+[ip deny] function score: 100, performance score: 89.12151999999999
 [waf deny] waf deny test start
-[waf deny] waf deny test finished, using 176.044412 seconds
-[waf deny] function score is 50.0 , performance score is 51.31852933333334
+[waf deny] waf deny test finished, using 177.432397 seconds
+[waf deny] function score is 61.22 , performance score is 50.85586766666667
 [cc deny] evaluation of cc deny is arriving...
-{'ip_deny': 89.96580399999999, 'waf_deny': 50.7911176, 'cc_deny': 0}
+{'ip_deny': 89.87291199999999, 'waf_deny': 55.0015206, 'cc_deny': 0}
