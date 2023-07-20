@@ -1,6 +1,6 @@
 启动：
 docker compose up
 后台启动：
-docker compose up -t
+docker compose up -d
 停止：
 docker compose stop
