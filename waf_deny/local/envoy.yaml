@@ -56,7 +56,8 @@ static_resources:
                           "SecDefaultAction \"phase:5,log,auditlog,pass\"",
                           "SecDebugLogLevel 3",
                           "Include @owasp_crs/PINGER-REQUEST-801-FALSE-SKIP.conf",
-                          "Include @owasp_crs/REQUEST-932-APPLICATION-ATTACK-RCE.conf"
+                          "Include @owasp_crs/REQUEST-932-APPLICATION-ATTACK-RCE.conf",
+                          "Include @owasp_crs/PINGER-REQUEST-999-END-ALL.conf"
                         ]
                       }
           - name: envoy.filters.http.router
