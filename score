@@ -115,5 +115,12 @@ sqli2 feat:ip(no)+waf(sqli)
 [cc deny] evaluation of cc deny is arriving...
 {'ip_deny': 90.30904, 'waf_deny': 50.250067200000004, 'cc_deny': 0}
 
-
+2023-07-20 22:35:24 score:38.1300
 0.2.6 feat:ip(all)+waf(sqli-942100)
+[ip deny] ip deny test finished, using 1.036266 seconds
+[ip deny] function score: 100, performance score: 89.27468000000002
+[waf deny] waf deny test start
+[waf deny] waf deny test finished, using 178.289682 seconds
+[waf deny] function score is 50.0 , performance score is 50.570106
+[cc deny] evaluation of cc deny is arriving...
+{'ip_deny': 89.964808, 'waf_deny': 50.3420636, 'cc_deny': 0}

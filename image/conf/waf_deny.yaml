@@ -25,6 +25,6 @@ resources:
                 "SecDefaultAction \"phase:4,log,auditlog,pass\"",
                 "SecDefaultAction \"phase:5,log,auditlog,pass\"",
                 "SecDebugLogLevel 3",
-                "Include @owasp_crs/PINGER-REQUEST-942-APPLICATION-ATTACK-SQLI.conf"
+                "Include @owasp_crs/REQUEST-932-APPLICATION-ATTACK-RCE.conf"
               ]
             }
