@@ -126,7 +126,7 @@ sqli2 feat:ip(no)+waf(sqli)
 {'ip_deny': 89.964808, 'waf_deny': 50.3420636, 'cc_deny': 0}
 
 2023-07-21 00:38:34 score:19.3500
-rce-skip feat:ip(no)+waf(rce,skip)
+rce-skip1 feat:ip(no)+waf(rce,skip)
 [ip deny] ip deny test finished, using 1.983487 seconds
 [ip deny] exsit ip not been blocked, so your ip deny score is 0
 [waf deny] waf deny test start
@@ -134,3 +134,13 @@ rce-skip feat:ip(no)+waf(rce,skip)
 [waf deny] function score is 45.57 , performance score is 50.262097000000004
 [cc deny] evaluation of cc deny is arriving...
 {'ip_deny': 0, 'waf_deny': 48.3852582, 'cc_deny': 0}
+
+2023-07-21 01:18:02 score:19.6800
+rce-skip1 feat:ip(no)+waf(rce,skip) bugfix
+[ip deny] ip deny test finished, using 1.916756 seconds
+[ip deny] exsit ip not been blocked, so your ip deny score is 0
+[waf deny] waf deny test start
+[waf deny] waf deny test finished, using 180.264269 seconds
+[waf deny] function score is 48.14 , performance score is 49.91191033333333
+[cc deny] evaluation of cc deny is arriving...
+{'ip_deny': 0, 'waf_deny': 49.2031462, 'cc_deny': 0}
