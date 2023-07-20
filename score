@@ -94,3 +94,13 @@ xss2 ip(cidranger,go)+waf(xss)
 [waf deny] function score is 61.22 , performance score is 50.85586766666667
 [cc deny] evaluation of cc deny is arriving...
 {'ip_deny': 89.87291199999999, 'waf_deny': 55.0015206, 'cc_deny': 0}
+
+2023-07-20 13:26:22
+sqli2 feat:ip(no)+waf(sqli)
+[ip deny] ip deny test finished, using 1.856009 seconds
+[ip deny] exsit ip not been blocked, so your ip deny score is 0
+[waf deny] waf deny test start
+[waf deny] waf deny test finished, using 179.09012 seconds
+[waf deny] function score is 44.24 , performance score is 50.30329333333333
+[cc deny] evaluation of cc deny is arriving...
+{'ip_deny': 0, 'waf_deny': 47.877976, 'cc_deny': 0}
