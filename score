@@ -144,3 +144,13 @@ rce-skip1 feat:ip(no)+waf(rce,skip) bugfix
 [waf deny] function score is 48.14 , performance score is 49.91191033333333
 [cc deny] evaluation of cc deny is arriving...
 {'ip_deny': 0, 'waf_deny': 49.2031462, 'cc_deny': 0}
+
+2023-07-21 01:49:03 score:20.2400
+ua-protocol feat:ip(no)+waf(ua,protocol)
+[ip deny] ip deny test finished, using 1.984407 seconds
+[ip deny] exsit ip not been blocked, so your ip deny score is 0
+[waf deny] waf deny test start
+[waf deny] waf deny test finished, using 180.019953 seconds
+[waf deny] function score is 51.54 , performance score is 49.993349
+[cc deny] evaluation of cc deny is arriving...
+{'ip_deny': 0, 'waf_deny': 50.6120094, 'cc_deny': 0}
