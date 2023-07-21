@@ -27,7 +27,7 @@ Negative Tests:
 | community             | community-xxe         |                100.00 |                     1 |                     0 |                     1 |                     2 |                     0 |
 | owasp                 | crlf                  |                  0.00 |                     0 |                     9 |                     0 |                     9 |                     0 |
 | owasp                 | ldap-injection        |                  0.00 |                     0 |                    16 |                    48 |                    64 |                     0 |
-| owasp                 | mail-injection        |                  0.00 |                     0 |                    12 |                    12 |                    24 |                     0 |
+| owasp                 | mail-injection        |                  0.00 |                      0 |                    12 |                    12 |                    24 |                     0 |
 | owasp                 | nosql-injection       |                  0.00 |                     0 |                    28 |                    42 |                    70 |                     0 |
 | owasp                 | path-traversal        |                 30.65 |                    19 |                    43 |                    48 |                   110 |                     0 |
 | owasp                 | rce                   |                 10.20 |                     5 |                    44 |                    17 |                    66 |                     0 |
