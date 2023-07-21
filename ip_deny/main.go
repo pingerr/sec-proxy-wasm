@@ -1,7 +1,7 @@
 package main
 
 import (
-	"ip_deny/no"
+	"ip_deny/cidranger"
 )
 
 //"ip_deny/cuckoofilter"
@@ -10,5 +10,5 @@ import (
 func main() {
 	//ipfilter.FilterStart()
 	//cuckoofilter.FilterStart()
-	no.FilterStart()
+	cidranger.FilterStart()
 }
