@@ -173,3 +173,14 @@ ua-protocol feat:ip(no)+waf(ua,protocol)
 [waf deny] function score is 63.7 , performance score is 50.27804066666667
 [cc deny] evaluation of cc deny is arriving...
 {'ip_deny': 0, 'waf_deny': 55.6468244, 'cc_deny': 0}
+
+2023-07-21 17:14:23 score:40.3800
+0.2.10 feat:ip(no)+waf(xss,lfi,ua,protocol，lfi-base64)
+[ip deny] ip deny test finished, using 1.023292 seconds
+[ip deny] function score: 100, performance score: 89.53416000000001
+[waf deny] waf deny test start
+[waf deny] waf deny test finished, using 177.915596 seconds
+[waf deny] function score is 63.7 , performance score is 50.69480133333334
+[cc deny] evaluation of cc deny is arriving...
+{'ip_deny': 90.12049599999999, 'waf_deny': 55.896880800000005, 'cc_deny': 0}
+
