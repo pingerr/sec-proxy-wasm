@@ -57,9 +57,11 @@ static_resources:
                           "SecDebugLogLevel 3",
                           "Include @owasp_crs/PINGER-REQUEST-913-SCANNER-DETECTION.conf",
                           "Include @owasp_crs/REQUEST-921-PROTOCOL-ATTACK.conf",
+                          "Include @owasp_crs/PINGER-REQUEST-821-PROTOCOL-ATTACK.conf",
                           "Include @owasp_crs/REQUEST-941-APPLICATION-ATTACK-XSS.conf",
                           "Include @owasp_crs/PINGER-REQUEST-841-APPLICATION-ATTACK-XSS.conf",
-                          "Include @owasp_crs/REQUEST-930-APPLICATION-ATTACK-LFI.conf"
+                          "Include @owasp_crs/REQUEST-930-APPLICATION-ATTACK-LFI.conf",
+                          "Include @owasp_crs/PINGER-REQUEST-830-APPLICATION-ATTACK-LFI.conf"
                         ]
                       }
           - name: envoy.filters.http.router
