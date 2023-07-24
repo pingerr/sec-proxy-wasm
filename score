@@ -186,8 +186,6 @@ ua-protocol feat:ip(no)+waf(ua,protocol)
 
 2023-07-22 18:35:07 score:40.8100
 0.2.11 feat:ip(no)+waf(xss,lfi,rfi,ua,protocol,lfi-base64flat)
-time="2023-07-22T10:39:27Z" level=info msg="Scanning finished" duration=2m49.386978776s
-{"code":"SUCCESS","data":{"returnCode":true}}[ip deny] ip deny test start
 [ip deny] ip deny test finished, using 1.047351 seconds
 [ip deny] function score: 100, performance score: 89.05298
 [waf deny] waf deny test start
@@ -196,3 +194,13 @@ time="2023-07-22T10:39:27Z" level=info msg="Scanning finished" duration=2m49.386
 [cc deny] evaluation of cc deny is arriving...
 {'ip_deny': 89.831788, 'waf_deny': 57.112504599999994, 'cc_deny': 0}
 
+
+2023-07-24 16:54:08 score:23.0400
+0.2.14 feat:ip(no)+waf(xss-bs64,lfi+bs64,ua,protocol-bs64)
+[ip deny] ip deny test finished, using 2.08798 seconds
+[ip deny] exsit ip not been blocked, so your ip deny score is 0
+[waf deny] waf deny test start
+[waf deny] waf deny test finished, using 180.312393 seconds
+[waf deny] function score is 69.15 , performance score is 49.895869000000005
+[cc deny] evaluation of cc deny is arriving...
+{'ip_deny': 0, 'waf_deny': 57.597521400000005, 'cc_deny': 0}
