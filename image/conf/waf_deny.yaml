@@ -31,6 +31,7 @@ resources:
                 "Include @owasp_crs/REQUEST-941-APPLICATION-ATTACK-XSS.conf",
                 "Include @owasp_crs/PINGER-REQUEST-841-APPLICATION-ATTACK-XSS.conf",
                 "Include @owasp_crs/REQUEST-930-APPLICATION-ATTACK-LFI.conf",
-                "Include @owasp_crs/PINGER-REQUEST-830-APPLICATION-ATTACK-LFI.conf"
+                "Include @owasp_crs/PINGER-REQUEST-830-APPLICATION-ATTACK-LFI.conf",
+                "Include @owasp_crs/PINGER-REQUEST-832-APPLICATION-ATTACK-RCE.conf"
               ]
             }
