@@ -204,3 +204,6 @@ ua-protocol feat:ip(no)+waf(ua,protocol)
 [waf deny] function score is 69.15 , performance score is 49.895869000000005
 [cc deny] evaluation of cc deny is arriving...
 {'ip_deny': 0, 'waf_deny': 57.597521400000005, 'cc_deny': 0}
+
+
+0.3.2 ip(cidranger)+waf(curbest+rce-832130,832160,Shellshock|urldecode)
