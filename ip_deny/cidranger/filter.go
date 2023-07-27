@@ -79,10 +79,8 @@ func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
 
 func onHttpRequestHeaders(ctx wrapper.HttpContext, config IpConfig, log wrapper.Log) types.Action {
 	if config.index < 5 {
-		if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by ip"), -1); err != nil {
-			panic(err)
-		}
 		config.index = config.index + 1
+		return types.ActionContinue
 	} else {
 
 		xRealIp, _ := proxywasm.GetHttpRequestHeader("x-real-ip")
