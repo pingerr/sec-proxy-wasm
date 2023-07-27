@@ -2,6 +2,7 @@ package ccfilter
 
 import (
 	json2 "encoding/json"
+	"fmt"
 	"github.com/alibaba/higress/plugins/wasm-go/pkg/wrapper"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
@@ -54,7 +55,7 @@ func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
 
 	for i := range result {
 		var rule CCRule
-		err := json2.Unmarshal([]byte(result[i].String()), &rule)
+		err := json2.Unmarshal([]byte(result[i].Str), &rule)
 		if err != nil {
 			log.Errorf("[json parse error: %s]", result[i].String())
 		}
@@ -114,4 +115,30 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 		}
 	}
 	return types.ActionContinue
+}
+
+func CCTest(file string) {
+	var rule CCRule
+	var config CCConfig
+	err := json2.Unmarshal([]byte(file), &rule)
+	if err != nil {
+		fmt.Printf("[json parse error: %s]", file)
+	}
+	//var limiter MyLimiter
+
+	config.qps = rule.Qps
+	config.qpm = rule.Qpm
+	config.qpd = rule.Qpd
+	config.headerBlockTime = rule.BlockSeconds
+	if rule.BlockSeconds != 0 {
+		config.headerBlockTime = rule.BlockSeconds
+		config.hasHeaderBlock = true
+	} else {
+		config.headerBlockTime = 0
+		config.hasHeaderBlock = false
+	}
+
+	if rule.Header != "" {
+		config.headerKey = rule.Header
+	}
 }

@@ -3,6 +3,7 @@ module cc_deny
 go 1.19
 
 require (
+	fortio.org/log v1.8.1
 	github.com/alibaba/higress/plugins/wasm-go v0.0.0-20230726025556-3700ada7e6b6
 	github.com/tetratelabs/proxy-wasm-go-sdk v0.22.0
 	github.com/tidwall/gjson v1.14.4
