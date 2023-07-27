@@ -11,7 +11,8 @@ import (
 )
 
 type IpConfig struct {
-	f cidranger.Ranger
+	f     cidranger.Ranger
+	index int
 }
 
 type customRangerEntry struct {
@@ -45,6 +46,8 @@ func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
 	//获取黑名单配置
 	result := json.Get("ip_blacklist").Array()
 
+	config.index = 0
+
 	for i := range result {
 		var ip bytes.Buffer
 		if bytes.IndexByte([]byte(result[i].String()), '/') < 0 {
@@ -75,14 +78,23 @@ func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
 }
 
 func onHttpRequestHeaders(ctx wrapper.HttpContext, config IpConfig, log wrapper.Log) types.Action {
-	xRealIp, _ := proxywasm.GetHttpRequestHeader("x-real-ip")
-
-	contains, _ := config.f.Contains(net.ParseIP(xRealIp))
-	if contains {
+	if config.index < 5 {
 		if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by ip"), -1); err != nil {
 			panic(err)
 		}
+		config.index = config.index + 1
+	} else {
+
+		xRealIp, _ := proxywasm.GetHttpRequestHeader("x-real-ip")
+
+		contains, _ := config.f.Contains(net.ParseIP(xRealIp))
+		if contains {
+			if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by ip"), -1); err != nil {
+				panic(err)
+			}
+		}
 	}
+
 	return types.ActionContinue
 }
 

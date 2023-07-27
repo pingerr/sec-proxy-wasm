@@ -207,3 +207,13 @@ ua-protocol feat:ip(no)+waf(ua,protocol)
 
 
 0.3.2 ip(cidranger)+waf(curbest+rce-832130,832160,Shellshock|urldecode)
+total requests: 1000, denied requests: 1000
+[ip deny] ip deny test finished, using 1.133433 seconds
+[ip deny] exsit ip not been blocked, so your ip deny score is 0
+time="2023-07-27T02:32:41Z" level=info msg="Scanning finished" duration=4m7.213917332s
+[waf deny] waf deny test start
+[waf deny] waf deny test finished, using 257.417732 seconds
+[waf deny] function score is 81.88 , performance score is 24.19408933333333
+time used: 7.842235, total requests: 50, passed requests: 50, denied requests: 0, score of case 1: 0
+time used: 7.844235, total requests: 50, passed requests: 50, denied requests: 0, score of case 2: 0
+{'ip_deny': 0.0, 'waf_deny': 47.2684536, 'cc_deny': 0.0}
