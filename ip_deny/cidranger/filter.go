@@ -78,9 +78,8 @@ func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
 }
 
 func onHttpRequestHeaders(ctx wrapper.HttpContext, config IpConfig, log wrapper.Log) types.Action {
-	if config.index < 5 {
-		config.index = config.index + 1
-		return types.ActionContinue
+	if config.index == 0 {
+		config.index = 1
 	} else {
 
 		xRealIp, _ := proxywasm.GetHttpRequestHeader("x-real-ip")
