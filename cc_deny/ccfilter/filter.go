@@ -1,7 +1,6 @@
 package ccfilter
 
 import (
-	json2 "encoding/json"
 	"github.com/alibaba/higress/plugins/wasm-go/pkg/wrapper"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
@@ -21,9 +20,9 @@ func PluginStart() {
 type CCConfig struct {
 	headerKey       string
 	cookieKey       string
-	qps             int
-	qpm             int
-	qpd             int
+	qps             int64
+	qpm             int64
+	qpd             int64
 	headerBlockTime int64
 	cookieBlockTime int64
 	hasHeaderBlock  bool
@@ -40,14 +39,14 @@ type MyLimiter struct {
 	nextTime     int64
 }
 
-type CCRule struct {
-	Header       string `json:"header,omitempty"`
-	Qps          int    `json:"qps,omitempty"`
-	Qpm          int    `json:"qpm"`
-	Qpd          int    `json:"qpd,omitempty"`
-	BlockSeconds int64  `json:"block_seconds,omitempty"`
-	Cookie       string `json:"cookie,omitempty"`
-}
+//type CCRule struct {
+//	Header       string
+//	Qps          int
+//	Qpm          int
+//	Qpd          int
+//	BlockSeconds int64
+//	Cookie       string
+//}
 
 //type CCRule []struct {
 //	Header       string `json:"header,omitempty"`
@@ -59,32 +58,30 @@ type CCRule struct {
 //}
 
 func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
-	result := json.Get("cc_rules").Array()
+	results := json.Get("cc_rules").Array()
 
-	for i, item := range result {
-		var rule CCRule
-		err := json2.Unmarshal([]byte(item.Raw), &rule)
-		if err != nil {
-			log.Errorf("[json parse error: %s]", result[i].Raw)
+	for i := range results {
+		curMap := results[i].Map()
+
+		if qps := curMap["qps"].Int(); qps != 0 {
+			config.qps = qps
 		}
-		//var limiter MyLimiter
-		//log.Infof("[cc config: %s]", result[i].String())
-		config.qps = rule.Qps
-		config.qpm = rule.Qpm
-		config.qpd = rule.Qpd
-		config.headerBlockTime = rule.BlockSeconds
-		if rule.BlockSeconds != 0 {
-			config.headerBlockTime = rule.BlockSeconds
+		if qpm := curMap["qpm"].Int(); qpm != 0 {
+			config.qpm = qpm
+		}
+		if qpd := curMap["qpd"].Int(); qpd != 0 {
+			config.qpd = qpd
+		}
+
+		if headerBlockTime := curMap["block_seconds"].Int(); headerBlockTime != 0 {
+			config.headerBlockTime = headerBlockTime
 			config.hasHeaderBlock = true
-		} else {
-			config.headerBlockTime = 0
-			config.hasHeaderBlock = false
 		}
 
-		if rule.Header != "" {
-			config.headerKey = rule.Header
-
+		if headerKy := curMap["header"].Str; headerKy != "" {
+			config.headerKey = headerKy
 		}
+
 		//if rule.Cookie != "" {
 		//	config.cookieKey = rule.Cookie
 		//}
@@ -102,8 +99,8 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 	limiter, isOk := config.headerMap[headerValue]
 	if !isOk {
 		var myLimiter MyLimiter
-		myLimiter.qps = rate.NewLimiter(rate.Every(time.Second), config.qps)
-		myLimiter.qpm = rate.NewLimiter(rate.Every(time.Second*60), config.qpm)
+		myLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(config.qps))
+		myLimiter.qpm = rate.NewLimiter(rate.Every(time.Second*60), int(config.qpm))
 		myLimiter.hasBlockTime = config.hasHeaderBlock
 		myLimiter.nextTime = now.UnixMilli()
 		return types.ActionContinue
