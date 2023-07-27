@@ -225,3 +225,13 @@ same
 
 0.3.4 ip(ipfilter)+waf(curbest+rce-832130,832160,Shellshock|urldecode|headers)+cc(denyall)
 
+
+ip
+    hash表
+    radix树
+
+cc
+    令牌桶 ——》共享队列wasm-》全局令牌桶
+
+waf
+

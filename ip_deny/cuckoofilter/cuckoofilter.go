@@ -32,9 +32,9 @@ func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
 
 func onHttpRequestHeaders(ctx wrapper.HttpContext, config IpConfig, log wrapper.Log) types.Action {
 	xRealIp, _ := proxywasm.GetHttpRequestHeader("x-real-ip")
-	if length := len(xRealIp); length > 15 {
-		log.Infof("[xRealIp: %s]", xRealIp)
-	}
+
+	log.Infof("[xRealIp: %s]", xRealIp)
+
 	if config.f.Contain([]byte(xRealIp)) {
 		if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by ip"), -1); err != nil {
 			panic(err)
