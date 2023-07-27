@@ -62,7 +62,7 @@ func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
 
 	for i := range results {
 		curMap := results[i].Map()
-
+		log.Infof("[ccjson: %s]", results[i].String())
 		if qps := curMap["qps"].Int(); qps != 0 {
 			config.qps = qps
 		}
