@@ -10,10 +10,12 @@ require (
 	github.com/tetratelabs/proxy-wasm-go-sdk v0.22.0
 	github.com/tidwall/gjson v1.14.4
 	github.com/yl2chen/cidranger v1.0.2
+	github.com/zmap/go-iptree v0.0.0-20210731043055-d4e632617837
 )
 
 require (
 	github.com/anknown/darts v0.0.0-20151216065714-83ff685239e6 // indirect
+	github.com/asergeyev/nradix v0.0.0-20170505151046-3872ab85bb56 // indirect
 	github.com/dgryski/go-metro v0.0.0-20200812162917-85c65e2d0165 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
