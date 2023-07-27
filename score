@@ -218,5 +218,10 @@ time used: 7.842235, total requests: 50, passed requests: 50, denied requests: 0
 time used: 7.844235, total requests: 50, passed requests: 50, denied requests: 0, score of case 2: 0
 {'ip_deny': 0.0, 'waf_deny': 47.2684536, 'cc_deny': 0.0}
 
-
+2023-07-27 11:23:26 score:19.0600
 0.3.3 ip(ipfilter)+waf(curbest+rce-832130,832160,Shellshock|urldecode)
+same
+
+
+0.3.4 ip(ipfilter)+waf(curbest+rce-832130,832160,Shellshock|urldecode|headers)+cc(denyall)
+

@@ -26,9 +26,12 @@ func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
 }
 
 func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.Log) types.Action {
-
-	if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1); err != nil {
-		panic(err)
+	if config.test%2 == 0 {
+		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 	}
+	config.test++
+	//if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1); err != nil {
+	//	panic(err)
+	//}
 	return types.ActionContinue
 }
