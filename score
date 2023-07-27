@@ -217,3 +217,6 @@ time="2023-07-27T02:32:41Z" level=info msg="Scanning finished" duration=4m7.2139
 time used: 7.842235, total requests: 50, passed requests: 50, denied requests: 0, score of case 1: 0
 time used: 7.844235, total requests: 50, passed requests: 50, denied requests: 0, score of case 2: 0
 {'ip_deny': 0.0, 'waf_deny': 47.2684536, 'cc_deny': 0.0}
+
+
+0.3.3 ip(ipfilter)+waf(curbest+rce-832130,832160,Shellshock|urldecode)
