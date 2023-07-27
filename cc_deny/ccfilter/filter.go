@@ -5,6 +5,7 @@ import (
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 	"github.com/tidwall/gjson"
+	"math/rand"
 )
 
 func PluginStart() {
@@ -26,10 +27,11 @@ func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
 }
 
 func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.Log) types.Action {
-	if config.test%2 == 0 {
+	ran := rand.Intn(2)
+	if ran%2 == 0 {
 		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 	}
-	config.test++
+
 	//if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1); err != nil {
 	//	panic(err)
 	//}

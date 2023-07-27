@@ -7,6 +7,7 @@ import (
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 	"github.com/tidwall/gjson"
 	"github.com/yl2chen/cidranger"
+	"math/rand"
 	"net"
 )
 
@@ -75,15 +76,18 @@ func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
 }
 
 func onHttpRequestHeaders(ctx wrapper.HttpContext, config IpConfig, log wrapper.Log) types.Action {
-
-	xRealIp, _ := proxywasm.GetHttpRequestHeader("x-real-ip")
-
-	contains, _ := config.f.Contains(net.ParseIP(xRealIp))
-	if contains {
-		if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by ip"), -1); err != nil {
-			panic(err)
-		}
+	ran := rand.Intn(2)
+	if ran%2 == 0 {
+		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by ip"), -1)
 	}
+	//xRealIp, _ := proxywasm.GetHttpRequestHeader("x-real-ip")
+	//
+	//contains, _ := config.f.Contains(net.ParseIP(xRealIp))
+	//if contains {
+	//	if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by ip"), -1); err != nil {
+	//		panic(err)
+	//	}
+	//}
 
 	return types.ActionContinue
 }
