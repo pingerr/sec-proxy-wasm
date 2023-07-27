@@ -7,7 +7,6 @@ import (
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 	"github.com/tidwall/gjson"
 	"golang.org/x/time/rate"
-	"strconv"
 	"time"
 )
 
@@ -41,44 +40,45 @@ type MyLimiter struct {
 	nextTime     int64
 }
 
+type CCRule struct {
+	Header       string `json:"header"`
+	Qps          int    `json:"qps"`
+	Qpm          int    `json:"qpm"`
+	Qpd          int    `json:"qpd"`
+	BlockSeconds int64  `json:"block_seconds"`
+	Cookie       string `json:"cookie"`
+}
+
 func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
 	result := json.Get("cc_rules").Array()
 
 	for i := range result {
-		rule := make(map[string]string)
+		var rule CCRule
 		err := json2.Unmarshal([]byte(result[i].String()), &rule)
 		if err != nil {
 			log.Errorf("[json parse error: %s]", result[i].String())
 		}
 		//var limiter MyLimiter
 		log.Infof("[cc config: %s]", result[i].String())
-		if qpsStr, isOk := rule["qps"]; isOk {
-			qps, _ := strconv.Atoi(qpsStr)
-			config.qps = qps
-			//limiter.qps = rate.NewLimiter(rate.Every(time.Second), qps)
-		}
-		if qpmStr, isOk := rule["qpm"]; isOk {
-			qpm, _ := strconv.Atoi(qpmStr)
-			config.qpm = qpm
-			//limiter.qpm = rate.NewLimiter(rate.Every(time.Second*60), qpm)
-		}
-		if blockSeconds, isOk := rule["block_seconds"]; isOk {
-			bs, _ := strconv.Atoi(blockSeconds)
-			config.headerBlockTime = int64(bs)
+		config.qps = rule.Qps
+		config.qpm = rule.Qpm
+		config.qpd = rule.Qpd
+		config.headerBlockTime = rule.BlockSeconds
+		if rule.BlockSeconds != 0 {
+			config.headerBlockTime = rule.BlockSeconds
 			config.hasHeaderBlock = true
-			//limiter.hasBlockTime = true
-			//limiter.blockTime = bs
-			//limiter.nextTime = time.Now().Unix()
+		} else {
+			config.headerBlockTime = 0
+			config.hasHeaderBlock = false
 		}
-		if headerKey, isOk := rule["header"]; isOk {
-			config.headerKey = headerKey
-			//config.headerLmt = &limiter
-		}
-		//if cookie, isOk := rule["cookie"]; isOk {
-		//	config.cookieKey = cookie
-		//	config.cookieLmt = &limiter
-		//}
 
+		if rule.Header != "" {
+			config.headerKey = rule.Header
+
+		}
+		//if rule.Cookie != "" {
+		//	config.cookieKey = rule.Cookie
+		//}
 	}
 	return nil
 }
