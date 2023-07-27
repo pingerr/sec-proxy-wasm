@@ -41,20 +41,29 @@ type MyLimiter struct {
 }
 
 type CCRule struct {
-	Header       string `json:"header"`
-	Qps          int    `json:"qps"`
+	Header       string `json:"header,omitempty"`
+	Qps          int    `json:"qps,omitempty"`
 	Qpm          int    `json:"qpm"`
-	Qpd          int    `json:"qpd"`
-	BlockSeconds int64  `json:"block_seconds"`
-	Cookie       string `json:"cookie"`
+	Qpd          int    `json:"qpd,omitempty"`
+	BlockSeconds int64  `json:"block_seconds,omitempty"`
+	Cookie       string `json:"cookie,omitempty"`
 }
+
+//type CCRule []struct {
+//	Header       string `json:"header,omitempty"`
+//	QPS          int    `json:"qps,omitempty"`
+//	Qpm          int    `json:"qpm"`
+//	Qpd          int    `json:"qpd,omitempty"`
+//	BlockSeconds int    `json:"block_seconds,omitempty"`
+//	Cookie       string `json:"cookie,omitempty"`
+//}
 
 func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
 	result := json.Get("cc_rules").Array()
 
-	for i := range result {
+	for i, item := range result {
 		var rule CCRule
-		err := json2.Unmarshal([]byte(result[i].Raw), &rule)
+		err := json2.Unmarshal([]byte(item.Raw), &rule)
 		if err != nil {
 			log.Errorf("[json parse error: %s]", result[i].Raw)
 		}
