@@ -62,7 +62,8 @@ static_resources:
                           "Include @owasp_crs/PINGER-REQUEST-841-APPLICATION-ATTACK-XSS.conf",
                           "Include @owasp_crs/REQUEST-930-APPLICATION-ATTACK-LFI.conf",
                           "Include @owasp_crs/PINGER-REQUEST-830-APPLICATION-ATTACK-LFI.conf",
-                          "Include @owasp_crs/PINGER-REQUEST-832-APPLICATION-ATTACK-RCE.conf"
+                          "Include @owasp_crs/PINGER-REQUEST-832-APPLICATION-ATTACK-RCE.conf",
+                          "Include @owasp_crs/PINGER-REQUEST-842-APPLICATION-ATTACK-SQLI.conf"
                         ]
                       }
           - name: envoy.filters.http.router
