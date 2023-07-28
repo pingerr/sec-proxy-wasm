@@ -33,11 +33,13 @@ func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
 	for _, ipBlack := range result.Array() {
 		if bytes.IndexByte([]byte(ipBlack.String()), '/') < 0 {
 			if err := config.f.AddIPString(ipBlack.String()); err != nil {
-				return err
+				log.Errorf("[insert ip failed: %s]", ipBlack.String())
+				panic(err)
 			}
 		} else {
 			if err := config.f.AddIPNetString(ipBlack.String()); err != nil {
-				return err
+				log.Errorf("[insert ip failed: %s]", ipBlack.String())
+				panic(err)
 			}
 		}
 	}
