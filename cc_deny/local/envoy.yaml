@@ -50,15 +50,13 @@ static_resources:
                       {
                         "cc_rules": [
                           {
-                            "header": "user-agent",
-                            "qps": 1,
-                            "qpm": 5,
-                            "qpd": 1000,
-                            "block_seconds": 300
+                            "header": "hd1",
+                            "qps": 5,
+                            "qpm": 5
                           },
                           {
                             "cookie": "uid",
-                            "qpm": 100
+                            "qps": 5
                           }
                         ]
                       }
