@@ -59,11 +59,12 @@ type MyLimiter struct {
 
 func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
 	results := json.Get("cc_rules").Array()
-
+	log.Infof("[json]: %s", json.Get("cc_rules").String())
 	for i := range results {
 		curMap := results[i].Map()
-		log.Infof("[ccjson: %s]", results[i].String())
+		//log.Infof("[ccjson: %s]", results[i].String())
 		if qps := curMap["qps"].Int(); qps != 0 {
+			//log.Infof("[qps: %s]", qps)
 			config.qps = qps
 		}
 		if qpm := curMap["qpm"].Int(); qpm != 0 {
@@ -103,6 +104,7 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 		myLimiter.qpm = rate.NewLimiter(rate.Every(time.Second*60), int(config.qpm))
 		myLimiter.hasBlockTime = config.hasHeaderBlock
 		myLimiter.nextTime = now.UnixMilli()
+		config.headerMap[headerValue] = &myLimiter
 		return types.ActionContinue
 	}
 

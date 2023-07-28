@@ -1,7 +1,6 @@
 package radixTree
 
 import (
-	"fmt"
 	"github.com/alibaba/higress/plugins/wasm-go/pkg/wrapper"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
@@ -47,28 +46,29 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config IpConfig, log wrapper.
 	return types.ActionContinue
 }
 
-func RadixTest(ipArr []string) {
-	f := iptree.New()
-	for i := range ipArr {
-		err := f.AddByString(ipArr[i], 1)
-		if err != nil {
-			fmt.Printf("[insert error； %s]", ipArr[i])
-		}
-
-	}
-	err := f.AddByString("1.2.3.4", 1)
-	if err != nil {
-		fmt.Printf("[insert error； %s]", "1.2.3.4")
-	}
-	err1 := f.AddByString("4.2.3.4/8", 1)
-	if err1 != nil {
-		fmt.Printf("[insert error； %s]", "1.2.3.4")
-	}
-
-	ipArr = append(ipArr, "123.123.123.321")
-
-	for i := range ipArr {
-		_, _, _ = f.GetByString(ipArr[i])
-		//fmt.Println(found)
-	}
-}
+//
+//func RadixTest(ipArr []string) {
+//	f := iptree.New()
+//	for i := range ipArr {
+//		err := f.AddByString(ipArr[i], 1)
+//		if err != nil {
+//			fmt.Printf("[insert error； %s]", ipArr[i])
+//		}
+//
+//	}
+//	err := f.AddByString("1.2.3.4", 1)
+//	if err != nil {
+//		fmt.Printf("[insert error； %s]", "1.2.3.4")
+//	}
+//	err1 := f.AddByString("4.2.3.4/8", 1)
+//	if err1 != nil {
+//		fmt.Printf("[insert error； %s]", "1.2.3.4")
+//	}
+//
+//	ipArr = append(ipArr, "123.123.123.321")
+//
+//	for i := range ipArr {
+//		_, _, _ = f.GetByString(ipArr[i])
+//		//fmt.Println(found)
+//	}
+//}
