@@ -7,13 +7,12 @@ import (
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 	"github.com/tidwall/gjson"
-	"strings"
 )
 
 func PluginStart() {
 	wrapper.SetCtx(
 		"waf-deny",
-		//wrapper.ParseConfigBy(parseConfig),
+		wrapper.ParseConfigBy(parseConfig),
 		wrapper.ProcessRequestHeadersBy(onHttpRequestHeaders),
 		//wrapper.ProcessRequestBodyBy(onHttpRequestBody),
 	)
@@ -24,21 +23,21 @@ type WafConfig struct {
 }
 
 func parseConfig(json gjson.Result, config *WafConfig, log wrapper.Log) error {
-	var secRules []string
-	rules := json.Get("secRules").Array()
-	for i := range rules {
-		//rule := item.String()
-		secRules = append(secRules, rules[i].String())
-	}
-	//log.Debugf("[rinfx log] %s", strings.Join(secRules, "\n"))
-	conf := coraza.NewWAFConfig().WithRootFS(root)
-	// error: Failed to load Wasm module due to a missing import: wasi_snapshot_preview1.fd_filestat_get
-	// because without fs.go
-	config.waf, _ = coraza.NewWAF(conf.WithDirectives(strings.Join(secRules, "\n")))
-	//if err != nil {
-	//	//log.Errorf("Failed to create waf conf: %v", err)
-	//	return errors.New("failed to create waf conf")
+	//var secRules []string
+	//rules := json.Get("secRules").Array()
+	//for i := range rules {
+	//	//rule := item.String()
+	//	secRules = append(secRules, rules[i].String())
 	//}
+	////log.Debugf("[rinfx log] %s", strings.Join(secRules, "\n"))
+	//conf := coraza.NewWAFConfig().WithRootFS(root)
+	//// error: Failed to load Wasm module due to a missing import: wasi_snapshot_preview1.fd_filestat_get
+	//// because without fs.go
+	//config.waf, _ = coraza.NewWAF(conf.WithDirectives(strings.Join(secRules, "\n")))
+	////if err != nil {
+	////	//log.Errorf("Failed to create waf conf: %v", err)
+	////	return errors.New("failed to create waf conf")
+	////}
 	return nil
 }
 
