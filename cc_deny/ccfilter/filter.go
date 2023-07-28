@@ -55,8 +55,9 @@ func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
 		}
 		if qpm := curMap["qpm"].Int(); qpm != 0 {
 			config.qpm = qpm
+			log.Infof("[header config success: %s]", qpm)
 		} else {
-			log.Error("[qpm config failed]")
+			log.Info("[qpm config failed]")
 		}
 		//if qpd := curMap["qpd"].Int(); qpd != 0 {
 		//	config.qpd = qpd
@@ -67,10 +68,11 @@ func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
 		//	config.hasHeaderBlock = true
 		//}
 
-		if headerKy := curMap["header"].Str; headerKy != "" {
-			config.headerKey = headerKy
+		if headerKey := curMap["header"].Str; headerKey != "" {
+			config.headerKey = headerKey
+			log.Infof("[header config success: %s]", headerKey)
 		} else {
-			log.Error("[header config failed]")
+			log.Info("[header config failed]")
 		}
 
 		//if rule.Cookie != "" {
