@@ -222,9 +222,18 @@ time used: 7.844235, total requests: 50, passed requests: 50, denied requests: 0
 0.3.3 ip(ipfilter)+waf(curbest+rce-832130,832160,Shellshock|urldecode)
 same
 
-
+2023-07-29 00:01:39 score:35.1000
+registry.cn-hangzhou.aliyuncs.com/docker_learn_pinger/appsec-wasm:0.3.12
 0.3.11 ip(radix)+waf(curbest+rce-832130,832160,Shellshock|urldecode|headers)+cc(bucket)
-
+time="2023-07-28T16:06:30Z" level=info msg="Scanning finished" duration=4m4.827899644s
+[waf deny] waf deny test start
+[waf deny] waf deny test finished, using 254.954001 seconds
+[waf deny] function score is 81.88 , performance score is 25.015333000000002
+/tcdata/start.sh: line 234: 98 Killed envoy -c envoy-ecds.yaml --concurrency 4 --log-level info --component-log-level wasm:debug --log-format "[%Y-%m-%d %T.%f][%t][%l][%n] [%g:%#] %v" --log-path /home/envoy/logs/envoy.log > /home/envoy/logs/access.log
+time used: 7.806839, total requests: 50, passed requests: 43, denied requests: 7, score of case 1: 100
+time used: 7.810537, total requests: 50, passed requests: 45, denied requests: 5, score of case 2: 0
+/tcdata/start.sh: line 370: 1459 Killed envoy -c envoy-ecds.yaml --concurrency 4 --log-level info --component-log-level wasm:debug --log-format "[%Y-%m-%d %T.%f][%t][%l][%n] [%g:%#] %v" --log-path /home/envoy/logs/envoy.log > /home/envoy/logs/access.log
+{'ip_deny': 0.0, 'waf_deny': 47.7611998, 'cc_deny': 40.0}
 
 
 

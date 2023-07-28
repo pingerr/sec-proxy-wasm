@@ -13,9 +13,9 @@ import (
 func PluginStart() {
 	wrapper.SetCtx(
 		"waf-deny",
-		wrapper.ParseConfigBy(parseConfig),
+		//wrapper.ParseConfigBy(parseConfig),
 		wrapper.ProcessRequestHeadersBy(onHttpRequestHeaders),
-		wrapper.ProcessRequestBodyBy(onHttpRequestBody),
+		//wrapper.ProcessRequestBodyBy(onHttpRequestBody),
 	)
 }
 
@@ -43,75 +43,78 @@ func parseConfig(json gjson.Result, config *WafConfig, log wrapper.Log) error {
 }
 
 func onHttpRequestHeaders(ctx wrapper.HttpContext, config WafConfig, log wrapper.Log) types.Action {
-
-	ctx.SetContext("interruptionHandled", false)
-	//ctx.SetContext("processedRequestBody", false)
-	//ctx.SetContext("processedResponseBody", false)
-	tx := config.waf.NewTransaction()
-	ctx.SetContext("tx", tx)
-
-	// Note the pseudo-header :path includes the query.
-	// See https://httpwg.org/specs/rfc9113.html#rfc.section.8.3.1
-	uri, err := proxywasm.GetHttpRequestHeader(":path")
-	if err != nil {
-		return types.ActionContinue
+	if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by waf"), -1); err != nil {
+		panic(err)
 	}
-
-	// This currently relies on Envoy's behavior of mapping all requests to HTTP/2 semantics
-	// and its request properties, but they may not be true of other proxies implementing
-	// proxy-wasm.
-
-	//if tx.IsRuleEngineOff() {
+	return types.ActionContinue
+	//ctx.SetContext("interruptionHandled", false)
+	////ctx.SetContext("processedRequestBody", false)
+	////ctx.SetContext("processedResponseBody", false)
+	//tx := config.waf.NewTransaction()
+	//ctx.SetContext("tx", tx)
+	//
+	//// Note the pseudo-header :path includes the query.
+	//// See https://httpwg.org/specs/rfc9113.html#rfc.section.8.3.1
+	//uri, err := proxywasm.GetHttpRequestHeader(":path")
+	//if err != nil {
 	//	return types.ActionContinue
 	//}
-	// OnHttpRequestHeaders does not terminate if IP/Port retrieve goes wrong
-	srcIP, srcPort := retrieveAddressInfo(log, "source")
-	dstIP, dstPort := retrieveAddressInfo(log, "destination")
-
-	tx.ProcessConnection(srcIP, srcPort, dstIP, dstPort)
-
-	//proxywasm.LogInfof("[rinfx log] OnHttpRequestHeaders, RuleEngine On, url = %s", uri)
-
-	method, err := proxywasm.GetHttpRequestHeader(":method")
-	if err != nil {
-		//log.Error("Failed to get :method")
-		return types.ActionContinue
-	}
-
-	protocol, err := proxywasm.GetProperty([]string{"request", "protocol"})
-	if err != nil {
-		// TODO(anuraaga): HTTP protocol is commonly required in WAF rules, we should probably
-		// fail fast here, but proxytest does not support properties yet.
-		protocol = []byte("HTTP/2.0")
-	}
-
-	ctx.SetContext("httpProtocol", string(protocol))
-
-	tx.ProcessURI(uri, method, string(protocol))
-
-	hs, err := proxywasm.GetHttpRequestHeaders()
-	if err != nil {
-		//log.Error("Failed to get request headers")
-		return types.ActionContinue
-	}
-
-	for _, h := range hs {
-		tx.AddRequestHeader(h[0], h[1])
-	}
-
-	// CRS rules tend to expect Host even with HTTP/2
-	authority, err := proxywasm.GetHttpRequestHeader(":authority")
-	if err == nil {
-		tx.AddRequestHeader("Host", authority)
-		tx.SetServerName(parseServerName(log, authority))
-	}
-
-	interruption := tx.ProcessRequestHeaders()
-	if interruption != nil {
-		return handleInterruption(ctx, "http_request_headers", interruption, log)
-	}
-
-	return types.ActionContinue
+	//
+	//// This currently relies on Envoy's behavior of mapping all requests to HTTP/2 semantics
+	//// and its request properties, but they may not be true of other proxies implementing
+	//// proxy-wasm.
+	//
+	////if tx.IsRuleEngineOff() {
+	////	return types.ActionContinue
+	////}
+	//// OnHttpRequestHeaders does not terminate if IP/Port retrieve goes wrong
+	//srcIP, srcPort := retrieveAddressInfo(log, "source")
+	//dstIP, dstPort := retrieveAddressInfo(log, "destination")
+	//
+	//tx.ProcessConnection(srcIP, srcPort, dstIP, dstPort)
+	//
+	////proxywasm.LogInfof("[rinfx log] OnHttpRequestHeaders, RuleEngine On, url = %s", uri)
+	//
+	//method, err := proxywasm.GetHttpRequestHeader(":method")
+	//if err != nil {
+	//	//log.Error("Failed to get :method")
+	//	return types.ActionContinue
+	//}
+	//
+	//protocol, err := proxywasm.GetProperty([]string{"request", "protocol"})
+	//if err != nil {
+	//	// TODO(anuraaga): HTTP protocol is commonly required in WAF rules, we should probably
+	//	// fail fast here, but proxytest does not support properties yet.
+	//	protocol = []byte("HTTP/2.0")
+	//}
+	//
+	//ctx.SetContext("httpProtocol", string(protocol))
+	//
+	//tx.ProcessURI(uri, method, string(protocol))
+	//
+	//hs, err := proxywasm.GetHttpRequestHeaders()
+	//if err != nil {
+	//	//log.Error("Failed to get request headers")
+	//	return types.ActionContinue
+	//}
+	//
+	//for _, h := range hs {
+	//	tx.AddRequestHeader(h[0], h[1])
+	//}
+	//
+	//// CRS rules tend to expect Host even with HTTP/2
+	//authority, err := proxywasm.GetHttpRequestHeader(":authority")
+	//if err == nil {
+	//	tx.AddRequestHeader("Host", authority)
+	//	tx.SetServerName(parseServerName(log, authority))
+	//}
+	//
+	//interruption := tx.ProcessRequestHeaders()
+	//if interruption != nil {
+	//	return handleInterruption(ctx, "http_request_headers", interruption, log)
+	//}
+	//
+	//return types.ActionContinue
 }
 
 func onHttpRequestBody(ctx wrapper.HttpContext, config WafConfig, body []byte, log wrapper.Log) types.Action {
