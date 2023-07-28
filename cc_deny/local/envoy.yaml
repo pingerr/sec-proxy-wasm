@@ -51,8 +51,8 @@ static_resources:
                         "cc_rules": [
                           {
                             "header": "user-agent",
-                            "qps": 10,
-                            "qpm": 100,
+                            "qps": 1,
+                            "qpm": 5,
                             "qpd": 1000,
                             "block_seconds": 300
                           },
