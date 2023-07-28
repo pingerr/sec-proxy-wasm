@@ -53,12 +53,12 @@ func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
 		} else {
 			log.Error("[qps config failed]")
 		}
-		if qpm := curMap["qpm"].Int(); qpm != 0 {
-			config.qpm = qpm
-			log.Infof("[header config success: %s]", qpm)
-		} else {
-			log.Info("[qpm config failed]")
-		}
+		//if qpm := curMap["qpm"].Int(); qpm != 0 {
+		//	config.qpm = qpm
+		//	log.Infof("[header config success: %s]", qpm)
+		//} else {
+		//	log.Info("[qpm config failed]")
+		//}
 		//if qpd := curMap["qpd"].Int(); qpd != 0 {
 		//	config.qpd = qpd
 		//}
@@ -90,6 +90,7 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 		log.Errorf("[header get error, %s]", config.headerKey)
 		return types.ActionContinue
 	}
+	log.Infof("[headervalue: %s]", headerValue)
 	now := time.Now()
 	limiter, isOk := config.headerMap[headerValue]
 	if !isOk {
@@ -97,9 +98,9 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 		if config.qps != 0 {
 			myLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(config.qps))
 		}
-		if config.qpm != 0 {
-			myLimiter.qpm = rate.NewLimiter(rate.Every(time.Second*60), int(config.qpm))
-		}
+		//if config.qpm != 0 {
+		//	myLimiter.qpm = rate.NewLimiter(rate.Every(time.Second*60), int(config.qpm))
+		//}
 		if config.hasHeaderBlock {
 			myLimiter.hasBlockTime = config.hasHeaderBlock
 			myLimiter.nextTime = now.UnixMilli()
@@ -112,11 +113,11 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 		return types.ActionContinue
 	} else {
-		if limiter.qps == nil && limiter.qpm == nil {
+		if limiter.qps == nil {
 			return types.ActionContinue
 		}
 
-		if !limiter.qps.Allow() || !limiter.qpm.Allow() {
+		if !limiter.qps.Allow() {
 			_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 			if limiter.hasBlockTime {
 				limiter.nextTime = now.UnixMilli() + config.headerBlockTime*1000
