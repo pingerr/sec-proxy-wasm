@@ -21,17 +21,18 @@ func FilterStart() {
 }
 
 func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
-	config.f = iptree.New()
+	t := iptree.New()
 	//获取黑名单配置
 	results := json.Get("ip_blacklist").Array()
 
 	for i := range results {
-		err := config.f.AddByString(results[i].String(), 1)
+		err := t.AddByString(results[i].String(), 1)
 		if err != nil {
 			log.Errorf("[insert cidr error: %s]", results[i].String())
 			panic(err)
 		}
 	}
+	config.f = t
 	return nil
 }
 

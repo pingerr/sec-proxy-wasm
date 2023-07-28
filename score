@@ -223,7 +223,9 @@ time used: 7.844235, total requests: 50, passed requests: 50, denied requests: 0
 same
 
 
-0.3.4 ip(ipfilter)+waf(curbest+rce-832130,832160,Shellshock|urldecode|headers)+cc(denyall)
+0.3.11 ip(radix)+waf(curbest+rce-832130,832160,Shellshock|urldecode|headers)+cc(bucket)
+
+
 
 
 ip
