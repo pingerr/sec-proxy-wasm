@@ -6,6 +6,7 @@ import (
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 	"github.com/tidwall/gjson"
 	"golang.org/x/time/rate"
+	"strings"
 	"time"
 )
 
@@ -131,42 +132,45 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 	if err != nil {
 		return types.ActionContinue
 	}
-	log.Infof("[cookies: %]", cookies)
-	//
+	log.Infof("[cookies: %s]", cookies)
+	cookieValue := strings.Replace(cookies, config.cookieKey+"=", "", -1)
+
 	//if cookieValue, err := proxywasm.GetHttpRequestHeader(config.cookieKey); err != nil {
 	//	log.Errorf("[cookie get error, %s]", config.cookieKey)
-	//} else {
-	//	log.Infof("[cookieValue: %s]", cookieValue)
-	//	cLimiter, isOk := config.cookieMap[cookieValue]
-	//	if !isOk {
-	//		var newCLimiter MyLimiter
-	//		if config.headerQps != 0 {
-	//			newCLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(config.cookieQps))
-	//		}
-	//		//if config.headerQpd != 0 {
-	//		//	myLimiter.qpm = rate.NewLimiter(rate.Every(time.Second*60), int(config.headerQpm))
-	//		//}
-	//		//if config.hasHeaderBlock {
-	//		//	myLimiter.hasBlockTime = config.hasHeaderBlock
-	//		//	myLimiter.nextTime = now.UnixMilli()
-	//		//}
-	//		config.headerMap[cookieValue] = &newCLimiter
-	//	} else {
-	//		if cLimiter.hasBlockTime && now.UnixMilli() < cLimiter.nextTime {
-	//			_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-	//			return types.ActionContinue
-	//		}
-	//
-	//		if cLimiter.qps != nil && !cLimiter.qps.Allow() {
-	//			_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-	//			//if limiter.hasBlockTime {
-	//			//	limiter.nextTime = now.UnixMilli() + config.headerBlockTime*1000
-	//			//	log.Infof("[block time : %s ms]", config.headerBlockTime*1000)
-	//			//}
-	//			return types.ActionContinue
-	//		}
-	//	}
-	//}
+	if cookieValue == "" {
+		log.Errorf("[cookieValue is null, %s]")
+	} else {
+		log.Infof("[cookieValue: %s]", cookieValue)
+		cLimiter, isOk := config.cookieMap[cookieValue]
+		if !isOk {
+			var newCLimiter MyLimiter
+			if config.headerQps != 0 {
+				newCLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(config.cookieQps))
+			}
+			//if config.headerQpd != 0 {
+			//	myLimiter.qpm = rate.NewLimiter(rate.Every(time.Second*60), int(config.headerQpm))
+			//}
+			//if config.hasHeaderBlock {
+			//	myLimiter.hasBlockTime = config.hasHeaderBlock
+			//	myLimiter.nextTime = now.UnixMilli()
+			//}
+			config.headerMap[cookieValue] = &newCLimiter
+		} else {
+			if cLimiter.hasBlockTime && now.UnixMilli() < cLimiter.nextTime {
+				_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+				return types.ActionContinue
+			}
+
+			if cLimiter.qps != nil && !cLimiter.qps.Allow() {
+				_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+				//if limiter.hasBlockTime {
+				//	limiter.nextTime = now.UnixMilli() + config.headerBlockTime*1000
+				//	log.Infof("[block time : %s ms]", config.headerBlockTime*1000)
+				//}
+				return types.ActionContinue
+			}
+		}
+	}
 
 	return types.ActionContinue
 }
