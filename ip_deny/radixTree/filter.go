@@ -27,9 +27,10 @@ func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
 	result := json.Get("ip_blacklist").Array()
 
 	for i := range result {
-		err := config.f.AddByString(result[i].Str, 1)
+		err := config.f.AddByString(result[i].String(), 1)
 		if err != nil {
-			log.Errorf("[insert cidr error: %s]", result[i].Str)
+			log.Errorf("[insert cidr error: %s]", result[i].String())
+			panic(err)
 		}
 	}
 	return nil
