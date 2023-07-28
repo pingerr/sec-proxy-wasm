@@ -15,7 +15,7 @@ func PluginStart() {
 		"waf-deny",
 		wrapper.ParseConfigBy(parseConfig),
 		wrapper.ProcessRequestHeadersBy(onHttpRequestHeaders),
-		//wrapper.ProcessRequestBodyBy(onHttpRequestBody),
+		wrapper.ProcessRequestBodyBy(onHttpRequestBody),
 	)
 }
 

@@ -44,7 +44,7 @@ type MyLimiter struct {
 
 func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
 	results := json.Get("cc_rules").Array()
-	log.Infof("[json]: %s", json.Get("cc_rules").String())
+	//log.Infof("[json]: %s", json.Get("cc_rules").String())
 	config.headerMap = make(map[string]*MyLimiter)
 	config.cookieMap = make(map[string]*MyLimiter)
 	for i := range results {
@@ -55,32 +55,32 @@ func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
 		//}
 		if headerKey := curMap["header"].Str; headerKey != "" {
 			config.headerKey = headerKey
-			log.Infof("[header config success: %s]", headerKey)
+			//log.Infof("[header config success: %s]", headerKey)
 			if qps := curMap["qps"].Int(); qps != 0 {
 				config.headerQps = qps
 			} else {
-				log.Error("[qps config failed]")
+				//log.Error("[qps config failed]")
 			}
 			if qpm := curMap["qpm"].Int(); qpm != 0 {
 				config.headerQpm = qpm
 			} else {
-				log.Info("[qpm config failed]")
+				//log.Info("[qpm config failed]")
 			}
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
 				config.headerQpd = qpd
 			}
 		} else if cookieKey := curMap["cookie"].Str; cookieKey != "" {
 			config.cookieKey = cookieKey
-			log.Infof("[cookie config success: %s]", cookieKey)
+			//log.Infof("[cookie config success: %s]", cookieKey)
 			if qps := curMap["qps"].Int(); qps != 0 {
 				config.cookieQps = qps
 			} else {
-				log.Error("[qps config failed]")
+				//log.Error("[qps config failed]")
 			}
 			if qpm := curMap["qpm"].Int(); qpm != 0 {
 				config.cookieQpm = qpm
 			} else {
-				log.Info("[qpm config failed]")
+				//log.Info("[qpm config failed]")
 			}
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
 				config.cookieQpd = qpd
@@ -94,9 +94,9 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 	now := time.Now()
 
 	if headerValue, err := proxywasm.GetHttpRequestHeader(config.headerKey); err != nil {
-		log.Errorf("[header get error, %s]", config.headerKey)
+		//log.Errorf("[header get error, %s]", config.headerKey)
 	} else {
-		log.Infof("[headerValue: %s]", headerValue)
+		//log.Infof("[headerValue: %s]", headerValue)
 		hLimiter, isOk := config.headerMap[headerValue]
 		if !isOk {
 			var newHLimiter MyLimiter
@@ -127,7 +127,6 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 			}
 		}
 	}
-
 	cookies, err := proxywasm.GetHttpRequestHeader("cookie")
 	if err != nil {
 		return types.ActionContinue
