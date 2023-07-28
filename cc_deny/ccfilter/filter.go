@@ -28,7 +28,7 @@ type CCConfig struct {
 	hasHeaderBlock  bool
 	hasCookieBlock  bool
 	headerMap       map[string]*MyLimiter
-	cookieLmt       map[string]*MyLimiter
+	cookieMap       map[string]*MyLimiter
 }
 
 type MyLimiter struct {
@@ -60,6 +60,8 @@ type MyLimiter struct {
 func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
 	results := json.Get("cc_rules").Array()
 	log.Infof("[json]: %s", json.Get("cc_rules").String())
+	config.headerMap = make(map[string]*MyLimiter)
+	config.cookieMap = make(map[string]*MyLimiter)
 	for i := range results {
 		curMap := results[i].Map()
 		//log.Infof("[ccjson: %s]", results[i].String())
@@ -87,6 +89,7 @@ func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
 		//	config.cookieKey = rule.Cookie
 		//}
 	}
+
 	return nil
 }
 
