@@ -133,18 +133,17 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 		return types.ActionContinue
 	}
 	log.Infof("[cookies: %s]", cookies)
-	cookieValue := strings.Replace(cookies, config.cookieKey+"=", "", -1)
-
+	uid := strings.Replace(cookies, config.cookieKey+"=", "", -1)
 	//if cookieValue, err := proxywasm.GetHttpRequestHeader(config.cookieKey); err != nil {
 	//	log.Errorf("[cookie get error, %s]", config.cookieKey)
-	if cookieValue == "" {
-		log.Errorf("[cookieValue is null, %s]")
+	if uid == "" {
+		log.Errorf("[uid is null, %s]")
 	} else {
-		log.Infof("[cookieValue: %s]", cookieValue)
-		cLimiter, isOk := config.cookieMap[cookieValue]
+		log.Infof("[uid: %s]", uid)
+		cLimiter, isOk := config.cookieMap[uid]
 		if !isOk {
 			var newCLimiter MyLimiter
-			if config.headerQps != 0 {
+			if config.cookieQps != 0 {
 				newCLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(config.cookieQps))
 			}
 			//if config.headerQpd != 0 {
@@ -154,7 +153,7 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 			//	myLimiter.hasBlockTime = config.hasHeaderBlock
 			//	myLimiter.nextTime = now.UnixMilli()
 			//}
-			config.headerMap[cookieValue] = &newCLimiter
+			config.cookieMap[uid] = &newCLimiter
 		} else {
 			if cLimiter.hasBlockTime && now.UnixMilli() < cLimiter.nextTime {
 				_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
