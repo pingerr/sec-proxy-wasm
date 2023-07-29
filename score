@@ -235,6 +235,18 @@ time used: 7.810537, total requests: 50, passed requests: 45, denied requests: 5
 /tcdata/start.sh: line 370: 1459 Killed envoy -c envoy-ecds.yaml --concurrency 4 --log-level info --component-log-level wasm:debug --log-format "[%Y-%m-%d %T.%f][%t][%l][%n] [%g:%#] %v" --log-path /home/envoy/logs/envoy.log > /home/envoy/logs/access.log
 {'ip_deny': 0.0, 'waf_deny': 47.7611998, 'cc_deny': 40.0}
 
+2023-07-29 10:19:43 score:51.2100
+0.3.14 cc(bucket)+ip(radix)+waf(best+libsqli)
+total requests: 1000, denied requests: 0
+[ip deny] exsit ip not been blocked, so your ip deny score is 0
+time="2023-07-29T02:24:36Z" level=info msg="Scanning finished" duration=4m6.424647695s
+[waf deny] waf deny test finished, using 256.588761 seconds
+[waf deny] function score is 83.37 , performance score is 24.470413000000008
+/tcdata/start.sh: line 234: 98 Killed envoy -c envoy-ecds.yaml --concurrency 4 --log-level info --component-log-level wasm:debug --log-format "[%Y-%m-%d %T.%f][%t][%l][%n] [%g:%#] %v" --log-path /home/envoy/logs/envoy.log > /home/envoy/logs/access.log
+time used: 7.829, total requests: 50, passed requests: 43, denied requests: 7, score of case 1: 100
+time used: 7.831387, total requests: 50, passed requests: 41, denied requests: 9, score of case 2: 100
+/tcdata/start.sh: line 370: 1445 Killed envoy -c envoy-ecds.yaml --concurrency 4 --log-level info --component-log-level wasm:debug --log-format "[%Y-%m-%d %T.%f][%t][%l][%n] [%g:%#] %v" --log-path /home/envoy/logs/envoy.log > /home/envoy/logs/access.log
+{'ip_deny': 0.0, 'waf_deny': 48.03024780000001, 'cc_deny': 80.0}
 
 
 ip
