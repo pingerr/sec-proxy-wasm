@@ -93,41 +93,36 @@ func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
 
 func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.Log) types.Action {
 	now := time.Now()
+	headerValue, _ := proxywasm.GetHttpRequestHeader(config.headerKey)
 
-	//if headerValue, err := proxywasm.GetHttpRequestHeader(config.headerKey); err != nil {
-	//	//log.Errorf("[header get error, %s]", config.headerKey)
-	//} else {
-	//	//log.Infof("[headerValue: %s]", headerValue)
-	//	hLimiter, isOk := config.headerMap[headerValue]
-	//	if !isOk {
-	//		var newHLimiter MyLimiter
-	//		if config.headerQps != 0 {
-	//			newHLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(config.headerQps))
-	//		}
-	//		//if config.headerQpd != 0 {
-	//		//	myLimiter.qpm = rate.NewLimiter(rate.Every(time.Second*60), int(config.headerQpm))
-	//		//}
-	//		//if config.hasHeaderBlock {
-	//		//	myLimiter.hasBlockTime = config.hasHeaderBlock
-	//		//	myLimiter.nextTime = now.UnixMilli()
-	//		//}
-	//		config.headerMap[headerValue] = &newHLimiter
-	//	} else {
-	//		if hLimiter.hasBlockTime && now.UnixMilli() < hLimiter.nextTime {
-	//			_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-	//			return types.ActionContinue
-	//		}
-	//
-	//		if hLimiter.qps != nil && !hLimiter.qps.Allow() {
-	//			_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-	//			//if limiter.hasBlockTime {
-	//			//	limiter.nextTime = now.UnixMilli() + config.headerBlockTime*1000
-	//			//	log.Infof("[block time : %s ms]", config.headerBlockTime*1000)
-	//			//}
-	//			return types.ActionContinue
-	//		}
-	//	}
-	//}
+	if headerValue != "" {
+		//log.Infof("[headerValue: %s]", headerValue)
+		hLimiter, isOk := config.headerMap[headerValue]
+		if !isOk {
+			var newHLimiter MyLimiter
+			if config.headerQps != 0 {
+				newHLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(config.headerQps))
+			}
+			//if config.headerQpd != 0 {
+			//	myLimiter.qpm = rate.NewLimiter(rate.Every(time.Second*60), int(config.headerQpm))
+			//}
+			//if config.hasHeaderBlock {
+			//	myLimiter.hasBlockTime = config.hasHeaderBlock
+			//	myLimiter.nextTime = now.UnixMilli()
+			//}
+			config.headerMap[headerValue] = &newHLimiter
+		} else {
+			if hLimiter.hasBlockTime && now.UnixMilli() < hLimiter.nextTime {
+				_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+			} else if hLimiter.qps != nil && !hLimiter.qps.Allow() {
+				_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+				//if limiter.hasBlockTime {
+				//	limiter.nextTime = now.UnixMilli() + config.headerBlockTime*1000
+				//	log.Infof("[block time : %s ms]", config.headerBlockTime*1000)
+				//}
+			}
+		}
+	}
 	cookies, err := proxywasm.GetHttpRequestHeader("cookie")
 	if err != nil {
 		return types.ActionContinue
@@ -158,15 +153,12 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 			if cLimiter.hasBlockTime && now.UnixMilli() < cLimiter.nextTime {
 				_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 				return types.ActionContinue
-			}
-
-			if cLimiter.qps != nil && !cLimiter.qps.Allow() {
+			} else if cLimiter.qps != nil && !cLimiter.qps.Allow() {
 				_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 				//if limiter.hasBlockTime {
 				//	limiter.nextTime = now.UnixMilli() + config.headerBlockTime*1000
 				//	log.Infof("[block time : %s ms]", config.headerBlockTime*1000)
 				//}
-				return types.ActionContinue
 			}
 		}
 	}
