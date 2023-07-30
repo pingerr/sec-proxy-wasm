@@ -39,7 +39,7 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config IpConfig, log wrapper.
 
 	xRealIp, _ := proxywasm.GetHttpRequestHeader("x-real-ip")
 
-	if v, err := config.f.FindCIDR(xRealIp); err == nil && v != 1 {
+	if v, err := config.f.FindCIDR(xRealIp); err == nil && v == 1 {
 		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by ip"), -1)
 	}
 
