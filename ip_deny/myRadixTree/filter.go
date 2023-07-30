@@ -28,7 +28,7 @@ func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
 		err := t.SetCIDR(results[i].String(), 1)
 		if err != nil {
 			log.Errorf("[insert cidr error: %s]", results[i].String())
-			//panic(err)
+			panic(err)
 		}
 	}
 	config.f = t
