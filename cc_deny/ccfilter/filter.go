@@ -100,6 +100,7 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 	headerValue, _ := proxywasm.GetHttpRequestHeader(config.headerKey)
 
 	mu.Lock()
+	defer mu.Unlock()
 	if headerValue != "" {
 		//log.Infof("[headerValue: %s]", headerValue)
 		hLimiter, isOk := config.headerMap[headerValue]
@@ -166,7 +167,6 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 			}
 		}
 	}
-	mu.Unlock()
 
 	return types.ActionContinue
 }
