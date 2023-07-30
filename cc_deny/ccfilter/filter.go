@@ -19,6 +19,8 @@ func PluginStart() {
 	)
 }
 
+var mu sync.Mutex
+
 type CCConfig struct {
 	headerKey       string
 	cookieKey       string
@@ -33,7 +35,6 @@ type CCConfig struct {
 	hasHeaderBlock  bool
 	hasCookieBlock  bool
 
-	mu        *sync.Mutex
 	headerMap map[string]*MyLimiter
 	cookieMap map[string]*MyLimiter
 }
@@ -98,7 +99,7 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 	now := time.Now()
 	headerValue, _ := proxywasm.GetHttpRequestHeader(config.headerKey)
 
-	config.mu.Lock()
+	mu.Lock()
 	if headerValue != "" {
 		//log.Infof("[headerValue: %s]", headerValue)
 		hLimiter, isOk := config.headerMap[headerValue]
@@ -165,7 +166,7 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 			}
 		}
 	}
-	config.mu.Unlock()
+	mu.Unlock()
 
 	return types.ActionContinue
 }
