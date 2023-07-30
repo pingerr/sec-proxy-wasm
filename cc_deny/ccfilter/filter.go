@@ -7,6 +7,7 @@ import (
 	"github.com/tidwall/gjson"
 	"golang.org/x/time/rate"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -31,8 +32,10 @@ type CCConfig struct {
 	cookieBlockTime int64
 	hasHeaderBlock  bool
 	hasCookieBlock  bool
-	headerMap       map[string]*MyLimiter
-	cookieMap       map[string]*MyLimiter
+
+	mu        *sync.Mutex
+	headerMap map[string]*MyLimiter
+	cookieMap map[string]*MyLimiter
 }
 
 type MyLimiter struct {
@@ -95,6 +98,7 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 	now := time.Now()
 	headerValue, _ := proxywasm.GetHttpRequestHeader(config.headerKey)
 
+	config.mu.Lock()
 	if headerValue != "" {
 		//log.Infof("[headerValue: %s]", headerValue)
 		hLimiter, isOk := config.headerMap[headerValue]
@@ -152,7 +156,6 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 		} else {
 			if cLimiter.hasBlockTime && now.UnixMilli() < cLimiter.nextTime {
 				_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-				return types.ActionContinue
 			} else if cLimiter.qps != nil && !cLimiter.qps.Allow() {
 				_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 				//if limiter.hasBlockTime {
@@ -162,6 +165,7 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 			}
 		}
 	}
+	config.mu.Unlock()
 
 	return types.ActionContinue
 }
