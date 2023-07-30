@@ -1,7 +1,7 @@
 package main
 
 import (
-	"ip_deny/radixTree"
+	"ip_deny/myRadixTree"
 )
 
 //"ip_deny/cuckoofilter"
@@ -11,5 +11,6 @@ func main() {
 	//ipfilter.FilterStart()
 	//cuckoofilter.FilterStart()
 	//cidranger.FilterStart()
-	radixTree.FilterStart()
+	//radixTree.FilterStart()
+	myRadixTree.FilterStart()
 }
