@@ -1,10 +1,10 @@
 package main
 
 import (
-	"cc_deny/ccfiltermuli"
+	"cc_deny/ccfiltershare"
 )
 
 func main() {
 	//ccfilter.PluginStart()
-	ccfiltermuli.PluginStart()
+	ccfiltershare.PluginStart()
 }
