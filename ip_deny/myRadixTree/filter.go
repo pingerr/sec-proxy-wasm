@@ -1,15 +1,14 @@
-package radixTree
+package myRadixTree
 
 import (
 	"github.com/alibaba/higress/plugins/wasm-go/pkg/wrapper"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 	"github.com/tidwall/gjson"
-	"github.com/zmap/go-iptree/iptree"
 )
 
 type IpConfig struct {
-	f *iptree.IPTree
+	f *Tree
 }
 
 func FilterStart() {
@@ -21,12 +20,12 @@ func FilterStart() {
 }
 
 func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
-	t := iptree.New()
+	t := NewTree(0)
 	//获取黑名单配置
 	results := json.Get("ip_blacklist").Array()
 
 	for i := range results {
-		err := t.AddByString(results[i].String(), 1)
+		err := t.SetCIDR(results[i].String(), 1)
 		if err != nil {
 			log.Errorf("[insert cidr error: %s]", results[i].String())
 			//panic(err)
@@ -40,35 +39,9 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config IpConfig, log wrapper.
 
 	xRealIp, _ := proxywasm.GetHttpRequestHeader("x-real-ip")
 
-	if _, found, err := config.f.GetByString(xRealIp); err == nil && found {
+	if v, err := config.f.FindCIDR(xRealIp); err == nil && v != 1 {
 		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by ip"), -1)
 	}
 
 	return types.ActionContinue
-}
-
-func RadixTest(ipArr []string) {
-	f := iptree.New()
-	for i := range ipArr {
-		err := f.AddByString(ipArr[i], 1)
-		if err != nil {
-			//fmt.Printf("[insert error； %s]", ipArr[i])
-		}
-
-	}
-	err := f.AddByString("1.2.3.4", 1)
-	if err != nil {
-		//fmt.Printf("[insert error； %s]", "1.2.3.4")
-	}
-	err1 := f.AddByString("4.2.3.4/8", 1)
-	if err1 != nil {
-		//fmt.Printf("[insert error； %s]", "1.2.3.4")
-	}
-
-	ipArr = append(ipArr, "123.123.123.321")
-
-	for i := range ipArr {
-		_, _, _ = f.GetByString(ipArr[i])
-		//fmt.Println(found)
-	}
 }
