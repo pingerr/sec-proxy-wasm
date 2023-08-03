@@ -63,13 +63,9 @@ func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
 			//log.Infof("[header config success: %s]", headerKey)
 			if qps := curMap["qps"].Int(); qps != 0 {
 				config.headerQps = qps
-			} else {
-				//log.Error("[qps config failed]")
 			}
 			if qpm := curMap["qpm"].Int(); qpm != 0 {
 				config.headerQpm = qpm
-			} else {
-				//log.Info("[qpm config failed]")
 			}
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
 				config.headerQpd = qpd
@@ -79,13 +75,9 @@ func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
 			//log.Infof("[cookie config success: %s]", cookieKey)
 			if qps := curMap["qps"].Int(); qps != 0 {
 				config.cookieQps = qps
-			} else {
-				//log.Error("[qps config failed]")
 			}
 			if qpm := curMap["qpm"].Int(); qpm != 0 {
 				config.cookieQpm = qpm
-			} else {
-				//log.Info("[qpm config failed]")
 			}
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
 				config.cookieQpd = qpd
@@ -133,14 +125,12 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config CCConfig, log wrapper.
 	if err != nil {
 		return types.ActionContinue
 	}
-	log.Infof("[cookies: %s]", cookies)
+	//log.Infof("[cookies: %s]", cookies)
 	uid := strings.Replace(cookies, config.cookieKey+"=", "", -1)
 	//if cookieValue, err := proxywasm.GetHttpRequestHeader(config.cookieKey); err != nil {
 	//	log.Errorf("[cookie get error, %s]", config.cookieKey)
-	if uid == "" {
-		log.Errorf("[uid is null, %s]")
-	} else {
-		log.Infof("[uid: %s]", uid)
+	if uid != "" {
+		//log.Infof("[uid: %s]", uid)
 		cLimiter, isOk := config.cookieMap[uid]
 		if !isOk {
 			var newCLimiter MyLimiter

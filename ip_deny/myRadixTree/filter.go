@@ -45,3 +45,29 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config IpConfig, log wrapper.
 
 	return types.ActionContinue
 }
+
+func RadixTest(ipArr []string) {
+	f := NewTree(0)
+	for i := range ipArr {
+		err := f.SetCIDR(ipArr[i], 1)
+		if err != nil {
+			//fmt.Printf("[insert error； %s]", ipArr[i])
+		}
+
+	}
+	err := f.SetCIDR("1.2.3.4", 1)
+	if err != nil {
+		//fmt.Printf("[insert error； %s]", "1.2.3.4")
+	}
+	err1 := f.SetCIDR("4.2.3.4/8", 1)
+	if err1 != nil {
+		//fmt.Printf("[insert error； %s]", "1.2.3.4")
+	}
+
+	ipArr = append(ipArr, "123.123.123.321")
+
+	for i := range ipArr {
+		_, _ = f.FindCIDR(ipArr[i])
+		//fmt.Println(found)
+	}
+}
