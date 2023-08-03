@@ -1,10 +1,8 @@
 package pingerPlugins
 
-/*
-#cgo LDFLAGS: libpcre_linux.a
-#include <pcre.h>
-#include <string.h>
-*/
+// #cgo CFLAGS: -I /usr/lib64
+// #include <pcre.h>
+// #include <string.h>
 import "C"
 
 import (
