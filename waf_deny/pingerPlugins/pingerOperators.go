@@ -5,6 +5,8 @@ import (
 	"github.com/GRbit/go-pcre"
 	"github.com/corazawaf/coraza/v3/experimental/plugins"
 	"github.com/corazawaf/coraza/v3/experimental/plugins/plugintypes"
+	//"github.com/GRbit/go-pcre"
+	_ "waf_deny/pingerPlugins/utils"
 )
 
 type rx struct {
