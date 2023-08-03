@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"github.com/corazawaf/coraza/v3/experimental/plugins"
 	"github.com/corazawaf/coraza/v3/experimental/plugins/plugintypes"
+	"waf_deny/pingerPlugins/go-pcre"
 	//"github.com/rubrikinc/go-pcre"
 )
 
 type rx struct {
-	re Regexp
+	re pcre.Regexp
 }
 
 var _ plugintypes.Operator = (*rx)(nil)
@@ -18,7 +19,7 @@ func newRX(options plugintypes.OperatorOptions) (plugintypes.Operator, error) {
 	data := fmt.Sprintf("(?sm)%s", options.Arguments)
 
 	//var re *pcre.Regexp
-	re := MustCompile(data, 0)
+	re := pcre.MustCompile(data, 0)
 	//re := pcre.MustCompile(data, 0)
 
 	return &rx{re: re}, nil
@@ -26,7 +27,7 @@ func newRX(options plugintypes.OperatorOptions) (plugintypes.Operator, error) {
 
 func (o *rx) Evaluate(tx plugintypes.TransactionState, value string) bool {
 
-	return o.re.MatchString(value, 0)
+	return o.re.MatcherString(value, 0).Matches()
 
 }
 
