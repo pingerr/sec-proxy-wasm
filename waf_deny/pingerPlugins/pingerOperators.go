@@ -2,15 +2,12 @@ package pingerPlugins
 
 import (
 	"fmt"
-	"github.com/GRbit/go-pcre"
 	"github.com/corazawaf/coraza/v3/experimental/plugins"
 	"github.com/corazawaf/coraza/v3/experimental/plugins/plugintypes"
-	//"github.com/GRbit/go-pcre"
-	_ "waf_deny/pingerPlugins/utils"
 )
 
 type rx struct {
-	re pcre.Regexp
+	re Regexp
 }
 
 var _ plugintypes.Operator = (*rx)(nil)
@@ -20,7 +17,7 @@ func newRX(options plugintypes.OperatorOptions) (plugintypes.Operator, error) {
 	data := fmt.Sprintf("(?sm)%s", options.Arguments)
 
 	//var re *pcre.Regexp
-	re := pcre.MustCompile(data, 0)
+	re := MustCompile(data, 0)
 	//re := pcre.MustCompile(data, 0)
 
 	return &rx{re: re}, nil

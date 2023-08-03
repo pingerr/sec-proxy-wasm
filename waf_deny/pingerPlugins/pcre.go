@@ -1,4 +1,4 @@
-package utils
+package pingerPlugins
 
 /*
 #cgo pkg-config: pcre
