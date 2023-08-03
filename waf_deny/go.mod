@@ -3,22 +3,23 @@ module waf_deny
 go 1.19
 
 require (
+	github.com/Godyu97/vegePcre v1.0.14
 	github.com/alibaba/higress/plugins/wasm-go v0.0.0-20230708135159-28892cf3ae0f
 	github.com/corazawaf/coraza-wasilibs v0.0.0-20230620081031-05a5097dbea3
 	github.com/corazawaf/coraza/v3 v3.0.2
 	github.com/tetratelabs/proxy-wasm-go-sdk v0.22.0
 	github.com/tidwall/gjson v1.14.4
 	github.com/wasilibs/nottinygc v0.2.0
-	go.elara.ws/pcre v0.0.0-20230727164457-107b5db1fb8d
 )
 
 require (
 	github.com/corazawaf/libinjection-go v0.1.2 // indirect
+	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/magefile/mage v1.15.0 // indirect
-	github.com/mattn/go-isatty v0.0.12 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/petar-dambovaliev/aho-corasick v0.0.0-20211021192214-5ab2d9280aa9 // indirect
-	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
+	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/tetratelabs/wazero v1.2.1 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
@@ -27,8 +28,8 @@ require (
 	github.com/wasilibs/go-re2 v1.2.0 // indirect
 	golang.org/x/net v0.11.0 // indirect
 	golang.org/x/sys v0.9.0 // indirect
-	modernc.org/libc v1.16.8 // indirect
-	modernc.org/mathutil v1.4.1 // indirect
-	modernc.org/memory v1.1.1 // indirect
+	modernc.org/libc v1.22.6 // indirect
+	modernc.org/mathutil v1.5.0 // indirect
+	modernc.org/memory v1.5.0 // indirect
 	rsc.io/binaryregexp v0.2.0 // indirect
 )

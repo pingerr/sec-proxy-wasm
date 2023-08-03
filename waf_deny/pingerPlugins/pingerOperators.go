@@ -2,12 +2,13 @@ package pingerPlugins
 
 import (
 	"fmt"
+	"github.com/Godyu97/vegePcre/pcre2"
 	"github.com/corazawaf/coraza/v3/experimental/plugins"
 	"github.com/corazawaf/coraza/v3/experimental/plugins/plugintypes"
 )
 
 type rx struct {
-	re Regexp
+	re *pcre2.Regexp
 }
 
 var _ plugintypes.Operator = (*rx)(nil)
@@ -17,15 +18,15 @@ func newRX(options plugintypes.OperatorOptions) (plugintypes.Operator, error) {
 	data := fmt.Sprintf("(?sm)%s", options.Arguments)
 
 	//var re *pcre.Regexp
-	//re := pcre.MustCompile(data, 0)
-	re := MustCompile(data, 0)
+	re := pcre2.MustCompile(data)
+	//re := MustCompile(data, 0)
 
 	return &rx{re: re}, nil
 }
 
 func (o *rx) Evaluate(tx plugintypes.TransactionState, value string) bool {
 
-	return o.re.MatchString(value, 0)
+	return o.re.MatchString(value)
 
 }
 
