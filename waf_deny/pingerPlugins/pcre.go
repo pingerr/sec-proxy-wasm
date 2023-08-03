@@ -1,6 +1,6 @@
 package pingerPlugins
 
-// #cgo LDFLAGS: -I /usr/lib64
+// #cgo LDFLAGS: -L /usr/lib64
 // #cgo CFLAGS: -I /usr/include
 // #include <pcre.h>
 // #include <string.h>
