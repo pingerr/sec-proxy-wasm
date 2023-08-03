@@ -1,7 +1,7 @@
 package pingerPlugins
 
 /*
-#cgo pkg-config: pcre
+#cgo LDFLAGS: libpcre_linux.a
 #include <pcre.h>
 #include <string.h>
 */
