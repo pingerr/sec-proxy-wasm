@@ -249,9 +249,18 @@ time used: 7.831387, total requests: 50, passed requests: 41, denied requests: 9
 {'ip_deny': 0.0, 'waf_deny': 48.03024780000001, 'cc_deny': 80.0}
 
 
-
-
-
+2023-08-01 16:35:45 score:68.2500
+0.3.18 cc(bucket,lock)+ip(radix)+waf(best+libsqli)
+total requests: 1200, denied requests: 1200
+[ip deny] white test, total 100 requests, you deny 3 requests
+[ip deny] ip deny test finished, using 1.444735 seconds
+[ip deny] function score: 100, performance score: 81.1053
+time="2023-08-01T08:40:42Z" level=info msg="Scanning finished" duration=4m6.212508054s
+[waf deny] waf deny test finished, using 256.235907 seconds
+[waf deny] function score is 83.37 , performance score is 24.588031
+time used: 7.806499, total requests: 50, passed requests: 44, denied requests: 6, score of case 1: 100
+time used: 7.809648, total requests: 50, passed requests: 42, denied requests: 8, score of case 2: 100
+{'ip_deny': 85.06317999999999, 'waf_deny': 48.100818600000004, 'cc_deny': 80.0}
 ip
     hash表
     radix树

@@ -6,7 +6,7 @@ require (
 	github.com/alibaba/higress/plugins/wasm-go v0.0.0-20230708135159-28892cf3ae0f
 	github.com/corazawaf/coraza-wasilibs v0.0.0-20230620081031-05a5097dbea3
 	github.com/corazawaf/coraza/v3 v3.0.2
-	github.com/gijsbers/go-pcre v0.0.0-20161214203829-a84f3096ab3c
+	github.com/glenn-brown/golang-pkg-pcre v0.0.0-20120522223659-48bb82a8b8ce
 	github.com/tetratelabs/proxy-wasm-go-sdk v0.22.0
 	github.com/tidwall/gjson v1.14.4
 	github.com/wasilibs/nottinygc v0.2.0

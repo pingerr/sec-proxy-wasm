@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/corazawaf/coraza/v3/experimental/plugins"
 	"github.com/corazawaf/coraza/v3/experimental/plugins/plugintypes"
-	"github.com/gijsbers/go-pcre"
+	"github.com/glenn-brown/golang-pkg-pcre/src/pkg/pcre"
 )
 
 type rx struct {
@@ -14,18 +14,13 @@ type rx struct {
 var _ plugintypes.Operator = (*rx)(nil)
 
 func newRX(options plugintypes.OperatorOptions) (plugintypes.Operator, error) {
-	// (?sm) enables multiline mode which makes 942522-7 work, see
-	// - https://stackoverflow.com/a/27680233
-	// - https://groups.google.com/g/golang-nuts/c/jiVdamGFU9E
+
 	data := fmt.Sprintf("(?sm)%s", options.Arguments)
 
 	var re pcre.Regexp
-	var err error
 
-	re, err = pcre.Compile(data, pcre.DOTALL|pcre.DOLLAR_ENDONLY)
-	if err != nil {
-		return nil, err
-	}
+	re = pcre.MustCompile(data, 0)
+
 	return &rx{re: re}, nil
 }
 
