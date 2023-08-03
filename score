@@ -249,6 +249,9 @@ time used: 7.831387, total requests: 50, passed requests: 41, denied requests: 9
 {'ip_deny': 0.0, 'waf_deny': 48.03024780000001, 'cc_deny': 80.0}
 
 
+
+
+
 ip
     hash表
     radix树
