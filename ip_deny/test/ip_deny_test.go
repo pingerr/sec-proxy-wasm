@@ -3,7 +3,7 @@ package test
 import (
 	"bufio"
 	"fmt"
-	"ip_deny/cidranger"
+	"ip_deny/myRadixTree"
 	"os"
 	"testing"
 )
@@ -27,10 +27,10 @@ func BenchmarkIp(b *testing.B) {
 	}
 
 	for n := 0; n < b.N; n++ {
-		cidranger.CidrangerTest(ipArr) // BenchmarkIp-4                302           3414727 ns/op          801432 B/op      43729 allocs/op
+		//cidranger.CidrangerTest(ipArr) // BenchmarkIp-4                302           3414727 ns/op          801432 B/op      43729 allocs/op
 		//radixTree.RadixTest(ipArr) // BenchmarkIp-4               2467            533437 ns/op          639043 B/op         13 allocs/op
-		//myRadixTree.RadixTest(ipArr) //BenchmarkIp-4               2241            527007 ns/op          639045 B/op         13 allocs/op
-		//art.RadixTest(ipArr)
+		myRadixTree.RadixTest(ipArr) //BenchmarkIp-4               2241            527007 ns/op          639045 B/op         13 allocs/op
+		//art.RadixTest(ipArr) //BenchmarkIp-4               1316            873632 ns/op          260916 B/op       6523 allocs/op
 	}
 }
 

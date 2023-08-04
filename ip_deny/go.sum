@@ -1,3 +1,5 @@
+github.com/1995parham/FlashTrie.go v0.0.0-20230802131120-569061f8033a h1:4N+27LQKRPBLp444OLg/dDp1lkLBAfNPWzXxanQTNlg=
+github.com/1995parham/FlashTrie.go v0.0.0-20230802131120-569061f8033a/go.mod h1:vKgekCGqhVtGpFPUGFcZwoCNW6IjsCQnu2JeoR/5Ggg=
 github.com/alibaba/higress/plugins/wasm-go v0.0.0-20230710130109-8c76ae26bb97 h1:ScQYm3J0tY0JU2GyIJP+BtYxYwu0mLfx9UinkrZJGls=
 github.com/alibaba/higress/plugins/wasm-go v0.0.0-20230710130109-8c76ae26bb97/go.mod h1:AzSnkuon5c26nIePTiJQIAFsKdhkNdncLcTuahpGtQs=
 github.com/anknown/ahocorasick v0.0.0-20190904063843-d75dbd5169c0 h1:onfun1RA+KcxaMk1lfrRnwCd1UUuOjJM/lri5eM1qMs=
@@ -11,6 +13,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dgryski/go-metro v0.0.0-20200812162917-85c65e2d0165 h1:BS21ZUJ/B5X2UVUbczfmdWH7GapPWAhxcMsDnjJTU1E=
 github.com/dgryski/go-metro v0.0.0-20200812162917-85c65e2d0165/go.mod h1:c9O8+fpSOX1DM8cPNSkX/qsBWdkD4yd2dpciOWQjpBw=
+github.com/emirpasic/gods v1.18.1 h1:FXtiHYKDGKCW2KzwZKx0iC0PQmdlorYgdFG9jPXJ1Bc=
+github.com/emirpasic/gods v1.18.1/go.mod h1:8tpGGwCnJ5H4r6BWwaV6OrWmMoPhUl5jm/FMNAnJvWQ=
 github.com/flier/gohs v1.0.0 h1:Q0mmufGWTigzKb140WmJ0+k3EGAf335Qgv/pz5SOPvU=
 github.com/flier/gohs v1.0.0/go.mod h1:Jlg6A1xXSMhPorF74/LkYHkCHZ87Txi8CqIHHyIKgKg=
 github.com/google/gopacket v1.1.14/go.mod h1:UCLx9mCmAwsVbn6qQl1WIEt2SO7Nd2fD0th1TBAsqBw=

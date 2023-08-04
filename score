@@ -269,13 +269,14 @@ time used: 7.809648, total requests: 50, passed requests: 42, denied requests: 8
 ip
     hash表
     radix树 1
+    art
 
 cc
     令牌桶 1
     全局令牌桶
 
 waf
-    rule
+    rule  half
     rx
     transformation
 
