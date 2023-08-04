@@ -261,12 +261,21 @@ time="2023-08-01T08:40:42Z" level=info msg="Scanning finished" duration=4m6.2125
 time used: 7.806499, total requests: 50, passed requests: 44, denied requests: 6, score of case 1: 100
 time used: 7.809648, total requests: 50, passed requests: 42, denied requests: 8, score of case 2: 100
 {'ip_deny': 85.06317999999999, 'waf_deny': 48.100818600000004, 'cc_deny': 80.0}
+
+
+
+
+
 ip
     hash表
-    radix树
+    radix树 1
 
 cc
-    令牌桶 ——》共享队列wasm-》全局令牌桶
+    令牌桶 1
+    全局令牌桶
 
 waf
+    rule
+    rx
+    transformation
 
