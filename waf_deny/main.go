@@ -16,5 +16,4 @@ func main() {
 	pingerPlugins.RegisterRX()
 
 	wasmplugin.PluginStart()
-	//denyall.PluginStart()
 }
