@@ -6,7 +6,7 @@ require (
 	github.com/alibaba/higress/plugins/wasm-go v0.0.0-20230708135159-28892cf3ae0f
 	github.com/corazawaf/coraza-wasilibs v0.0.0-20230620081031-05a5097dbea3
 	github.com/corazawaf/coraza/v3 v3.0.2
-	github.com/samthor/sre2 v0.0.0-20150929104051-385a11de6465
+	github.com/dlclark/regexp2 v1.10.0
 	github.com/tetratelabs/proxy-wasm-go-sdk v0.22.0
 	github.com/tidwall/gjson v1.14.4
 	github.com/wasilibs/nottinygc v0.2.0

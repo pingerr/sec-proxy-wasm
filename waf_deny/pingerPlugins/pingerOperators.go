@@ -1,32 +1,35 @@
 package pingerPlugins
 
 import (
-	"fmt"
+	"bytes"
 	"github.com/corazawaf/coraza/v3/experimental/plugins"
 	"github.com/corazawaf/coraza/v3/experimental/plugins/plugintypes"
-	"github.com/samthor/sre2"
+	"github.com/dlclark/regexp2"
 )
 
 type rx struct {
-	re sre2.Re
+	re *regexp2.Regexp
 }
 
 var _ plugintypes.Operator = (*rx)(nil)
 
 func newRX(options plugintypes.OperatorOptions) (plugintypes.Operator, error) {
 
-	data := fmt.Sprintf("(?sm)%s", options.Arguments)
+	//var data bytes.Buffer
+	data := bytes.NewBufferString("(?sm)")
+	data.WriteString(options.Arguments)
+	//data := fmt.Sprintf("%s", options.Arguments)
 
 	//var re *pcre.Regexp
-	re := sre2.MustParse(data)
+	re := regexp2.MustCompile(data.String(), 0)
 	//re := MustCompile(data, 0)
 
 	return &rx{re: re}, nil
 }
 
 func (o *rx) Evaluate(tx plugintypes.TransactionState, value string) bool {
-
-	return o.re.Match(value)
+	isMatch, _ := o.re.MatchString(value)
+	return isMatch
 
 }
 
