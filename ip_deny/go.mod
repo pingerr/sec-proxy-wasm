@@ -7,6 +7,7 @@ require (
 	github.com/anknown/ahocorasick v0.0.0-20190904063843-d75dbd5169c0
 	github.com/flier/gohs v1.0.0
 	github.com/linvon/cuckoo-filter v0.4.0
+	github.com/plar/go-adaptive-radix-tree v1.0.5
 	github.com/tetratelabs/proxy-wasm-go-sdk v0.22.0
 	github.com/tidwall/gjson v1.14.4
 	github.com/yl2chen/cidranger v1.0.2
