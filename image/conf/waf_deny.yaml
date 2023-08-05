@@ -24,7 +24,7 @@ resources:
                 "SecDefaultAction \"phase:3,log,auditlog,pass\"",
                 "SecDefaultAction \"phase:4,log,auditlog,pass\"",
                 "SecDefaultAction \"phase:5,log,auditlog,pass\"",
-                "Include @owasp_crs/PINGER-REQUEST-913-SCANNER-DETECTION.conf",
+                "Include @owasp_crs/PINGER-REQUEST-813-SCANNER-DETECTION.conf",
                 "Include @owasp_crs/REQUEST-921-PROTOCOL-ATTACK.conf",
                 "Include @owasp_crs/PINGER-REQUEST-821-PROTOCOL-ATTACK.conf",
                 "Include @owasp_crs/REQUEST-941-APPLICATION-ATTACK-XSS.conf",
@@ -32,6 +32,7 @@ resources:
                 "Include @owasp_crs/REQUEST-930-APPLICATION-ATTACK-LFI.conf",
                 "Include @owasp_crs/PINGER-REQUEST-830-APPLICATION-ATTACK-LFI.conf",
                 "Include @owasp_crs/PINGER-REQUEST-832-APPLICATION-ATTACK-RCE.conf",
-                "Include @owasp_crs/PINGER-REQUEST-842-APPLICATION-ATTACK-SQLI.conf"
+                "Include @owasp_crs/PINGER-REQUEST-842-APPLICATION-ATTACK-SQLI.conf",
+                "Include @owasp_crs/PINGER-REQUEST-845-API-ATTACK.conf"
               ]
             }
