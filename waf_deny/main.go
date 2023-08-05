@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	//wasilibs.RegisterRX()
+	wasilibs.RegisterRX()
 	wasilibs.RegisterPM()
 	wasilibs.RegisterSQLi()
 	wasilibs.RegisterXSS()
