@@ -262,8 +262,18 @@ time used: 7.806499, total requests: 50, passed requests: 44, denied requests: 6
 time used: 7.809648, total requests: 50, passed requests: 42, denied requests: 8, score of case 2: 100
 {'ip_deny': 85.06317999999999, 'waf_deny': 48.100818600000004, 'cc_deny': 80.0}
 
-
-
+2023-08-05 11:37:48 score:69.0700
+0.3.21 cc(bucket,lock)+ip(radix)+waf(83.37+graphql)
+total requests: 1200, denied requests: 1200
+[ip deny] white test, total 100 requests, you deny 3 requests
+[ip deny] ip deny test finished, using 1.465854 seconds
+[ip deny] function score: 100, performance score: 80.68292
+time="2023-08-05T03:42:46Z" level=info msg="Scanning finished" duration=4m5.7351974s
+[waf deny] waf deny test finished, using 255.925668 seconds
+[waf deny] function score is 88.63 , performance score is 24.691443999999997
+time used: 7.83126, total requests: 50, passed requests: 42, denied requests: 8, score of case 1: 100
+time used: 7.832311, total requests: 50, passed requests: 43, denied requests: 7, score of case 2: 100
+{'ip_deny': 84.809752, 'waf_deny': 50.2668664, 'cc_deny': 80.0}
 
 
 ip
