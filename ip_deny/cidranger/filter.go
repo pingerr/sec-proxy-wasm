@@ -86,8 +86,6 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config IpConfig, log wrapper.
 		if err := proxywasm.SendHttpResponse(403, nil, []byte("denied by ip"), -1); err != nil {
 			panic(err)
 		}
-	} else {
-		log.Infof("[white ip: %s]", xRealIp)
 	}
 
 	return types.ActionContinue
