@@ -2,7 +2,10 @@ package test
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
+	"ip_deny/ipLook"
+	"net"
 	"os"
 	"testing"
 )
@@ -48,6 +51,30 @@ func BenchmarkIp(b *testing.B) {
 	//	//	//fmt.Println()
 	//	//}
 	//}
+
+	var id ipLook.SID = 1
+	tree := ipLook.New()
+	for _, cidr := range ipArr {
+		if index := bytes.IndexByte([]byte(cidr), '/'); index < 0 {
+			cidr = cidr + "/24"
+		}
+		//fmt.Println(cidr)
+		_, ipNet, err := net.ParseCIDR(cidr)
+		//ip := net.ParseIP(cidr).To4()
+		//ip.To4()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		tree.Add(id, *ipNet)
+	}
+	for n := 0; n < b.N; n++ {
+		for i := range ipArr {
+			_ = tree.Get(net.ParseIP(ipArr[i])) //BenchmarkIp-4              18952             63953 ns/op           10482 B/op        653 allocs/op
+			//fmt.Println(tree.Get(net.ParseIP(ipArr[i]).To4()))
+		}
+	}
+
 }
 
 //func BenchmarkFlash(b *testing.B) {
