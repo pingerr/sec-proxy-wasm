@@ -28,9 +28,8 @@ func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
 	//获取黑名单配置
 	results := json.Get("ip_blacklist").Array()
 
-	var buf bytes.Buffer
 	for i := range results {
-		buf.WriteString(results[i].Str)
+		buf := bytes.NewBufferString(results[i].Str)
 		if index := bytes.IndexByte(buf.Bytes(), '/'); index < 0 {
 			buf.WriteString("/32")
 		}
