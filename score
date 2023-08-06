@@ -277,8 +277,8 @@ time used: 7.832311, total requests: 50, passed requests: 43, denied requests: 7
 
 
 ip
-    hash表
-    radix树 1
+    前缀hash
+    radix树 1  压缩
     art
 
 cc

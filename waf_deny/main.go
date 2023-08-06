@@ -13,7 +13,7 @@ func main() {
 	wasilibs.RegisterXSS()
 
 	_ = pingerPlugins.RegisterPingerTransformations()
-	pingerPlugins.RegisterRX()
+	//pingerPlugins.RegisterRX()
 
 	wasmplugin.PluginStart()
 }

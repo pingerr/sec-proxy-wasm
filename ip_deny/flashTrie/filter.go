@@ -65,8 +65,6 @@ func RadixTest(ipArr []string) {
 
 	}
 
-	ipArr = append(ipArr, "123.123.123.321")
-
 	for i := range ipArr {
 		a := f.Lookup(ipArr[i])
 		fmt.Printf(a)

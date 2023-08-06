@@ -45,12 +45,12 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config IpConfig, log wrapper.
 	return types.ActionContinue
 }
 
-func RadixTest(ipArr []string) {
-	f := NewTree(0)
-	for i := range ipArr {
-		_ = f.SetCIDRb([]byte(ipArr[i]), 1)
-
-	}
+func RadixTest(ipArr []string, f *Tree) {
+	//f := NewTree(0)
+	//for i := range ipArr {
+	//	_ = f.SetCIDRb([]byte(ipArr[i]), 1)
+	//
+	//}
 
 	for i := range ipArr {
 		_, _ = f.FindCIDRb([]byte(ipArr[i]))
