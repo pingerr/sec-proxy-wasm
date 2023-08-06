@@ -68,10 +68,21 @@ func BenchmarkIp(b *testing.B) {
 
 		tree.Add(id, *ipNet)
 	}
+
+	//_, ipNet, err := net.ParseCIDR("1.1.1.1/24")
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+	//tree.Add(id, *ipNet)
+	//fmt.Println(tree.Get(net.ParseIP("1.1.1.1").To4()))
+	//fmt.Println(tree.Get(net.ParseIP("2.1.1.1").To4()))
+
+	//ipArr = append(ipArr, "130.130.130.130")
 	for n := 0; n < b.N; n++ {
 		for i := range ipArr {
-			_ = tree.Get(net.ParseIP(ipArr[i])) //BenchmarkIp-4              18952             63953 ns/op           10482 B/op        653 allocs/op
-			//fmt.Println(tree.Get(net.ParseIP(ipArr[i]).To4()))
+			//sid :=  //BenchmarkIp-4              18952             63953 ns/op           10482 B/op        653 allocs/op
+			//fmt.Println(tree.Get(net.ParseIP(ipArr[i])[12:16]) == 1)
+			_ = tree.Get(net.ParseIP(ipArr[i])[12:16]) == 1
 		}
 	}
 

@@ -46,7 +46,7 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config IpConfig, log wrapper.
 
 	xRealIp, _ := proxywasm.GetHttpRequestHeader("x-real-ip")
 
-	if config.f.Get(net.ParseIP(xRealIp)) == config.id {
+	if config.f.Get(net.ParseIP(xRealIp)[12:16]) == config.id {
 		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by ip"), -1)
 	}
 
