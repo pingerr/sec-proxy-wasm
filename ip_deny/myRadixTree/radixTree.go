@@ -6,8 +6,8 @@ import (
 )
 
 type node struct {
-	left, right, parent *node
-	value               interface{}
+	left, right *node
+	value       interface{}
 }
 
 // Tree implements radix tree for working with IP/mask. Thread safety is not guaranteed, you should choose your own style of protecting safety of operations.
@@ -19,51 +19,19 @@ type Tree struct {
 }
 
 const (
-	startbit  = uint32(0x80000000)
-	startbyte = byte(0x80)
+	startbit = uint32(0x80000000)
 )
 
 var (
 	ErrNodeBusy = errors.New("Node Busy")
-	ErrNotFound = errors.New("No Such Node")
 	ErrBadIP    = errors.New("Bad IP address or mask")
 )
 
 // NewTree creates Tree and preallocates (if preallocate not zero) number of nodes that would be ready to fill with data.
-func NewTree(preallocate int) *Tree {
+func NewTree() *Tree {
 	tree := new(Tree)
 	tree.root = tree.newnode()
-	if preallocate == 0 {
-		return tree
-	}
-
-	// Simplification, static preallocate max 6 bits
-	if preallocate > 6 || preallocate < 0 {
-		preallocate = 6
-	}
-
-	var key, mask uint32
-
-	for inc := startbit; preallocate > 0; inc, preallocate = inc>>1, preallocate-1 {
-		key = 0
-		mask >>= 1
-		mask |= startbit
-
-		for {
-			tree.insert32(key, mask, nil, false)
-			key += inc
-			if key == 0 { // magic bits collide
-				break
-			}
-		}
-	}
-
 	return tree
-}
-
-// AddCIDR adds value associated with IP/mask to the tree. Will return error for invalid CIDR or if value already exists.
-func (tree *Tree) SetCIDR(cidr string, val interface{}) error {
-	return tree.SetCIDRb([]byte(cidr), val)
 }
 
 func (tree *Tree) SetCIDRb(cidr []byte, val interface{}) error {
@@ -71,11 +39,7 @@ func (tree *Tree) SetCIDRb(cidr []byte, val interface{}) error {
 	if err != nil {
 		return err
 	}
-	return tree.insert32(ip, mask, val, true)
-}
-
-func (tree *Tree) FindCIDR(cidr string) (interface{}, error) {
-	return tree.FindCIDRb([]byte(cidr))
+	return tree.insert32(ip, mask, val)
 }
 
 func (tree *Tree) FindCIDRb(cidr []byte) (interface{}, error) {
@@ -87,7 +51,7 @@ func (tree *Tree) FindCIDRb(cidr []byte) (interface{}, error) {
 
 }
 
-func (tree *Tree) insert32(key, mask uint32, value interface{}, overwrite bool) error {
+func (tree *Tree) insert32(key, mask uint32, value interface{}) error {
 	bit := startbit
 	node := tree.root
 	next := tree.root
@@ -104,15 +68,11 @@ func (tree *Tree) insert32(key, mask uint32, value interface{}, overwrite bool) 
 		node = next
 	}
 	if next != nil {
-		if node.value != nil && !overwrite {
-			return ErrNodeBusy
-		}
 		node.value = value
 		return nil
 	}
 	for bit&mask != 0 {
 		next = tree.newnode()
-		next.parent = node
 		if key&bit != 0 {
 			node.right = next
 		} else {
@@ -154,7 +114,6 @@ func (tree *Tree) newnode() (p *node) {
 
 		// release all prior links
 		p.right = nil
-		p.parent = nil
 		p.left = nil
 		p.value = nil
 		return p

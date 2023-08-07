@@ -28,12 +28,22 @@ func BenchmarkIp(b *testing.B) {
 		ipArr = append(ipArr, line)
 	}
 
-	//t := myRadixTree.NewTree(0)
+	//t := myRadixTree.NewTree()
 	//for i := range ipArr {
 	//	_ = t.SetCIDRb([]byte(ipArr[i]), 1)
 	//}
 	//for n := 0; n < b.N; n++ {
-	//	//cidranger.CidrangerTest(ipArr) // BenchmarkIp-4                302           3414727 ns/op          801432 B/op      43729 allocs/op
+	//	t := myRadixTree.NewTree()
+	//	for i := range ipArr {
+	//		_ = t.SetCIDRb([]byte(ipArr[i]), 1)
+	//	}
+	//
+	//	//BenchmarkIp-4               2023            582941 ns/op          534854 B/op         13 allocs/op
+	//	//BenchmarkIp-4               1944            606920 ns/op          534856 B/op         13 allocs/op
+	//	//BenchmarkIp-4               1954            550793 ns/op          534855 B/op         13 allocs/op
+	//	//BenchmarkIp-4               1963            593881 ns/op          534855 B/op         13 allocs/op
+	//	//BenchmarkIp-4               1837            583084 ns/op          534856 B/op         13 allocs/op
+
 	//	for i := range ipArr {
 	//		_, _ = t.FindCIDRb([]byte(ipArr[i]))
 	//		//fmt.Println(found)
@@ -42,15 +52,12 @@ func BenchmarkIp(b *testing.B) {
 	//	//goarch: amd64
 	//	//pkg: ip_deny/test
 	//	//cpu: Intel(R) Celeron(R) N5105 @ 2.00GHz
-	//	//BenchmarkIp-4               7030            164570 ns/op              97 B/op          0 allocs/op
-	//	//BenchmarkIp-4              10000            151737 ns/op              68 B/op          0 allocs/op
-	//	//BenchmarkIp-4               7072            181991 ns/op              96 B/op          0 allocs/op
-	//	//BenchmarkIp-4              10000            152848 ns/op              68 B/op          0 allocs/op
-	//	//BenchmarkIp-4               7762            154598 ns/op              88 B/op          0 allocs/op
-	//	//for i := range ipArr {
-	//	//	_, _ = t.FindCIDRb([]byte(ipArr[i]))
-	//	//	//fmt.Println(found)
-	//	//}
+	//	//BenchmarkIp-4               7690            140662 ns/op              75 B/op          0 allocs/op
+	//	//BenchmarkIp-4              10000            152221 ns/op              57 B/op          0 allocs/op
+	//	//BenchmarkIp-4               7460            143445 ns/op              77 B/op          0 allocs/op
+	//	//BenchmarkIp-4              10000            143369 ns/op              57 B/op          0 allocs/op
+	//	//BenchmarkIp-4               8318            147110 ns/op              69 B/op          0 allocs/op
+
 	//}
 
 	var id ipLook.SID = 1
@@ -69,13 +76,36 @@ func BenchmarkIp(b *testing.B) {
 
 		tree.Add(id, *ipNet)
 	}
-
-	//ipArr = append(ipArr, "130.130.130.130")
 	for n := 0; n < b.N; n++ {
+		//var id ipLook.SID = 1
+		//tree := ipLook.New()
+		//for i, _ := range ipArr {
+		//	cidrBuf := bytes.NewBufferString(ipArr[i])
+		//	if index := bytes.IndexByte(cidrBuf.Bytes(), '/'); index < 0 {
+		//		cidrBuf.WriteString("/24")
+		//	}
+		//	_, ipNet, _ := net.ParseCIDR(cidrBuf.String())
+		//	tree.Add(id, *ipNet)
+		//	//goos: windows
+		//	//goarch: amd64
+		//	//pkg: ip_deny/test
+		//	//cpu: Intel(R) Celeron(R) N5105 @ 2.00GHz
+		//	//BenchmarkIp-4               2298            490945 ns/op          607967 B/op       5406 allocs/op
+		//	//BenchmarkIp-4               2302            466568 ns/op          607966 B/op       5406 allocs/op
+		//	//BenchmarkIp-4               2358            517260 ns/op          607965 B/op       5406 allocs/op
+		//	//BenchmarkIp-4               2013            522196 ns/op          607969 B/op       5406 allocs/op
+		//	//BenchmarkIp-4               2200            489812 ns/op          607967 B/op       5406 allocs/op
+		//}
 		for i := range ipArr {
-			//BenchmarkIp-4              10000            119869 ns/op           10513 B/op        653 allocs/op
-			// BenchmarkIp-4              12860             96100 ns/op            2662 B/op        653 allocs/op
-			//fmt.Println(tree.Get(net.ParseIP(ipArr[i])[12:16]) == 1)
+			//goos: windows
+			//goarch: amd64
+			//pkg: ip_deny/test
+			//cpu: Intel(R) Celeron(R) N5105 @ 2.00GHz
+			//BenchmarkIp-4              14262             78307 ns/op            2657 B/op        653 allocs/op
+			//BenchmarkIp-4              15202             81512 ns/op            2654 B/op        653 allocs/op
+			//BenchmarkIp-4              15096             77823 ns/op            2655 B/op        653 allocs/op
+			//BenchmarkIp-4              15492             78030 ns/op            2654 B/op        653 allocs/op
+			//BenchmarkIp-4              15279             79110 ns/op            2654 B/op        653 allocs/op
 			_ = tree.Get(ipLook.ParseIPv4(ipArr[i])) == 1
 		}
 	}
