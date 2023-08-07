@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"ip_deny/ipLook"
-	"net"
+	"github.com/linvon/cuckoo-filter"
+	"github.com/nytr0gen/go-cidr"
 	"os"
 	"testing"
 )
@@ -88,46 +88,67 @@ func BenchmarkIp(b *testing.B) {
 	//	tree.Add(id, *ipNet)
 	//}
 	//ipArr = append(ipArr, "135.135.135.135")
-	for n := 0; n < b.N; n++ {
-		var id ipLook.SID = 1
-		tree := ipLook.New()
-		for i, _ := range ipArr {
-			cidrBuf := bytes.NewBufferString(ipArr[i])
-			if index := bytes.IndexByte(cidrBuf.Bytes(), '/'); index < 0 {
-				cidrBuf.WriteString("/24")
-			}
-			_, ipNet, _ := net.ParseCIDR(cidrBuf.String())
-			tree.Add(id, *ipNet)
-			//goos: windows
-			//goarch: amd64
-			//pkg: ip_deny/test
-			//cpu: Intel(R) Celeron(R) N5105 @ 2.00GHz
-			//BenchmarkIp-4               2298            490945 ns/op          607967 B/op       5406 allocs/op
-			//BenchmarkIp-4               2302            466568 ns/op          607966 B/op       5406 allocs/op
-			//BenchmarkIp-4               2358            517260 ns/op          607965 B/op       5406 allocs/op
-			//BenchmarkIp-4               2013            522196 ns/op          607969 B/op       5406 allocs/op
-			//BenchmarkIp-4               2200            489812 ns/op          607967 B/op       5406 allocs/op
-			//SID uint8
-			//BenchmarkIp-4               2702            414179 ns/op          368171 B/op       5406 allocs/op
-			//BenchmarkIp-4               2976            444895 ns/op          368169 B/op       5406 allocs/op
-			//BenchmarkIp-4               2407            679107 ns/op          368172 B/op       5406 allocs/op
-			//BenchmarkIp-4               2814            415113 ns/op          368169 B/op       5406 allocs/op
-			//BenchmarkIp-4               2810            409978 ns/op          368169 B/op       5406 allocs/op
+	//for n := 0; n < b.N; n++ {
+	//	var id ipLook.SID = 1
+	//	tree := ipLook.New()
+	//	for i, _ := range ipArr {
+	//		cidrBuf := bytes.NewBufferString(ipArr[i])
+	//		if index := bytes.IndexByte(cidrBuf.Bytes(), '/'); index < 0 {
+	//			cidrBuf.WriteString("/24")
+	//		}
+	//		_, ipNet, _ := net.ParseCIDR(cidrBuf.String())
+	//		tree.Add(id, *ipNet)
+	//goos: windows
+	//goarch: amd64
+	//pkg: ip_deny/test
+	//cpu: Intel(R) Celeron(R) N5105 @ 2.00GHz
+	//BenchmarkIp-4               2298            490945 ns/op          607967 B/op       5406 allocs/op
+	//BenchmarkIp-4               2302            466568 ns/op          607966 B/op       5406 allocs/op
+	//BenchmarkIp-4               2358            517260 ns/op          607965 B/op       5406 allocs/op
+	//BenchmarkIp-4               2013            522196 ns/op          607969 B/op       5406 allocs/op
+	//BenchmarkIp-4               2200            489812 ns/op          607967 B/op       5406 allocs/op
+	//SID uint8
+	//BenchmarkIp-4               2702            414179 ns/op          368171 B/op       5406 allocs/op
+	//BenchmarkIp-4               2976            444895 ns/op          368169 B/op       5406 allocs/op
+	//BenchmarkIp-4               2407            679107 ns/op          368172 B/op       5406 allocs/op
+	//BenchmarkIp-4               2814            415113 ns/op          368169 B/op       5406 allocs/op
+	//BenchmarkIp-4               2810            409978 ns/op          368169 B/op       5406 allocs/op
+	//}
+	//for i := range ipArr {
+	//	//goos: windows
+	//	//goarch: amd64
+	//	//pkg: ip_deny/test
+	//	//cpu: Intel(R) Celeron(R) N5105 @ 2.00GHz
+	//	//BenchmarkIp-4              14262             78307 ns/op            2657 B/op        653 allocs/op
+	//	//BenchmarkIp-4              15202             81512 ns/op            2654 B/op        653 allocs/op
+	//	//BenchmarkIp-4              15096             77823 ns/op            2655 B/op        653 allocs/op
+	//	//BenchmarkIp-4              15492             78030 ns/op            2654 B/op        653 allocs/op
+	//	//BenchmarkIp-4              15279             79110 ns/op            2654 B/op        653 allocs/op
+	//	_ = tree.Get(ipLook.ParseIPv4(ipArr[i])) == 1
+	//	//fmt.Println(tree.Get(ipLook.ParseIPv4(ipArr[i])))
+	//}
+	//}
+
+	// cuckoo hash
+	cuckooFilter := cuckoo.NewFilter(4, 9, 3900, cuckoo.TableTypePacked)
+	for i, _ := range ipArr {
+		cidrBuf := bytes.NewBufferString(ipArr[i])
+		if index := bytes.IndexByte(cidrBuf.Bytes(), '/'); index < 0 {
+			cidrBuf.WriteString("/24")
 		}
-		for i := range ipArr {
-			//goos: windows
-			//goarch: amd64
-			//pkg: ip_deny/test
-			//cpu: Intel(R) Celeron(R) N5105 @ 2.00GHz
-			//BenchmarkIp-4              14262             78307 ns/op            2657 B/op        653 allocs/op
-			//BenchmarkIp-4              15202             81512 ns/op            2654 B/op        653 allocs/op
-			//BenchmarkIp-4              15096             77823 ns/op            2655 B/op        653 allocs/op
-			//BenchmarkIp-4              15492             78030 ns/op            2654 B/op        653 allocs/op
-			//BenchmarkIp-4              15279             79110 ns/op            2654 B/op        653 allocs/op
-			_ = tree.Get(ipLook.ParseIPv4(ipArr[i])) == 1
-			//fmt.Println(tree.Get(ipLook.ParseIPv4(ipArr[i])))
+		r, _ := cidr.NewRange("127.0.0.0/31")
+		cuckooFilter.Add([]byte(r.String()))
+		if r.Next() {
+			cuckooFilter.Add([]byte(r.String()))
 		}
 	}
+	for n := 0; n < b.N; n++ {
+		for i := range ipArr {
+			//_ = cuckooFilter.Contain([]byte(ipArr[i]))
+			fmt.Println(cuckooFilter.Contain([]byte(ipArr[i])))
+		}
+	}
+
 }
 
 // go test -benchmem  -bench='Ip' . -count=5

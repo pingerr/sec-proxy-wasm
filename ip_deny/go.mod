@@ -6,6 +6,7 @@ require (
 	github.com/1995parham/FlashTrie.go v0.0.0-20230802131120-569061f8033a
 	github.com/alibaba/higress/plugins/wasm-go v0.0.0-20230710130109-8c76ae26bb97
 	github.com/linvon/cuckoo-filter v0.4.0
+	github.com/nytr0gen/go-cidr v0.0.0-20160312202100-fc36d0a3598c
 	github.com/tetratelabs/proxy-wasm-go-sdk v0.22.0
 	github.com/tidwall/gjson v1.14.4
 	github.com/yl2chen/cidranger v1.0.2
