@@ -2,10 +2,7 @@ package test
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
-	"github.com/linvon/cuckoo-filter"
-	"github.com/nytr0gen/go-cidr"
 	"os"
 	"testing"
 )
@@ -128,26 +125,6 @@ func BenchmarkIp(b *testing.B) {
 	//	//fmt.Println(tree.Get(ipLook.ParseIPv4(ipArr[i])))
 	//}
 	//}
-
-	// cuckoo hash
-	cuckooFilter := cuckoo.NewFilter(4, 9, 3900, cuckoo.TableTypePacked)
-	for i, _ := range ipArr {
-		cidrBuf := bytes.NewBufferString(ipArr[i])
-		if index := bytes.IndexByte(cidrBuf.Bytes(), '/'); index < 0 {
-			cidrBuf.WriteString("/24")
-		}
-		r, _ := cidr.NewRange(cidrBuf.String())
-		cuckooFilter.Add([]byte(r.String()))
-		if r.Next() {
-			cuckooFilter.Add([]byte(r.String()))
-		}
-	}
-	for n := 0; n < b.N; n++ {
-		for i := range ipArr {
-			//_ = cuckooFilter.Contain([]byte(ipArr[i]))
-			fmt.Println(cuckooFilter.Contain([]byte(ipArr[i])))
-		}
-	}
 
 }
 
