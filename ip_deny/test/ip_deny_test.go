@@ -136,7 +136,7 @@ func BenchmarkIp(b *testing.B) {
 		if index := bytes.IndexByte(cidrBuf.Bytes(), '/'); index < 0 {
 			cidrBuf.WriteString("/24")
 		}
-		r, _ := cidr.NewRange("127.0.0.0/31")
+		r, _ := cidr.NewRange(cidrBuf.String())
 		cuckooFilter.Add([]byte(r.String()))
 		if r.Next() {
 			cuckooFilter.Add([]byte(r.String()))
