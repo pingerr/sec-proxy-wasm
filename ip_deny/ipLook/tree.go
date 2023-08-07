@@ -2,15 +2,12 @@ package ipLook
 
 import (
 	"encoding/binary"
-	"math"
 	"net"
 )
 
-// bitslen contstant must be a power of 2. It indicates how much space
-// will be taken by a tree and maximum number of hops (treenode accesses). When bitslen is 4,
-// the maximum number of hops will be 32 / bitslen and one node takes
-// 1<< bitslen * (sizeof SID and *treenode). So current constant (4) will make maximum 8 hops and
-// every node consumes 256 bytes.
+// bitslen contstant must be a power of 2. It indicates how much space will be taken by a tree and maximum number of hops (treenode accesses).
+// When bitslen is 4, the maximum number of hops will be 32 / bitslen and one node takes 1<< bitslen * (sizeof SID and *treenode).
+// So current constant (4) will make maximum 8 hops and every node consumes 256 bytes.
 const bitslen = 4
 
 // SID type contains a list of corresponding service indexes.
@@ -30,17 +27,6 @@ type treenode struct {
 	ptrs [1 << bitslen]*treenode
 }
 
-// isEmpty checks if node is empty. Used to determine whether to delete node
-// Reminder: don't accidentally remove root node
-func (node *treenode) isEmpty() bool {
-	for i := 0; i < 1<<bitslen; i++ {
-		if node.srvs[i] != 0 || node.ptrs[i] != nil {
-			return false
-		}
-	}
-	return true
-}
-
 // New creates new IP subnet tree. It only works with IP v4
 func New() *Tree {
 	tree := &Tree{&treenode{}}
@@ -56,10 +42,9 @@ func New() *Tree {
 func (tree *Tree) Add(service SID, ipnet net.IPNet) {
 	node := tree.root
 
-	prefixLen, _ := ipnet.Mask.Size()
-
-	curLen := bitslen
-	for i := 0; i < 32/bitslen; i++ {
+	prefixLen, _ := ipnet.Mask.Size() //24
+	curLen := bitslen                 //4
+	for i := 0; i < 32/bitslen; i++ { //i<8
 		if curLen >= prefixLen {
 
 			start := getSubstring(ipnet.IP, uint8(i))
@@ -100,61 +85,58 @@ func (tree *Tree) Get(ipv4 []byte) SID {
 	return ans
 }
 
-// getSubstring is helper function that returns substring of
-// bits placed in range [index * bitslen, index * bitslen + bitslen)
+// getSubstring is helper function that returns substring of bits placed in range [index * bitslen, index * bitslen + bitslen)
+// getSubstring是一个辅助函数，它返回位于范围[index * bitslen，index * bitslen + bitslen]中的bits substring。
 func getSubstring(ipv4 []byte, index uint8) uint32 {
 	var ans = binary.BigEndian.Uint32(ipv4)
 	ans = ans << (bitslen * index)
 	ans = ans >> (32 - bitslen)
-
 	return ans
 }
 
-// Remove removes subnet from the tree. It works properly if you add
-// and remove the same subnet. However, it will lead to undefined behaviour, if
-// you remove subnet which was not added before.
-func (tree *Tree) Remove(service SID, ipnet net.IPNet) {
-	reversedService := math.MaxUint64 ^ service
+const IPv4len = 4
+const big = 0xFFFFFF
 
-	node := tree.root
-
-	path := make([]*treenode, 32/bitslen, 32/bitslen)
-	indpath := make([]uint32, 32/bitslen, 32/bitslen)
-	pathlen := 0
-
-	prefixLen, _ := ipnet.Mask.Size()
-
-	curLen := bitslen
-	for i := 0; i < 32/bitslen; i++ {
-		path[pathlen] = node
-		pathlen++
-		if curLen >= prefixLen {
-
-			start := getSubstring(ipnet.IP, uint8(i))
-			end := start + (1 << uint(curLen-prefixLen)) - 1
-
-			for j := start; j <= end; j++ {
-				node.srvs[j] = node.srvs[j] & reversedService
+func ParseIPv4(s string) []byte {
+	var p = make([]byte, 4)
+	for i := 0; i < IPv4len; i++ {
+		if len(s) == 0 {
+			// Missing octets.
+			return nil
+		}
+		if i > 0 {
+			if s[0] != '.' {
+				return nil
 			}
-			break
+			s = s[1:]
 		}
-
-		ind := getSubstring(ipnet.IP, uint8(i))
-		indpath[pathlen] = ind
-
-		if node.ptrs[ind] != nil {
-			node = node.ptrs[ind]
+		n, c, ok := dtoi(s)
+		if !ok || n > 0xFF {
+			return nil
 		}
-		curLen += bitslen
+		if c > 1 && s[0] == '0' {
+			// Reject non-zero components with leading zeroes.
+			return nil
+		}
+		s = s[c:]
+		p[i] = byte(n)
 	}
+	if len(s) != 0 {
+		return nil
+	}
+	return p
+}
 
-	for i := pathlen - 1; i > 0; i-- {
-		node = path[i]
-		parent := path[i-1]
-		ind := indpath[i]
-
-		if node.isEmpty() {
-			parent.ptrs[ind] = nil
+func dtoi(s string) (n int, i int, ok bool) {
+	n = 0
+	for i = 0; i < len(s) && '0' <= s[i] && s[i] <= '9'; i++ {
+		n = n*10 + int(s[i]-'0')
+		if n >= big {
+			return big, i, false
 		}
 	}
+	if i == 0 {
+		return 0, 0, false
+	}
+	return n, i, true
 }
