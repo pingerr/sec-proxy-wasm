@@ -13,24 +13,19 @@ type node struct {
 // Tree implements radix tree for working with IP/mask. Thread safety is not guaranteed, you should choose your own style of protecting safety of operations.
 type Tree struct {
 	root *node
-	free *node
 
 	alloc []node
 }
 
-const (
-	startbit = uint32(0x80000000)
-)
+const startbit = uint32(0x80000000)
 
-var (
-	ErrNodeBusy = errors.New("Node Busy")
-	ErrBadIP    = errors.New("Bad IP address or mask")
-)
+var ErrBadIP = errors.New("bad IP address or mask")
 
 // NewTree creates Tree and preallocates (if preallocate not zero) number of nodes that would be ready to fill with data.
 func NewTree() *Tree {
 	tree := new(Tree)
 	tree.root = tree.newnode()
+
 	return tree
 }
 
@@ -48,7 +43,15 @@ func (tree *Tree) FindCIDRb(cidr []byte) (interface{}, error) {
 		return nil, err
 	}
 	return tree.find32(ip, mask), nil
+}
 
+func (tree *Tree) FindIpv4(cidr []byte) (interface{}, error) {
+	ip, mask, err := parseIpv4(cidr)
+
+	if err != nil {
+		return nil, err
+	}
+	return tree.find32(ip, mask), nil
 }
 
 func (tree *Tree) insert32(key, mask uint32, value interface{}) error {
@@ -102,22 +105,11 @@ func (tree *Tree) find32(key, mask uint32) (value interface{}) {
 			break
 		}
 		bit >>= 1
-
 	}
 	return value
 }
 
 func (tree *Tree) newnode() (p *node) {
-	if tree.free != nil {
-		p = tree.free
-		tree.free = tree.free.right
-
-		// release all prior links
-		p.right = nil
-		p.left = nil
-		p.value = nil
-		return p
-	}
 
 	ln := len(tree.alloc)
 	if ln == cap(tree.alloc) {
@@ -168,12 +160,13 @@ func loadip4(ipstr []byte) (uint32, error) {
 func parsecidr4(cidr []byte) (uint32, uint32, error) {
 	var mask uint32
 	p := bytes.IndexByte(cidr, '/')
+	var item byte
 	if p > 0 {
-		for _, c := range cidr[p+1:] {
-			if c < '0' || c > '9' {
+		for _, item = range cidr[p+1:] {
+			if item < '0' || item > '9' {
 				return 0, 0, ErrBadIP
 			}
-			mask = mask*10 + uint32(c-'0')
+			mask = mask*10 + uint32(item-'0')
 		}
 		mask = 0xffffffff << (32 - mask)
 		cidr = cidr[:p]
@@ -185,4 +178,15 @@ func parsecidr4(cidr []byte) (uint32, uint32, error) {
 		return 0, 0, err
 	}
 	return ip, mask, nil
+}
+
+const maskConst uint32 = 0xffffffff
+
+func parseIpv4(cidr []byte) (uint32, uint32, error) {
+
+	ip, err := loadip4(cidr)
+	if err != nil {
+		return 0, 0, err
+	}
+	return ip, maskConst, nil
 }

@@ -33,10 +33,7 @@ func parseConfig(json gjson.Result, config *IpConfig, log wrapper.Log) error {
 		if index := bytes.IndexByte(buf.Bytes(), '/'); index < 0 {
 			buf.WriteString("/32")
 		}
-		_, ipNet, err := net.ParseCIDR(buf.String())
-		if err != nil {
-			log.Errorf("[parseCTDR error：%s]", buf.String())
-		}
+		_, ipNet, _ := net.ParseCIDR(buf.String())
 		config.f.Add(config.id, *ipNet)
 	}
 	return nil

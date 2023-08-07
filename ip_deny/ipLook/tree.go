@@ -16,7 +16,7 @@ const bitslen = 4
 // So you can handle up to 64 services.
 // 0 indicates that there are no service.
 // Example: service has index 6, then its SID representation will be 1<<6
-type SID uint64
+type SID uint8
 
 type Tree struct {
 	root *treenode
