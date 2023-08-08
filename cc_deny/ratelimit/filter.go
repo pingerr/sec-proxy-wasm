@@ -66,6 +66,7 @@ func (p *pluginContext) NewHttpContext(contextID uint32) types.HttpContext {
 
 func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPluginStartStatus {
 	data, err := proxywasm.GetPluginConfiguration()
+	proxywasm.LogDebugf("[data: %s]", data)
 	if data == nil {
 		return types.OnPluginStartStatusOK
 	}
@@ -79,6 +80,7 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 	}
 
 	results := gjson.Get(string(data), "cc_rules").Array()
+	proxywasm.LogDebugf("[arr: %s]", results)
 	for i := range results {
 		curMap := results[i].Map()
 		if headerKey := curMap["header"].Str; headerKey != "" {
@@ -115,12 +117,8 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 	}
 
 	p.mu.Lock()
-	if p.headerMap == nil {
-		p.headerMap = make(map[string]*MyLimiter)
-	}
-	if p.cookieMap == nil {
-		p.cookieMap = make(map[string]*MyLimiter)
-	}
+	p.headerMap = make(map[string]*MyLimiter)
+	p.cookieMap = make(map[string]*MyLimiter)
 	p.mu.Unlock()
 
 	return types.OnPluginStartStatusOK
