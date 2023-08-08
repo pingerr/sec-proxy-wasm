@@ -93,7 +93,7 @@ func handleInterruption(ctx wrapper.HttpContext, phase string, interruption *cty
 // replaceResponseBodyWhenInterrupted address an interruption raised during phase 4.
 // At this phase, response headers are already sent downstream, therefore an interruption
 // can not change anymore the status code, but only tweak the response body
-//func replaceResponseBodyWhenInterrupted(logger wrapper.Log, bodySize int) types.Action {
+//func replaceResponseBodyWhenInterrupted(logger mywrapper.Log, bodySize int) types.Action {
 //	// TODO(M4tteoP): Update response body interruption logic after https://github.com/corazawaf/coraza-proxy-wasm/issues/26
 //	// Currently returns a body filled with null bytes that replaces the sensitive data potentially leaked
 //	err := proxywasm.ReplaceHttpResponseBody(bytes.Repeat([]byte("\x00"), bodySize))

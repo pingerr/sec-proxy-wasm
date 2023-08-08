@@ -1,10 +1,10 @@
 package main
 
 import (
-	"cc_deny/ccfilter"
+	"cc_deny/ratelimit"
 )
 
 func main() {
-	ccfilter.PluginStart()
-	//ccfiltershare.PluginStart()
+	//ccfilter.PluginStart()
+	ratelimit.PluginStart()
 }

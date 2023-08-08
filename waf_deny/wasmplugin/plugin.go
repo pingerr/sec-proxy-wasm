@@ -170,7 +170,7 @@ func onHttpResponseHeaders(ctx wrapper.HttpContext, config WafConfig, log wrappe
 	return types.ActionContinue
 }
 
-//func onHttpStreamDone(ctx wrapper.HttpContext, config WafConfig, log wrapper.Log) {
+//func onHttpStreamDone(ctx mywrapper.HttpContext, config WafConfig, log mywrapper.Log) {
 //	log.Info("[rinfx log] OnHttpStreamDone")
 //
 //	tx := ctx.GetContext("tx").(ctypes.Transaction)
