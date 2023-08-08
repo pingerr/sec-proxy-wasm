@@ -49,7 +49,7 @@ func BenchmarkIp(b *testing.B) {
 		//BenchmarkIp-4               2930            381192 ns/op          534848 B/op         13 allocs/op
 
 		for i := range ipArr {
-			_, _ = t.FindIpv4([]byte(ipArr[i]))
+			_, _ = t.FindCIDRb([]byte(ipArr[i]))
 			//found, _ := t.FindIpv4([]byte(ipArr[i]))
 			//fmt.Println(found)
 		}
@@ -63,7 +63,15 @@ func BenchmarkIp(b *testing.B) {
 		//BenchmarkIp-4               7292            144960 ns/op              79 B/op          0 allocs/op
 		//BenchmarkIp-4               8019            146973 ns/op              72 B/op          0 allocs/op
 		// FindIpv4
-
+		//goos: linux
+		//goarch: amd64
+		//pkg: ip_deny/test
+		//cpu: Intel(R) Xeon(R) Gold 6278C CPU @ 2.60GHz
+		//BenchmarkIp-2              10000            122281 ns/op              57 B/op          0 allocs/op
+		//BenchmarkIp-2              10000            107754 ns/op              57 B/op          0 allocs/op
+		//BenchmarkIp-2              10000            106516 ns/op              57 B/op          0 allocs/op
+		//BenchmarkIp-2              11198            107759 ns/op              51 B/op          0 allocs/op
+		//BenchmarkIp-2              10000            106136 ns/op              57 B/op          0 allocs/op
 	}
 	//t := myRadixTree.NewTree()
 	//_ = t.SetCIDRb([]byte("1.1.1.1/24"), 1)
