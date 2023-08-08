@@ -156,7 +156,7 @@ func onHttpRequestBody(ctx wrapper.HttpContext, config WafConfig, body []byte, l
 
 func onHttpResponseHeaders(ctx wrapper.HttpContext, config WafConfig, log wrapper.Log) types.Action {
 	if ctx.GetContext("interruptionHandled").(bool) {
-		log.Error("OnHttpResponseHeaders, interruption already handled")
+		//log.Error("OnHttpResponseHeaders, interruption already handled")
 		return types.ActionContinue
 	}
 
