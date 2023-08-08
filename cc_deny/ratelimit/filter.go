@@ -22,7 +22,7 @@ type (
 		types.DefaultPluginContext
 		headerMap map[string]*MyLimiter
 		cookieMap map[string]*MyLimiter
-		config    *Config
+		config    Config
 		mu        sync.Mutex
 	}
 
@@ -57,7 +57,12 @@ type (
 )
 
 func (*vmContext) NewPluginContext(contextID uint32) types.PluginContext {
-	return &pluginContext{}
+	return &pluginContext{
+		headerMap: map[string]*MyLimiter{},
+		cookieMap: map[string]*MyLimiter{},
+		mu:        sync.Mutex{},
+		config:    Config{},
+	}
 }
 
 func (p *pluginContext) NewHttpContext(contextID uint32) types.HttpContext {
@@ -116,10 +121,10 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 		}
 	}
 
-	p.mu.Lock()
-	p.headerMap = make(map[string]*MyLimiter)
-	p.cookieMap = make(map[string]*MyLimiter)
-	p.mu.Unlock()
+	//p.mu.Lock()
+	//p.headerMap = make(map[string]*MyLimiter)
+	//p.cookieMap = make(map[string]*MyLimiter)
+	//p.mu.Unlock()
 
 	return types.OnPluginStartStatusOK
 }
