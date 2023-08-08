@@ -3,6 +3,7 @@ package test
 import (
 	"bufio"
 	"fmt"
+	"ip_deny/myRadixTree"
 	"os"
 	"testing"
 )
@@ -25,45 +26,45 @@ func BenchmarkIp(b *testing.B) {
 		ipArr = append(ipArr, line)
 	}
 
-	//t := myRadixTree.NewTree()
-	//for i := range ipArr {
-	//	_ = t.SetCIDRb([]byte(ipArr[i]), 1)
-	//}
-	//ipArr = append(ipArr, "135.135.135.135")
-	//for n := 0; n < b.N; n++ {
-	//t := myRadixTree.NewTree()
-	//for i := range ipArr {
-	//	_ = t.SetCIDRb([]byte(ipArr[i]), 1)
-	//}
-	//BenchmarkIp-4               2023            582941 ns/op          534854 B/op         13 allocs/op
-	//BenchmarkIp-4               1944            606920 ns/op          534856 B/op         13 allocs/op
-	//BenchmarkIp-4               1954            550793 ns/op          534855 B/op         13 allocs/op
-	//BenchmarkIp-4               1963            593881 ns/op          534855 B/op         13 allocs/op
-	//BenchmarkIp-4               1837            583084 ns/op          534856 B/op         13 allocs/op
-	// mem
-	//BenchmarkIp-4               2991            375954 ns/op          534848 B/op         13 allocs/op
-	//BenchmarkIp-4               3349            383180 ns/op          534845 B/op         13 allocs/op
-	//BenchmarkIp-4               3925            404930 ns/op          534844 B/op         13 allocs/op
-	//BenchmarkIp-4               2799            386333 ns/op          534848 B/op         13 allocs/op
-	//BenchmarkIp-4               2930            381192 ns/op          534848 B/op         13 allocs/op
+	t := myRadixTree.NewTree()
+	for i := range ipArr {
+		_ = t.SetCIDRb([]byte(ipArr[i]), 1)
+	}
+	ipArr = append(ipArr, "135.135.135.135")
+	for n := 0; n < b.N; n++ {
+		//t := myRadixTree.NewTree()
+		//for i := range ipArr {
+		//	_ = t.SetCIDRb([]byte(ipArr[i]), 1)
+		//}
+		//BenchmarkIp-4               2023            582941 ns/op          534854 B/op         13 allocs/op
+		//BenchmarkIp-4               1944            606920 ns/op          534856 B/op         13 allocs/op
+		//BenchmarkIp-4               1954            550793 ns/op          534855 B/op         13 allocs/op
+		//BenchmarkIp-4               1963            593881 ns/op          534855 B/op         13 allocs/op
+		//BenchmarkIp-4               1837            583084 ns/op          534856 B/op         13 allocs/op
+		// mem
+		//BenchmarkIp-4               2991            375954 ns/op          534848 B/op         13 allocs/op
+		//BenchmarkIp-4               3349            383180 ns/op          534845 B/op         13 allocs/op
+		//BenchmarkIp-4               3925            404930 ns/op          534844 B/op         13 allocs/op
+		//BenchmarkIp-4               2799            386333 ns/op          534848 B/op         13 allocs/op
+		//BenchmarkIp-4               2930            381192 ns/op          534848 B/op         13 allocs/op
 
-	//for i := range ipArr {
-	//	_, _ = t.FindIpv4([]byte(ipArr[i]))
-	//	//found, _ := t.FindIpv4([]byte(ipArr[i]))
-	//	//fmt.Println(found)
-	//}
-	//goos: windows
-	//goarch: amd64
-	//pkg: ip_deny/test
-	//cpu: Intel(R) Celeron(R) N5105 @ 2.00GHz
-	//BenchmarkIp-4               7690            140662 ns/op              75 B/op          0 allocs/op
-	//BenchmarkIp-4              10000            152221 ns/op              57 B/op          0 allocs/op
-	//BenchmarkIp-4               7460            143445 ns/op              77 B/op          0 allocs/op
-	//BenchmarkIp-4              10000            143369 ns/op              57 B/op          0 allocs/op
-	//BenchmarkIp-4               8318            147110 ns/op              69 B/op          0 allocs/op
+		for i := range ipArr {
+			_, _ = t.FindIpv4([]byte(ipArr[i]))
+			//found, _ := t.FindIpv4([]byte(ipArr[i]))
+			//fmt.Println(found)
+		}
+		//goos: windows
+		//goarch: amd64
+		//pkg: ip_deny/test
+		//cpu: Intel(R) Celeron(R) N5105 @ 2.00GHz
+		//BenchmarkIp-4               8013            147115 ns/op              72 B/op          0 allocs/op
+		//BenchmarkIp-4               7156            149423 ns/op              81 B/op          0 allocs/op
+		//BenchmarkIp-4               8012            168108 ns/op              72 B/op          0 allocs/op
+		//BenchmarkIp-4               7292            144960 ns/op              79 B/op          0 allocs/op
+		//BenchmarkIp-4               8019            146973 ns/op              72 B/op          0 allocs/op
+		// FindIpv4
 
-	// FindIpv4
-	//}
+	}
 	//t := myRadixTree.NewTree()
 	//_ = t.SetCIDRb([]byte("1.1.1.1/24"), 1)
 	//_, _ = t.FindCIDRb([]byte("1.1.1.2"))
