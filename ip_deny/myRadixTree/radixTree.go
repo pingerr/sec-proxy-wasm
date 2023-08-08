@@ -109,6 +109,46 @@ func (tree *Tree) find32(key, mask uint32) (value interface{}) {
 	return value
 }
 
+//func (tree *Tree) FindIpv4Once(ipstr []byte) (interface{}, error) {
+//	var (
+//		ip  uint32
+//		oct uint32
+//		b   byte
+//	)
+//
+//	for _, b = range ipstr {
+//		if b != '.' {
+//			oct = oct*10 + uint32(b-'0')
+//		} else {
+//			ip = ip<<8 + oct
+//			oct = 0
+//		}
+//	}
+//
+//	ip = ip<<8 + oct
+//
+//	mask := maskConst
+//
+//	bit := startbit
+//	node := tree.root
+//	var value interface{}
+//	for node != nil {
+//		if node.value != nil {
+//			value = node.value
+//		}
+//		if ip&bit != 0 {
+//			node = node.right
+//		} else {
+//			node = node.left
+//		}
+//		if mask&bit == 0 {
+//			break
+//		}
+//		bit >>= 1
+//	}
+//	return value, nil
+//}
+
 func (tree *Tree) newnode() (p *node) {
 
 	ln := len(tree.alloc)
