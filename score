@@ -278,15 +278,18 @@ time used: 7.832311, total requests: 50, passed requests: 43, denied requests: 7
 
 ip
     前缀hash
-    radix树 1  压缩
-    art
+    my bit tree 1  todo 压缩
+    iplookup ?
 
 cc
     令牌桶 1
-    全局令牌桶
+    全局令牌桶 todo
 
 waf
     rule  half
-    rx
-    transformation
+    rx ?
+    transformation base64flat
+    placeholder
+
+
 
