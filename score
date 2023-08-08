@@ -275,6 +275,35 @@ time used: 7.83126, total requests: 50, passed requests: 42, denied requests: 8,
 time used: 7.832311, total requests: 50, passed requests: 43, denied requests: 7, score of case 2: 100
 {'ip_deny': 84.809752, 'waf_deny': 50.2668664, 'cc_deny': 80.0}
 
+0.3.37 ip(myIpLookup)+cc(bucket,muli)+waf(88+404)
+total requests: 1200, denied requests: 1200
+[ip deny] white test, total 100 requests, you deny 2 requests
+[ip deny] ip deny test finished, using 1.424261 seconds
+[ip deny] function score: 100, performance score: 81.51478
+/tcdata/start.sh: line 160: 25 Killed envoy -c envoy-ecds.yaml --concurrency 4 --log-level info --component-log-level wasm:debug --log-format "[%Y-%m-%d %T.%f][%t][%l][%n] [%g:%#] %v" --log-path /home/envoy/logs/envoy.log > /home/envoy/logs/access.log
+time="2023-08-08T09:26:03Z" level=info msg="GoTestWAF started" version=unknown
+time="2023-08-08T09:26:03Z" level=info msg="Test cases loading started"
+time="2023-08-08T09:26:03Z" level=info msg="Test cases loading finished"
+time="2023-08-08T09:26:03Z" level=info msg="Test cases fingerprint" fp=c1eca7695b88920cd1dc534c741a79f1
+time="2023-08-08T09:26:03Z" level=info msg="Try to identify WAF solution"
+time="2023-08-08T09:26:03Z" level=info msg="WAF was not identified"
+time="2023-08-08T09:26:03Z" level=info msg="WAF pre-check" status=skipped
+time="2023-08-08T09:26:03Z" level=info msg="WebSocket pre-check" status=skipped
+time="2023-08-08T09:26:03Z" level=info msg="gRPC pre-check" status=started
+time="2023-08-08T09:26:03Z" level=info msg="gRPC pre-check" connection="not available" status=done
+time="2023-08-08T09:26:03Z" level=info msg="Scanning started" url="http://127.0.0.1:8080/"
+time="2023-08-08T09:30:08Z" level=info msg="Scanning finished" duration=4m4.893424898s
+[waf deny] waf deny test start
+[waf deny] waf deny test finished, using 254.983129 seconds
+[waf deny] function score is 91.76 , performance score is 25.005623666666672
+/tcdata/start.sh: line 234: 105 Killed envoy -c envoy-ecds.yaml --concurrency 4 --log-level info --component-log-level wasm:debug --log-format "[%Y-%m-%d %T.%f][%t][%l][%n] [%g:%#] %v" --log-path /home/envoy/logs/envoy.log > /home/envoy/logs/access.log
+time used: 7.794096, total requests: 50, passed requests: 40, denied requests: 10, score of case 1: 100
+time used: 7.793654, total requests: 50, passed requests: 42, denied requests: 8, score of case 2: 100
+/tcdata/start.sh: line 370: 1441 Killed envoy -c envoy-ecds.yaml --concurrency 4 --log-level info --component-log-level wasm:debug --log-format "[%Y-%m-%d %T.%f][%t][%l][%n] [%g:%#] %v" --log-path /home/envoy/logs/envoy.log > /home/envoy/logs/access.log
+{'ip_deny': 85.30886799999999, 'waf_deny': 51.707374200000004, 'cc_deny': 80.0}
+
+
+
 
 ip
     前缀hash
