@@ -116,15 +116,15 @@ func BenchmarkIp(b *testing.B) {
 		//BenchmarkIp-4               2810            409978 ns/op          368169 B/op       5406 allocs/op
 		//}
 		for i := range ipArr {
-			//goos: windows
+			//goos: linux
 			//goarch: amd64
 			//pkg: ip_deny/test
-			//cpu: Intel(R) Celeron(R) N5105 @ 2.00GHz
-			//BenchmarkIp-4              14262             78307 ns/op            2657 B/op        653 allocs/op
-			//BenchmarkIp-4              15202             81512 ns/op            2654 B/op        653 allocs/op
-			//BenchmarkIp-4              15096             77823 ns/op            2655 B/op        653 allocs/op
-			//BenchmarkIp-4              15492             78030 ns/op            2654 B/op        653 allocs/op
-			//BenchmarkIp-4              15279             79110 ns/op            2654 B/op        653 allocs/op
+			//cpu: Intel(R) Xeon(R) Gold 6278C CPU @ 2.60GHz
+			//BenchmarkIp-2              23650             49855 ns/op            2629 B/op        653 allocs/op
+			//BenchmarkIp-2              24026             50161 ns/op            2629 B/op        653 allocs/op
+			//BenchmarkIp-2              23954             50041 ns/op            2629 B/op        653 allocs/op
+			//BenchmarkIp-2              23222             52219 ns/op            2629 B/op        653 allocs/op
+			//BenchmarkIp-2              23095             50679 ns/op            2629 B/op        653 allocs/op
 			_ = tree.Get(ipLook.ParseIPv4(ipArr[i])) == 1
 			//fmt.Println(tree.Get(ipLook.ParseIPv4(ipArr[i])))
 		}
