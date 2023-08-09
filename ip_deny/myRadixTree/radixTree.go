@@ -45,13 +45,40 @@ func (tree *Tree) FindCIDRb(cidr []byte) (interface{}, error) {
 	return tree.find32(ip, mask), nil
 }
 
-func (tree *Tree) FindIpv4(cidr []byte) (interface{}, error) {
-	ip, mask, err := parseIpv4(cidr)
-
-	if err != nil {
-		return nil, err
+func (tree *Tree) FindIpv4(ipstr []byte) (interface{}, error) {
+	var (
+		ip  uint32
+		oct uint32
+		b   byte
+	)
+	for _, b = range ipstr {
+		if b == '.' {
+			ip = ip<<8 + oct
+			oct = 0
+		} else {
+			oct = oct*10 + uint32(b-'0')
+		}
 	}
-	return tree.find32(ip, mask), nil
+	ip = ip<<8 + oct
+
+	bit := startbit
+	node := tree.root
+	var value interface{}
+	for node != nil {
+		if node.value != nil {
+			value = node.value
+		}
+		if ip&bit != 0 {
+			node = node.right
+		} else {
+			node = node.left
+		}
+		if maskConst&bit == 0 {
+			break
+		}
+		bit >>= 1
+	}
+	return value, nil
 }
 
 func (tree *Tree) insert32(key, mask uint32, value interface{}) error {
