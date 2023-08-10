@@ -411,7 +411,7 @@ nexthop_t find(word s, routtable_t t)
    word bitmask;
    int preadr;
 
-   /* Traverse the trie */
+   /* Traverse the trie 遍历 */
    node = t->trie[0];
    pos = GETSKIP(node);
    branch = GETBRANCH(node);
