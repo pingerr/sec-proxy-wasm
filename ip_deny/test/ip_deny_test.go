@@ -125,6 +125,12 @@ func BenchmarkIp(b *testing.B) {
 			//BenchmarkIp-2              23954             50041 ns/op            2629 B/op        653 allocs/op
 			//BenchmarkIp-2              23222             52219 ns/op            2629 B/op        653 allocs/op
 			//BenchmarkIp-2              23095             50679 ns/op            2629 B/op        653 allocs/op
+			// length = 8
+			//BenchmarkIp-2              26211             44995 ns/op            2693 B/op        653 allocs/op
+			//BenchmarkIp-2              26383             44998 ns/op            2692 B/op        653 allocs/op
+			//BenchmarkIp-2              26995             44386 ns/op            2691 B/op        653 allocs/op
+			//BenchmarkIp-2              26341             44956 ns/op            2692 B/op        653 allocs/op
+			//BenchmarkIp-2              26924             44644 ns/op            2691 B/op        653 allocs/op
 			_ = tree.Get(ipLookTest.ParseIPv4(ipArr[i])) == 1
 			//fmt.Println(tree.Get(ipLookTest.ParseIPv4(ipArr[i])))
 		}
