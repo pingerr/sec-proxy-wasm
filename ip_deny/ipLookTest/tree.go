@@ -8,7 +8,7 @@ import (
 // bitslen contstant must be a power of 2. It indicates how much space will be taken by a tree and maximum number of hops (treenode accesses).
 // When bitslen is 4, the maximum number of hops will be 32 / bitslen and one node takes 1<< bitslen * (sizeof SID and *treenode).
 // So current constant (4) will make maximum 8 hops and every node consumes 256 bytes.
-const bitslen = 8
+const bitslen = 4
 
 // SID type contains a list of corresponding service indexes.
 // Every nth bit indicates nth service. So 0x1 stores (0),
