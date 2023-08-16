@@ -52,11 +52,15 @@ static_resources:
                           {
                             "header": "hd1",
                             "qps": 1,
-                            "qpm": 5
+                            "qpm": 5,
+                            "qpd": 1000,
+                            "block_seconds": 5 
                           },
                           {
                             "cookie": "uid",
-                            "qps": 1
+                            "qps": 1,
+                            "qpm": 5,
+                            "block_seconds": 5
                           }
                         ]
                       }
