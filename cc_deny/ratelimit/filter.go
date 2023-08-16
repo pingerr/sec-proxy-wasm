@@ -137,7 +137,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 				newHLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(ctx.pluginContext.config.headerQps))
 				newHLimiter.qps.Allow()
 			}
-			if ctx.pluginContext.config.headerQpd != 0 {
+			if ctx.pluginContext.config.headerQpm != 0 {
 				newHLimiter.qpm = rate.NewLimiter(rate.Every(time.Minute), int(ctx.pluginContext.config.headerQpm))
 				newHLimiter.qpm.Allow()
 			}
