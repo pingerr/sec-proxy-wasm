@@ -140,6 +140,10 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 				newHLimiter.qpm = rate.NewLimiter(rate.Every(time.Minute), int(ctx.pluginContext.config.headerQpm))
 				newHLimiter.qpm.Allow()
 			}
+			if ctx.pluginContext.config.headerQpd != 0 {
+				newHLimiter.qpd = rate.NewLimiter(rate.Every(24*time.Hour), int(ctx.pluginContext.config.headerQpd))
+				newHLimiter.qpd.Allow()
+			}
 			if ctx.pluginContext.config.hasHeaderBlock {
 				newHLimiter.nextTime = 0
 			}
@@ -151,13 +155,17 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 			} else {
 				qpsAllow := true
 				qpmAllow := true
+				qpdAllow := true
 				if hLimiter.qps != nil {
 					qpsAllow = hLimiter.qps.Allow()
 				}
 				if hLimiter.qpm != nil {
 					qpmAllow = hLimiter.qpm.Allow()
 				}
-				if !qpsAllow || !qpmAllow {
+				if hLimiter.qpd != nil {
+					qpdAllow = hLimiter.qpd.Allow()
+				}
+				if !qpsAllow || !qpmAllow || !qpdAllow {
 					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 					if ctx.pluginContext.config.hasHeaderBlock {
 						hLimiter.nextTime = now + ctx.pluginContext.config.headerBlockTime*1000
@@ -166,6 +174,9 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						}
 						if ctx.pluginContext.config.headerQpm != 0 {
 							hLimiter.qpm = rate.NewLimiter(rate.Every(time.Minute), int(ctx.pluginContext.config.headerQpm))
+						}
+						if ctx.pluginContext.config.headerQpm != 0 {
+							hLimiter.qpd = rate.NewLimiter(rate.Every(24*time.Hour), int(ctx.pluginContext.config.headerQpd))
 						}
 					}
 				}
@@ -190,6 +201,10 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 				newCLimiter.qpm = rate.NewLimiter(rate.Every(time.Minute), int(ctx.pluginContext.config.cookieQpm))
 				newCLimiter.qpm.Allow()
 			}
+			if ctx.pluginContext.config.cookieQpd != 0 {
+				newCLimiter.qpd = rate.NewLimiter(rate.Every(24*time.Hour), int(ctx.pluginContext.config.cookieQpd))
+				newCLimiter.qpd.Allow()
+			}
 			if ctx.pluginContext.config.hasCookieBlock {
 				newCLimiter.nextTime = 0
 			}
@@ -200,13 +215,17 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 			} else {
 				qpsAllow := true
 				qpmAllow := true
+				qpdAllow := true
 				if cLimiter.qps != nil {
 					qpsAllow = cLimiter.qps.Allow()
 				}
 				if cLimiter.qpm != nil {
 					qpmAllow = cLimiter.qpm.Allow()
 				}
-				if !qpsAllow || !qpmAllow {
+				if cLimiter.qpd != nil {
+					qpdAllow = cLimiter.qpd.Allow()
+				}
+				if !qpsAllow || !qpmAllow || !qpdAllow {
 					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 					if ctx.pluginContext.config.hasCookieBlock {
 						cLimiter.nextTime = now + ctx.pluginContext.config.cookieBlockTime*1000
@@ -215,6 +234,9 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						}
 						if ctx.pluginContext.config.cookieQpm != 0 {
 							cLimiter.qpm = rate.NewLimiter(rate.Every(time.Minute), int(ctx.pluginContext.config.cookieQpm))
+						}
+						if ctx.pluginContext.config.cookieQpd != 0 {
+							cLimiter.qpd = rate.NewLimiter(rate.Every(24*time.Hour), int(ctx.pluginContext.config.cookieQpd))
 						}
 					}
 				}
