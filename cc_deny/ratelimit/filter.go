@@ -71,7 +71,6 @@ func (p *pluginContext) NewHttpContext(contextID uint32) types.HttpContext {
 
 func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPluginStartStatus {
 	data, err := proxywasm.GetPluginConfiguration()
-	//proxywasm.LogDebugf("[data: %s]", data)
 	if data == nil {
 		return types.OnPluginStartStatusOK
 	}
@@ -85,7 +84,6 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 	}
 
 	results := gjson.Get(string(data), "cc_rules").Array()
-	//proxywasm.LogDebugf("[arr: %s]", results)
 	for i := range results {
 		curMap := results[i].Map()
 		if headerKey := curMap["header"].Str; headerKey != "" {
@@ -121,11 +119,6 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 		}
 	}
 
-	//p.mu.Lock()
-	//p.headerMap = make(map[string]*MyLimiter)
-	//p.cookieMap = make(map[string]*MyLimiter)
-	//p.mu.Unlock()
-
 	return types.OnPluginStartStatusOK
 }
 
@@ -143,9 +136,9 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 			if ctx.pluginContext.config.headerQps != 0 {
 				newHLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(ctx.pluginContext.config.headerQps))
 			}
-			//if config.headerQpd != 0 {
-			//	myLimiter.qpm = rate.NewLimiter(rate.Every(time.Second*60), int(config.headerQpm))
-			//}
+			if ctx.pluginContext.config.headerQpd != 0 {
+				newHLimiter.qpm = rate.NewLimiter(rate.Every(time.Second*60), int(ctx.pluginContext.config.headerQpm))
+			}
 			//if config.hasHeaderBlock {
 			//	myLimiter.hasBlockTime = config.hasHeaderBlock
 			//	myLimiter.nextTime = now.UnixMilli()

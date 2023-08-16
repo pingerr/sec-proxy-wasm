@@ -7,6 +7,7 @@ import (
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 	"github.com/tidwall/gjson"
+	"strconv"
 	"strings"
 )
 
@@ -16,6 +17,7 @@ func PluginStart() {
 		wrapper.ParseConfigBy(parseConfig),
 		wrapper.ProcessRequestHeadersBy(onHttpRequestHeaders),
 		wrapper.ProcessRequestBodyBy(onHttpRequestBody),
+		wrapper.ProcessResponseHeadersBy(onHttpResponseHeaders),
 	)
 }
 
@@ -147,21 +149,21 @@ func onHttpRequestBody(ctx wrapper.HttpContext, config WafConfig, body []byte, l
 	return types.ActionContinue
 }
 
-//func onHttpResponseHeaders(ctx wrapper.HttpContext, config WafConfig, log wrapper.Log) types.Action {
-//	if ctx.GetContext("interruptionHandled").(bool) {
-//		//log.Error("OnHttpResponseHeaders, interruption already handled")
-//		return types.ActionContinue
-//	}
-//
-//	status, _ := proxywasm.GetHttpResponseHeader(":status")
-//	code, _ := strconv.Atoi(status)
-//	if code == 404 {
-//		_ = proxywasm.AddHttpResponseHeader(":status", "403")
-//		return handleInterruption(ctx, "http_response_headers", nil, log)
-//	}
-//
-//	return types.ActionContinue
-//}
+func onHttpResponseHeaders(ctx wrapper.HttpContext, config WafConfig, log wrapper.Log) types.Action {
+	if ctx.GetContext("interruptionHandled").(bool) {
+		//log.Error("OnHttpResponseHeaders, interruption already handled")
+		return types.ActionContinue
+	}
+
+	status, _ := proxywasm.GetHttpResponseHeader(":status")
+	code, _ := strconv.Atoi(status)
+	if code == 404 {
+		_ = proxywasm.AddHttpResponseHeader(":status", "403")
+		return handleInterruption(ctx, "http_response_headers", nil, log)
+	}
+
+	return types.ActionContinue
+}
 
 //func onHttpStreamDone(ctx mywrapper.HttpContext, config WafConfig, log mywrapper.Log) {
 //	log.Info("[rinfx log] OnHttpStreamDone")
