@@ -306,9 +306,9 @@ time="2023-08-05T03:42:46Z" level=info msg="Scanning finished" duration=4m5.7351
 time used: 7.83126, total requests: 50, passed requests: 42, denied requests: 8, score of case 1: 100
 time used: 7.832311, total requests: 50, passed requests: 43, denied requests: 7, score of case 2: 100
 {'ip_deny': 84.809752, 'waf_deny': 50.2668664, 'cc_deny': 80.0}
-waf: 36.1800
-ip: 23.2700
-cc: 4.00
+waf: 36.1800 -> (88.63, 91.663)
+ip: 23.2700 -> 19.27 (100.00,95.4375)
+cc: 4.00 -> (0.00, ?)
 
 
 
