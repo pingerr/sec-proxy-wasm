@@ -75,11 +75,11 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 		return types.OnPluginStartStatusOK
 	}
 	if err != nil {
-		proxywasm.LogCriticalf("error reading plugin configuration: %v", err)
+		//proxywasm.LogCriticalf("error reading plugin configuration: %v", err)
 		return types.OnPluginStartStatusFailed
 	}
 	if !gjson.Valid(string(data)) {
-		proxywasm.LogCritical(`invalid configuration format; expected {"header": "<header name>", "value": "<header value>"}`)
+		//proxywasm.LogCritical(`invalid configuration format; expected {"header": "<header name>", "value": "<header value>"}`)
 		return types.OnPluginStartStatusFailed
 	}
 
@@ -139,20 +139,19 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 			if ctx.pluginContext.config.headerQpd != 0 {
 				newHLimiter.qpm = rate.NewLimiter(rate.Every(time.Second*60), int(ctx.pluginContext.config.headerQpm))
 			}
-			//if config.hasHeaderBlock {
-			//	myLimiter.hasBlockTime = config.hasHeaderBlock
-			//	myLimiter.nextTime = now.UnixMilli()
-			//}
+			if ctx.pluginContext.config.hasHeaderBlock {
+				newHLimiter.hasBlockTime = true
+				newHLimiter.nextTime = 0
+			}
 			ctx.pluginContext.headerMap[headerValue] = &newHLimiter
 		} else {
-			if hLimiter.hasBlockTime && now.UnixMilli() < hLimiter.nextTime {
+			if hLimiter.hasBlockTime && hLimiter.nextTime != 0 && now.UnixMilli() < hLimiter.nextTime {
 				_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-			} else if hLimiter.qps != nil && !hLimiter.qps.Allow() {
+			} else if (hLimiter.qps != nil && !hLimiter.qps.Allow()) || (hLimiter.qpm != nil && !hLimiter.qpm.Allow()) {
 				_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-				//if limiter.hasBlockTime {
-				//	limiter.nextTime = now.UnixMilli() + config.headerBlockTime*1000
-				//	log.Infof("[block time : %s ms]", config.headerBlockTime*1000)
-				//}
+				if hLimiter.hasBlockTime {
+					hLimiter.nextTime = now.UnixMilli() + ctx.pluginContext.config.headerBlockTime*1000
+				}
 			}
 		}
 	}
@@ -169,23 +168,22 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 			if ctx.pluginContext.config.cookieQps != 0 {
 				newCLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(ctx.pluginContext.config.cookieQps))
 			}
-			//if config.headerQpd != 0 {
-			//	myLimiter.qpm = rate.NewLimiter(rate.Every(time.Second*60), int(config.headerQpm))
-			//}
-			//if config.hasHeaderBlock {
-			//	myLimiter.hasBlockTime = config.hasHeaderBlock
-			//	myLimiter.nextTime = now.UnixMilli()
-			//}
+			if ctx.pluginContext.config.headerQpd != 0 {
+				newCLimiter.qpm = rate.NewLimiter(rate.Every(time.Second*60), int(ctx.pluginContext.config.cookieQpm))
+			}
+			if ctx.pluginContext.config.hasHeaderBlock {
+				newCLimiter.hasBlockTime = true
+				newCLimiter.nextTime = 0
+			}
 			ctx.pluginContext.cookieMap[uid] = &newCLimiter
 		} else {
-			if cLimiter.hasBlockTime && now.UnixMilli() < cLimiter.nextTime {
+			if cLimiter.hasBlockTime && cLimiter.nextTime != 0 && now.UnixMilli() < cLimiter.nextTime {
 				_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-			} else if cLimiter.qps != nil && !cLimiter.qps.Allow() {
+			} else if (cLimiter.qps != nil && !cLimiter.qps.Allow()) || (cLimiter.qpm != nil && !cLimiter.qpm.Allow()) {
 				_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-				//if limiter.hasBlockTime {
-				//	limiter.nextTime = now.UnixMilli() + config.headerBlockTime*1000
-				//	log.Infof("[block time : %s ms]", config.headerBlockTime*1000)
-				//}
+				if cLimiter.hasBlockTime {
+					cLimiter.nextTime = now.UnixMilli() + ctx.pluginContext.config.cookieBlockTime*1000
+				}
 			}
 		}
 	}
