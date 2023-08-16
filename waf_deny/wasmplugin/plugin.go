@@ -17,7 +17,7 @@ func PluginStart() {
 		wrapper.ParseConfigBy(parseConfig),
 		wrapper.ProcessRequestHeadersBy(onHttpRequestHeaders),
 		wrapper.ProcessRequestBodyBy(onHttpRequestBody),
-		wrapper.ProcessResponseHeadersBy(onHttpResponseHeaders),
+		//wrapper.ProcessResponseHeadersBy(onHttpResponseHeaders),
 	)
 }
 

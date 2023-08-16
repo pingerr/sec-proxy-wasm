@@ -1,11 +1,11 @@
 package main
 
 import (
-	"ip_deny/ipLookTest"
+	"ip_deny/ipLook"
 )
 
 func main() {
 	//myRadixTree.FilterStart()
-	//ipLook.FilterStart()
-	ipLookTest.FilterStart()
+	ipLook.FilterStart()
+	//ipLookTest.FilterStart()
 }
