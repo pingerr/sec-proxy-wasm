@@ -51,7 +51,7 @@ static_resources:
                         "cc_rules": [
                           {
                             "header": "hd1",
-                            "qpm": 3
+                            "qpm": 10
                           },
                           {
                             "cookie": "uid",
