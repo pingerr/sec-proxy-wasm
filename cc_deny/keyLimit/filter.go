@@ -40,6 +40,7 @@ type (
 		qpsLastFillTime int64
 		qpmLastFillTime int64
 		qpdLastFillTime int64
+		blockStat       bool
 	}
 
 	LimitRule struct {
@@ -111,7 +112,6 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 			}
 			if cookieBlockTime := curMap["block_seconds"].Int(); cookieBlockTime != 0 {
 				cookieRule.blockNano = cookieBlockTime * 1e9
-				proxywasm.LogInfof("[blockNano: %d]", cookieRule.blockNano)
 			}
 			p.cookieRuleSlice = append(p.cookieRuleSlice, &cookieRule)
 		}
@@ -144,45 +144,75 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 					newHLimiter.qpdRemainTokens = limitRule.qpd - 1
 					newHLimiter.qpdLastFillTime = curNanoSec
 				}
+				newHLimiter.blockStat = false
 				ctx.pluginContext.headerMap[headerValue] = &newHLimiter
 
 			} else {
-				if limitRule.blockNano == 0 {
-					if hLimiter.qpsLastFillTime != 0 && curNanoSec > hLimiter.qpsLastFillTime+limitRule.blockNano {
-						hLimiter.qpsRemainTokens = limitRule.qps
-						hLimiter.qpsLastFillTime = curNanoSec
-					}
-					if hLimiter.qpmLastFillTime != 0 && curNanoSec > hLimiter.qpmLastFillTime+limitRule.blockNano {
-						hLimiter.qpmRemainTokens = limitRule.qpm
-						hLimiter.qpmLastFillTime = curNanoSec
-					}
-					if hLimiter.qpdLastFillTime != 0 && curNanoSec > hLimiter.qpdLastFillTime+limitRule.blockNano {
-						hLimiter.qpdRemainTokens = limitRule.qpd
-						hLimiter.qpdLastFillTime = curNanoSec
+				if hLimiter.blockStat {
+					if limitRule.blockNano != 0 {
+						if (hLimiter.qpsLastFillTime != 0 && curNanoSec <= hLimiter.qpsLastFillTime+limitRule.blockNano) ||
+							(hLimiter.qpmLastFillTime != 0 && curNanoSec <= hLimiter.qpmLastFillTime+limitRule.blockNano) ||
+							(hLimiter.qpdLastFillTime != 0 && curNanoSec <= hLimiter.qpdLastFillTime+limitRule.blockNano) {
+							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+						} else {
+							if hLimiter.qpsLastFillTime != 0 && curNanoSec > hLimiter.qpsLastFillTime+limitRule.blockNano {
+								hLimiter.qpsRemainTokens = limitRule.qps
+								hLimiter.qpsLastFillTime = curNanoSec
+							}
+							if hLimiter.qpmLastFillTime != 0 && curNanoSec > hLimiter.qpmLastFillTime+limitRule.blockNano {
+								hLimiter.qpmRemainTokens = limitRule.qpm
+								hLimiter.qpmLastFillTime = curNanoSec
+							}
+							if hLimiter.qpdLastFillTime != 0 && curNanoSec > hLimiter.qpdLastFillTime+limitRule.blockNano {
+								hLimiter.qpdRemainTokens = limitRule.qpd
+								hLimiter.qpdLastFillTime = curNanoSec
+							}
+						}
+					} else {
+						if (hLimiter.qpsLastFillTime != 0 && curNanoSec <= hLimiter.qpsLastFillTime+1e9) ||
+							(hLimiter.qpmLastFillTime != 0 && curNanoSec <= hLimiter.qpmLastFillTime+1e9*60) ||
+							(hLimiter.qpdLastFillTime != 0 && curNanoSec <= hLimiter.qpdLastFillTime+1e9*86400) {
+							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+						} else {
+							if hLimiter.qpsLastFillTime != 0 && curNanoSec > hLimiter.qpsLastFillTime+1e9 {
+								hLimiter.qpsRemainTokens = limitRule.qps
+								hLimiter.qpsLastFillTime = curNanoSec
+							}
+							if hLimiter.qpmLastFillTime != 0 && curNanoSec > hLimiter.qpmLastFillTime+1e9*60 {
+								hLimiter.qpmRemainTokens = limitRule.qpm
+								hLimiter.qpmLastFillTime = curNanoSec
+							}
+							if hLimiter.qpdLastFillTime != 0 && curNanoSec > hLimiter.qpdLastFillTime+1e9*86400 {
+								hLimiter.qpdRemainTokens = limitRule.qpd
+								hLimiter.qpdLastFillTime = curNanoSec
+							}
+						}
 					}
 				} else {
-					if hLimiter.qpsLastFillTime != 0 && curNanoSec > hLimiter.qpsLastFillTime+1e9 {
-						hLimiter.qpsRemainTokens = limitRule.qps
-						hLimiter.qpsLastFillTime = curNanoSec
+					if (hLimiter.qpsLastFillTime != 0 && hLimiter.qpsRemainTokens == 0) ||
+						(hLimiter.qpmLastFillTime != 0 && hLimiter.qpmRemainTokens == 0) ||
+						(hLimiter.qpdLastFillTime != 0 && hLimiter.qpdRemainTokens == 0) {
+						_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+						hLimiter.blockStat = true
+						if hLimiter.qpsLastFillTime != 0 {
+							hLimiter.qpsLastFillTime = curNanoSec
+						}
+						if hLimiter.qpmLastFillTime != 0 {
+							hLimiter.qpmLastFillTime = curNanoSec
+						}
+						if hLimiter.qpdLastFillTime != 0 {
+							hLimiter.qpdLastFillTime = curNanoSec
+						}
 					}
-					if hLimiter.qpmLastFillTime != 0 && curNanoSec > hLimiter.qpmLastFillTime+1e9*60 {
-						hLimiter.qpmRemainTokens = limitRule.qpm
-						hLimiter.qpmLastFillTime = curNanoSec
+					if hLimiter.qpsLastFillTime != 0 {
+						hLimiter.qpsRemainTokens -= 1
 					}
-					if hLimiter.qpdLastFillTime != 0 && curNanoSec > hLimiter.qpdLastFillTime+1e9*86400 {
-						hLimiter.qpdRemainTokens = limitRule.qpd
-						hLimiter.qpdLastFillTime = curNanoSec
+					if hLimiter.qpmLastFillTime != 0 {
+						hLimiter.qpmRemainTokens -= 1
 					}
-				}
-
-				hLimiter.qpsRemainTokens -= 1
-				hLimiter.qpmRemainTokens -= 1
-				hLimiter.qpdRemainTokens -= 1
-
-				if (hLimiter.qpsLastFillTime != 0 && hLimiter.qpsRemainTokens <= 0) ||
-					(hLimiter.qpmLastFillTime != 0 && hLimiter.qpmRemainTokens <= 0) ||
-					(hLimiter.qpdLastFillTime != 0 && hLimiter.qpdRemainTokens <= 0) {
-					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+					if hLimiter.qpdLastFillTime != 0 {
+						hLimiter.qpdRemainTokens -= 1
+					}
 				}
 			}
 		}
@@ -211,45 +241,63 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 					newCLimiter.qpdRemainTokens = limitRule.qpd - 1
 					newCLimiter.qpdLastFillTime = curNanoSec
 				}
+				newCLimiter.blockStat = false
 				ctx.pluginContext.cookieMap[cookieValue] = &newCLimiter
 
 			} else {
-				if limitRule.blockNano == 0 {
-					if cLimiter.qpsLastFillTime != 0 && curNanoSec > cLimiter.qpsLastFillTime+limitRule.blockNano {
-						cLimiter.qpsRemainTokens = limitRule.qps
-						cLimiter.qpsLastFillTime = curNanoSec
-					}
-					if cLimiter.qpmLastFillTime != 0 && curNanoSec > cLimiter.qpmLastFillTime+limitRule.blockNano {
-						cLimiter.qpmRemainTokens = limitRule.qpm
-						cLimiter.qpmLastFillTime = curNanoSec
-					}
-					if cLimiter.qpdLastFillTime != 0 && curNanoSec > cLimiter.qpdLastFillTime+limitRule.blockNano {
-						cLimiter.qpdRemainTokens = limitRule.qpd
-						cLimiter.qpdLastFillTime = curNanoSec
+				if cLimiter.blockStat {
+					if limitRule.blockNano != 0 {
+						if cLimiter.qpsLastFillTime != 0 && curNanoSec > cLimiter.qpsLastFillTime+limitRule.blockNano {
+							cLimiter.qpsRemainTokens = limitRule.qps
+							cLimiter.qpsLastFillTime = curNanoSec
+						}
+						if cLimiter.qpmLastFillTime != 0 && curNanoSec > cLimiter.qpmLastFillTime+limitRule.blockNano {
+							cLimiter.qpmRemainTokens = limitRule.qpm
+							cLimiter.qpmLastFillTime = curNanoSec
+						}
+						if cLimiter.qpdLastFillTime != 0 && curNanoSec > cLimiter.qpdLastFillTime+limitRule.blockNano {
+							cLimiter.qpdRemainTokens = limitRule.qpd
+							cLimiter.qpdLastFillTime = curNanoSec
+						}
+					} else {
+						if cLimiter.qpsLastFillTime != 0 && curNanoSec > cLimiter.qpsLastFillTime+1e9 {
+							cLimiter.qpsRemainTokens = limitRule.qps
+							cLimiter.qpsLastFillTime = curNanoSec
+						}
+						if cLimiter.qpmLastFillTime != 0 && curNanoSec > cLimiter.qpmLastFillTime+1e9*60 {
+							cLimiter.qpmRemainTokens = limitRule.qpm
+							cLimiter.qpmLastFillTime = curNanoSec
+						}
+						if cLimiter.qpdLastFillTime != 0 && curNanoSec > cLimiter.qpdLastFillTime+1e9*86400 {
+							cLimiter.qpdRemainTokens = limitRule.qpd
+							cLimiter.qpdLastFillTime = curNanoSec
+						}
 					}
 				} else {
-					if cLimiter.qpsLastFillTime != 0 && curNanoSec > cLimiter.qpsLastFillTime+1e9 {
-						cLimiter.qpsRemainTokens = limitRule.qps
-						cLimiter.qpsLastFillTime = curNanoSec
+					if (cLimiter.qpsLastFillTime != 0 && cLimiter.qpsRemainTokens == 0) ||
+						(cLimiter.qpmLastFillTime != 0 && cLimiter.qpmRemainTokens == 0) ||
+						(cLimiter.qpdLastFillTime != 0 && cLimiter.qpdRemainTokens == 0) {
+						_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+						cLimiter.blockStat = true
+						if cLimiter.qpsLastFillTime != 0 {
+							cLimiter.qpsLastFillTime = curNanoSec
+						}
+						if cLimiter.qpmLastFillTime != 0 {
+							cLimiter.qpmLastFillTime = curNanoSec
+						}
+						if cLimiter.qpdLastFillTime != 0 {
+							cLimiter.qpdLastFillTime = curNanoSec
+						}
 					}
-					if cLimiter.qpmLastFillTime != 0 && curNanoSec > cLimiter.qpmLastFillTime+1e9*60 {
-						cLimiter.qpmRemainTokens = limitRule.qpm
-						cLimiter.qpmLastFillTime = curNanoSec
+					if cLimiter.qpsLastFillTime != 0 {
+						cLimiter.qpsRemainTokens -= 1
 					}
-					if cLimiter.qpdLastFillTime != 0 && curNanoSec > cLimiter.qpdLastFillTime+1e9*86400 {
-						cLimiter.qpdRemainTokens = limitRule.qpd
-						cLimiter.qpdLastFillTime = curNanoSec
+					if cLimiter.qpmLastFillTime != 0 {
+						cLimiter.qpmRemainTokens -= 1
 					}
-				}
-
-				cLimiter.qpsRemainTokens -= 1
-				cLimiter.qpmRemainTokens -= 1
-				cLimiter.qpdRemainTokens -= 1
-
-				if (cLimiter.qpsLastFillTime != 0 && cLimiter.qpsRemainTokens <= 0) ||
-					(cLimiter.qpmLastFillTime != 0 && cLimiter.qpmRemainTokens <= 0) ||
-					(cLimiter.qpdLastFillTime != 0 && cLimiter.qpdRemainTokens <= 0) {
-					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+					if cLimiter.qpdLastFillTime != 0 {
+						cLimiter.qpdRemainTokens -= 1
+					}
 				}
 			}
 		}
