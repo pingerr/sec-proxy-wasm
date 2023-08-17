@@ -220,7 +220,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 					newCLimiter.qps.Allow()
 				}
 				if rule.qps != 0 {
-					newCLimiter.qpm = rate.NewLimiter(rate.Every(time.Minute), int(rule.qps))
+					newCLimiter.qpm = rate.NewLimiter(rate.Every(time.Minute), int(rule.qpm))
 					newCLimiter.qpm.Allow()
 				}
 				if rule.qpd != 0 {
