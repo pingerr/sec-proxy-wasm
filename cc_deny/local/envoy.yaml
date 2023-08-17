@@ -52,7 +52,7 @@ static_resources:
                           {
                             "header": "hd1",
                             "qpm": 3,
-                            "block_seconds": 5
+                            "block_seconds": 10
                           },
                           {
                             "cookie": "uid",
