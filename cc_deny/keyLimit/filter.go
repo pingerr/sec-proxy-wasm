@@ -111,6 +111,7 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 			}
 			if cookieBlockTime := curMap["block_seconds"].Int(); cookieBlockTime != 0 {
 				cookieRule.blockNano = cookieBlockTime * 1e9
+				proxywasm.LogInfof("[blockNano: %d]", cookieRule.blockNano)
 			}
 			p.cookieRuleSlice = append(p.cookieRuleSlice, &cookieRule)
 		}
@@ -146,7 +147,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 				ctx.pluginContext.headerMap[headerValue] = &newHLimiter
 
 			} else {
-				if limitRule.blockNano != 0 {
+				if limitRule.blockNano == 0 {
 					if hLimiter.qpsLastFillTime != 0 && curNanoSec > hLimiter.qpsLastFillTime+limitRule.blockNano {
 						hLimiter.qpsRemainTokens = limitRule.qps
 						hLimiter.qpsLastFillTime = curNanoSec
@@ -213,7 +214,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 				ctx.pluginContext.cookieMap[cookieValue] = &newCLimiter
 
 			} else {
-				if limitRule.blockNano != 0 {
+				if limitRule.blockNano == 0 {
 					if cLimiter.qpsLastFillTime != 0 && curNanoSec > cLimiter.qpsLastFillTime+limitRule.blockNano {
 						cLimiter.qpsRemainTokens = limitRule.qps
 						cLimiter.qpsLastFillTime = curNanoSec
