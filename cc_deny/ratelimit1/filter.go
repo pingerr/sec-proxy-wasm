@@ -219,7 +219,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 					newCLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(rule.qps))
 					newCLimiter.qps.Allow()
 				}
-				if rule.qps != 0 {
+				if rule.qpm != 0 {
 					newCLimiter.qpm = rate.NewLimiter(rate.Every(time.Minute), int(rule.qpm))
 					newCLimiter.qpm.Allow()
 				}
