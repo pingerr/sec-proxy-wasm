@@ -150,39 +150,41 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 			} else {
 				if hLimiter.blockStat {
 					if limitRule.blockNano != 0 {
-						if (hLimiter.qpsLastFillTime != 0 && curNanoSec <= hLimiter.qpsLastFillTime+limitRule.blockNano) ||
-							(hLimiter.qpmLastFillTime != 0 && curNanoSec <= hLimiter.qpmLastFillTime+limitRule.blockNano) ||
-							(hLimiter.qpdLastFillTime != 0 && curNanoSec <= hLimiter.qpdLastFillTime+limitRule.blockNano) {
+						if (hLimiter.qpsLastFillTime != 0 && curNanoSec < hLimiter.qpsLastFillTime+limitRule.blockNano) ||
+							(hLimiter.qpmLastFillTime != 0 && curNanoSec < hLimiter.qpmLastFillTime+limitRule.blockNano) ||
+							(hLimiter.qpdLastFillTime != 0 && curNanoSec < hLimiter.qpdLastFillTime+limitRule.blockNano) {
 							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 						} else {
-							if hLimiter.qpsLastFillTime != 0 && curNanoSec > hLimiter.qpsLastFillTime+limitRule.blockNano {
+							hLimiter.blockStat = false
+							if hLimiter.qpsLastFillTime != 0 && curNanoSec >= hLimiter.qpsLastFillTime+limitRule.blockNano {
 								hLimiter.qpsRemainTokens = limitRule.qps
 								hLimiter.qpsLastFillTime = curNanoSec
 							}
-							if hLimiter.qpmLastFillTime != 0 && curNanoSec > hLimiter.qpmLastFillTime+limitRule.blockNano {
+							if hLimiter.qpmLastFillTime != 0 && curNanoSec >= hLimiter.qpmLastFillTime+limitRule.blockNano {
 								hLimiter.qpmRemainTokens = limitRule.qpm
 								hLimiter.qpmLastFillTime = curNanoSec
 							}
-							if hLimiter.qpdLastFillTime != 0 && curNanoSec > hLimiter.qpdLastFillTime+limitRule.blockNano {
+							if hLimiter.qpdLastFillTime != 0 && curNanoSec >= hLimiter.qpdLastFillTime+limitRule.blockNano {
 								hLimiter.qpdRemainTokens = limitRule.qpd
 								hLimiter.qpdLastFillTime = curNanoSec
 							}
 						}
 					} else {
-						if (hLimiter.qpsLastFillTime != 0 && curNanoSec <= hLimiter.qpsLastFillTime+1e9) ||
-							(hLimiter.qpmLastFillTime != 0 && curNanoSec <= hLimiter.qpmLastFillTime+1e9*60) ||
-							(hLimiter.qpdLastFillTime != 0 && curNanoSec <= hLimiter.qpdLastFillTime+1e9*86400) {
+						if (hLimiter.qpsLastFillTime != 0 && curNanoSec < hLimiter.qpsLastFillTime+1e9) ||
+							(hLimiter.qpmLastFillTime != 0 && curNanoSec < hLimiter.qpmLastFillTime+1e9*60) ||
+							(hLimiter.qpdLastFillTime != 0 && curNanoSec < hLimiter.qpdLastFillTime+1e9*86400) {
 							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 						} else {
-							if hLimiter.qpsLastFillTime != 0 && curNanoSec > hLimiter.qpsLastFillTime+1e9 {
+							hLimiter.blockStat = false
+							if hLimiter.qpsLastFillTime != 0 && curNanoSec >= hLimiter.qpsLastFillTime+1e9 {
 								hLimiter.qpsRemainTokens = limitRule.qps
 								hLimiter.qpsLastFillTime = curNanoSec
 							}
-							if hLimiter.qpmLastFillTime != 0 && curNanoSec > hLimiter.qpmLastFillTime+1e9*60 {
+							if hLimiter.qpmLastFillTime != 0 && curNanoSec >= hLimiter.qpmLastFillTime+1e9*60 {
 								hLimiter.qpmRemainTokens = limitRule.qpm
 								hLimiter.qpmLastFillTime = curNanoSec
 							}
-							if hLimiter.qpdLastFillTime != 0 && curNanoSec > hLimiter.qpdLastFillTime+1e9*86400 {
+							if hLimiter.qpdLastFillTime != 0 && curNanoSec >= hLimiter.qpdLastFillTime+1e9*86400 {
 								hLimiter.qpdRemainTokens = limitRule.qpd
 								hLimiter.qpdLastFillTime = curNanoSec
 							}
@@ -247,30 +249,45 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 			} else {
 				if cLimiter.blockStat {
 					if limitRule.blockNano != 0 {
-						if cLimiter.qpsLastFillTime != 0 && curNanoSec > cLimiter.qpsLastFillTime+limitRule.blockNano {
-							cLimiter.qpsRemainTokens = limitRule.qps
-							cLimiter.qpsLastFillTime = curNanoSec
+						if (cLimiter.qpsLastFillTime != 0 && curNanoSec < cLimiter.qpsLastFillTime+limitRule.blockNano) ||
+							(cLimiter.qpmLastFillTime != 0 && curNanoSec < cLimiter.qpmLastFillTime+limitRule.blockNano) ||
+							(cLimiter.qpdLastFillTime != 0 && curNanoSec < cLimiter.qpdLastFillTime+limitRule.blockNano) {
+							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+						} else {
+							cLimiter.blockStat = false
+							if cLimiter.qpsLastFillTime != 0 && curNanoSec >= cLimiter.qpsLastFillTime+limitRule.blockNano {
+								cLimiter.qpsRemainTokens = limitRule.qps
+								cLimiter.qpsLastFillTime = curNanoSec
+							}
+							if cLimiter.qpmLastFillTime != 0 && curNanoSec >= cLimiter.qpmLastFillTime+limitRule.blockNano {
+								cLimiter.qpmRemainTokens = limitRule.qpm
+								cLimiter.qpmLastFillTime = curNanoSec
+							}
+							if cLimiter.qpdLastFillTime != 0 && curNanoSec >= cLimiter.qpdLastFillTime+limitRule.blockNano {
+								cLimiter.qpdRemainTokens = limitRule.qpd
+								cLimiter.qpdLastFillTime = curNanoSec
+							}
 						}
-						if cLimiter.qpmLastFillTime != 0 && curNanoSec > cLimiter.qpmLastFillTime+limitRule.blockNano {
-							cLimiter.qpmRemainTokens = limitRule.qpm
-							cLimiter.qpmLastFillTime = curNanoSec
-						}
-						if cLimiter.qpdLastFillTime != 0 && curNanoSec > cLimiter.qpdLastFillTime+limitRule.blockNano {
-							cLimiter.qpdRemainTokens = limitRule.qpd
-							cLimiter.qpdLastFillTime = curNanoSec
-						}
+
 					} else {
-						if cLimiter.qpsLastFillTime != 0 && curNanoSec > cLimiter.qpsLastFillTime+1e9 {
-							cLimiter.qpsRemainTokens = limitRule.qps
-							cLimiter.qpsLastFillTime = curNanoSec
-						}
-						if cLimiter.qpmLastFillTime != 0 && curNanoSec > cLimiter.qpmLastFillTime+1e9*60 {
-							cLimiter.qpmRemainTokens = limitRule.qpm
-							cLimiter.qpmLastFillTime = curNanoSec
-						}
-						if cLimiter.qpdLastFillTime != 0 && curNanoSec > cLimiter.qpdLastFillTime+1e9*86400 {
-							cLimiter.qpdRemainTokens = limitRule.qpd
-							cLimiter.qpdLastFillTime = curNanoSec
+						if (cLimiter.qpsLastFillTime != 0 && curNanoSec < cLimiter.qpsLastFillTime+1e9) ||
+							(cLimiter.qpmLastFillTime != 0 && curNanoSec < cLimiter.qpmLastFillTime+1e9*60) ||
+							(cLimiter.qpdLastFillTime != 0 && curNanoSec < cLimiter.qpdLastFillTime+1e9*86400) {
+							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+						} else {
+							cLimiter.blockStat = false
+							if cLimiter.qpsLastFillTime != 0 && curNanoSec >= cLimiter.qpsLastFillTime+1e9 {
+								cLimiter.qpsRemainTokens = limitRule.qps
+								cLimiter.qpsLastFillTime = curNanoSec
+							}
+							if cLimiter.qpmLastFillTime != 0 && curNanoSec >= cLimiter.qpmLastFillTime+1e9*60 {
+								cLimiter.qpmRemainTokens = limitRule.qpm
+								cLimiter.qpmLastFillTime = curNanoSec
+							}
+							if cLimiter.qpdLastFillTime != 0 && curNanoSec >= cLimiter.qpdLastFillTime+1e9*86400 {
+								cLimiter.qpdRemainTokens = limitRule.qpd
+								cLimiter.qpdLastFillTime = curNanoSec
+							}
 						}
 					}
 				} else {
