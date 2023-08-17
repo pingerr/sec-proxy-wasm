@@ -1,0 +1,422 @@
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692260981107",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692260982247",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692260983978",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692260985157",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692260988897",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]#
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692260990798",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261003547",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261005247",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261008287",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261009697",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261010907",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261013867",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261016447",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261017587",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261024787",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261026127",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261028377",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261029457",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261030558",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261032587",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261034607",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261036297",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261042547",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261043517",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261046717",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+{
+  "args": {},
+  "headers": {
+    "Accept": "*/*",
+    "Hd1": "pinger",
+    "Host": "127.0.0.1:10000",
+    "Original-Host": "127.0.0.1:10000",
+    "Req-Start-Time": "1692261047357",
+    "User-Agent": "curl/7.29.0",
+    "X-Envoy-Expected-Rq-Timeout-Ms": "15000"
+  },
+  "origin": "172.19.0.3",
+  "url": "https://127.0.0.1:10000/get"
+}
+[root@hecs-393810 local]# curl http://127.0.0.1:10000/get -H 'hd1:pinger'
+denied by cc[root@hecs-393810 local]#
