@@ -93,13 +93,15 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 			}
 			if qpm := curMap["qpm"].Int(); qpm != 0 {
 				headerRule.qpm = qpm
+				proxywasm.LogInfof("[qps: %d]", qpm)
 			}
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
 				headerRule.qpd = qpd
 			}
 			if headerBlockTime := curMap["block_seconds"].Int(); headerBlockTime != 0 {
-				headerRule.blockNano = headerBlockTime * 1e9
+				headerRule.blockNano = headerBlockTime * 1000
 			}
+			proxywasm.LogInfof("[qps:%d, qpm:%d, qpd:%d]", headerRule.qps, headerRule.qpm, headerRule.qpd)
 			p.headerRuleSlice = append(p.headerRuleSlice, &headerRule)
 		} else if cookieKey := curMap["cookie"].Str; cookieKey != "" {
 			var cookieRule LimitRule
@@ -114,7 +116,7 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 				cookieRule.qpd = qpd
 			}
 			if cookieBlockTime := curMap["block_seconds"].Int(); cookieBlockTime != 0 {
-				cookieRule.blockNano = cookieBlockTime * 1e9
+				cookieRule.blockNano = cookieBlockTime * 1000
 			}
 			p.cookieRuleSlice = append(p.cookieRuleSlice, &cookieRule)
 		}
@@ -128,7 +130,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	ctx.pluginContext.mu.Lock()
 	defer ctx.pluginContext.mu.Unlock()
 
-	curNanoSec := time.Now().UnixNano()
+	curNanoSec := time.Now().UnixMilli()
 
 	for _, limitRule := range ctx.pluginContext.headerRuleSlice {
 		headerValue, _ := proxywasm.GetHttpRequestHeader(limitRule.key)
@@ -174,38 +176,38 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 							}
 						}
 					} else {
-						if (limitRule.qps != 0 && curNanoSec < hLimiter.qpsLastLockTime+1e9) ||
-							(limitRule.qpm != 0 && curNanoSec < hLimiter.qpmLastLockTime+1e9*60) ||
-							(limitRule.qpd != 0 && curNanoSec < hLimiter.qpdLastLockTime+1e9*86400) {
+						if (limitRule.qps != 0 && curNanoSec < hLimiter.qpsLastLockTime+1000) ||
+							(limitRule.qpm != 0 && curNanoSec < hLimiter.qpmLastLockTime+1000*60) ||
+							(limitRule.qpd != 0 && curNanoSec < hLimiter.qpdLastLockTime+1000*86400) {
 							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 						} else {
 							hLimiter.blockStat = false
-							if limitRule.qps != 0 && curNanoSec > hLimiter.qpsLastLockTime+1e9 {
+							if limitRule.qps != 0 && curNanoSec > hLimiter.qpsLastLockTime+1000 {
 								hLimiter.qpsRemainTokens = limitRule.qps
 								hLimiter.qpsLastFillTime = curNanoSec
 							}
-							if limitRule.qpm != 0 && curNanoSec > hLimiter.qpmLastLockTime+1e9*60 {
+							if limitRule.qpm != 0 && curNanoSec > hLimiter.qpmLastLockTime+1000*60 {
 								hLimiter.qpmRemainTokens = limitRule.qpm
 								hLimiter.qpmLastFillTime = curNanoSec
 							}
-							if limitRule.qpd != 0 && curNanoSec > hLimiter.qpdLastLockTime+1e9*86400 {
+							if limitRule.qpd != 0 && curNanoSec > hLimiter.qpdLastLockTime+1000*86400 {
 								hLimiter.qpdRemainTokens = limitRule.qpd
 								hLimiter.qpdLastFillTime = curNanoSec
 							}
 						}
 					}
 				} else {
-					if limitRule.qps != 0 && curNanoSec > hLimiter.qpsLastFillTime+1e9 {
+					if limitRule.qps != 0 && curNanoSec > hLimiter.qpsLastFillTime+1000 {
 						hLimiter.qpsRemainTokens = limitRule.qps
-						hLimiter.qpsLastFillTime = hLimiter.qpsLastFillTime + 1e9
+						hLimiter.qpsLastFillTime = hLimiter.qpsLastFillTime + 1000
 					}
-					if limitRule.qpm != 0 && curNanoSec > hLimiter.qpmLastFillTime+1e9*60 {
+					if limitRule.qpm != 0 && curNanoSec > hLimiter.qpmLastFillTime+1000*60 {
 						hLimiter.qpmRemainTokens = limitRule.qpm
-						hLimiter.qpmLastFillTime = hLimiter.qpmLastFillTime + 1e9*60
+						hLimiter.qpmLastFillTime = hLimiter.qpmLastFillTime + 1000*60
 					}
-					if limitRule.qpd != 0 && curNanoSec > hLimiter.qpdLastFillTime+1e9*86400 {
+					if limitRule.qpd != 0 && curNanoSec > hLimiter.qpdLastFillTime+1000*86400 {
 						hLimiter.qpdRemainTokens = limitRule.qpd
-						hLimiter.qpdLastFillTime = hLimiter.qpdLastFillTime + 1e9*86400
+						hLimiter.qpdLastFillTime = hLimiter.qpdLastFillTime + 1000*86400
 					}
 					if (limitRule.qps != 0 && hLimiter.qpsRemainTokens == 0) ||
 						(limitRule.qpm != 0 && hLimiter.qpmRemainTokens == 0) ||
