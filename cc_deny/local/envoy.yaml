@@ -55,8 +55,18 @@ static_resources:
                             "block_seconds": 10
                           },
                           {
-                            "cookie": "uid",
+                            "header": "hd2",
+                            "qps": 2,
+                            "block_seconds": 5
+                          },
+                          {
+                            "cookie": "uid1",
                             "qpm": 3,
+                            "block_seconds": 10
+                          },
+                          {
+                            "cookie": "uid2",
+                            "qps": 2,
                             "block_seconds": 5
                           }
                         ]

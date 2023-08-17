@@ -20,10 +20,11 @@ type (
 	}
 	pluginContext struct {
 		types.DefaultPluginContext
-		headerMap map[string]*MyLimiter
-		cookieMap map[string]*MyLimiter
-		config    Config
-		mu        sync.Mutex
+		headerMap   map[string]*MyLimiter
+		cookieMap   map[string]*MyLimiter
+		headerSlice []*LimitRule
+		cookieSlice []*LimitRule
+		mu          sync.Mutex
 	}
 
 	httpContext struct {
@@ -40,29 +41,23 @@ type (
 		blockStat bool
 	}
 
-	Config struct {
-		headerKey       string
-		headerQps       int64
-		headerQpm       int64
-		headerQpd       int64
-		headerBlockTime int64
-		hasHeaderBlock  bool
-
-		cookieKey       string
-		cookieQps       int64
-		cookieQpm       int64
-		cookieQpd       int64
-		cookieBlockTime int64
-		hasCookieBlock  bool
+	LimitRule struct {
+		key       string
+		qps       int64
+		qpm       int64
+		qpd       int64
+		blockTime int64
+		hasBlock  bool
 	}
 )
 
 func (*vmContext) NewPluginContext(contextID uint32) types.PluginContext {
 	return &pluginContext{
-		headerMap: map[string]*MyLimiter{},
-		cookieMap: map[string]*MyLimiter{},
-		mu:        sync.Mutex{},
-		config:    Config{},
+		headerMap:   map[string]*MyLimiter{},
+		cookieMap:   map[string]*MyLimiter{},
+		mu:          sync.Mutex{},
+		headerSlice: []*LimitRule{},
+		cookieSlice: []*LimitRule{},
 	}
 }
 
@@ -88,35 +83,39 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 	for i := range results {
 		curMap := results[i].Map()
 		if headerKey := curMap["header"].Str; headerKey != "" {
-			p.config.headerKey = headerKey
+			var hRule LimitRule
+			hRule.key = headerKey
 			if qps := curMap["qps"].Int(); qps != 0 {
-				p.config.headerQps = qps
+				hRule.qps = qps
 			}
 			if qpm := curMap["qpm"].Int(); qpm != 0 {
-				p.config.headerQpm = qpm
+				hRule.qpm = qpm
 			}
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
-				p.config.headerQpd = qpd
+				hRule.qpd = qpd
 			}
 			if headerBlockTime := curMap["block_seconds"].Int(); headerBlockTime != 0 {
-				p.config.headerBlockTime = headerBlockTime
-				p.config.hasHeaderBlock = true
+				hRule.blockTime = headerBlockTime
+				hRule.hasBlock = true
 			}
+			p.headerSlice = append(p.headerSlice, &hRule)
 		} else if cookieKey := curMap["cookie"].Str; cookieKey != "" {
-			p.config.cookieKey = cookieKey
+			var cRule LimitRule
+			cRule.key = cookieKey
 			if qps := curMap["qps"].Int(); qps != 0 {
-				p.config.cookieQps = qps
+				cRule.qps = qps
 			}
 			if qpm := curMap["qpm"].Int(); qpm != 0 {
-				p.config.cookieQpm = qpm
+				cRule.qpm = qpm
 			}
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
-				p.config.cookieQpd = qpd
+				cRule.qpd = qpd
 			}
 			if cookieBlockTime := curMap["block_seconds"].Int(); cookieBlockTime != 0 {
-				p.config.cookieBlockTime = cookieBlockTime
-				p.config.hasCookieBlock = true
+				cRule.blockTime = cookieBlockTime
+				cRule.hasBlock = true
 			}
+			p.cookieSlice = append(p.cookieSlice, &cRule)
 		}
 	}
 
@@ -125,77 +124,79 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 
 func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	now := time.Now().UnixNano()
-	headerValue, _ := proxywasm.GetHttpRequestHeader(ctx.p.config.headerKey)
 
 	ctx.p.mu.Lock()
 	defer ctx.p.mu.Unlock()
 
-	if headerValue != "" {
-		hLimiter, isOk := ctx.p.headerMap[headerValue]
-		if !isOk {
-			var newHLimiter MyLimiter
-			if ctx.p.config.headerQps != 0 {
-				newHLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(ctx.p.config.headerQps))
-				newHLimiter.qps.Allow()
-			}
-			if ctx.p.config.headerQpm != 0 {
-				newHLimiter.qpm = rate.NewLimiter(rate.Every(time.Minute), int(ctx.p.config.headerQpm))
-				newHLimiter.qpm.Allow()
-			}
-			if ctx.p.config.headerQpd != 0 {
-				newHLimiter.qpd = rate.NewLimiter(rate.Every(24*time.Hour), int(ctx.p.config.headerQpd))
-				newHLimiter.qpd.Allow()
-			}
-
-			ctx.p.headerMap[headerValue] = &newHLimiter
-
-		} else {
-			if hLimiter.blockStat {
-				if now <= hLimiter.nextTime {
-					// in lock duration
-					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-				} else {
-					// out lock duration
-					hLimiter.blockStat = false
-					if ctx.p.config.headerQps != 0 {
-						hLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(ctx.p.config.headerQps))
-						hLimiter.qps.Allow()
-					}
-					if ctx.p.config.headerQpm != 0 {
-						hLimiter.qpm = rate.NewLimiter(rate.Every(time.Minute), int(ctx.p.config.headerQpm))
-						hLimiter.qpm.Allow()
-					}
-					if ctx.p.config.headerQpd != 0 {
-						hLimiter.qpd = rate.NewLimiter(rate.Every(24*time.Hour), int(ctx.p.config.headerQpd))
-						hLimiter.qpd.Allow()
-					}
-					//_ = proxywasm.SendHttpResponse(403, nil, []byte("pass - out lock"), -1)
+	for _, rule := range ctx.p.headerSlice {
+		headerValue, _ := proxywasm.GetHttpRequestHeader(rule.key)
+		if headerValue != "" {
+			hLimiter, isOk := ctx.p.headerMap[headerValue]
+			if !isOk {
+				var newHLimiter MyLimiter
+				if rule.qps != 0 {
+					newHLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(rule.qps))
+					newHLimiter.qps.Allow()
 				}
+				if rule.qpm != 0 {
+					newHLimiter.qpm = rate.NewLimiter(rate.Every(time.Minute), int(rule.qpm))
+					newHLimiter.qpm.Allow()
+				}
+				if rule.qpd != 0 {
+					newHLimiter.qpd = rate.NewLimiter(rate.Every(24*time.Hour), int(rule.qpd))
+					newHLimiter.qpd.Allow()
+				}
+
+				ctx.p.headerMap[headerValue] = &newHLimiter
+
 			} else {
-				qpsAllow := true
-				qpmAllow := true
-				qpdAllow := true
-				if hLimiter.qps != nil {
-					qpsAllow = hLimiter.qps.Allow()
-				}
-				if hLimiter.qpm != nil {
-					qpmAllow = hLimiter.qpm.Allow()
-				}
-				if hLimiter.qpd != nil {
-					qpdAllow = hLimiter.qpd.Allow()
-				}
-				if !qpsAllow || !qpmAllow || !qpdAllow {
-					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-					if ctx.p.config.hasHeaderBlock {
-						// new lock duration
-						//_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc - new lock"), -1)
-						hLimiter.blockStat = true
-						hLimiter.nextTime = now + ctx.p.config.headerBlockTime*1e9
+				if hLimiter.blockStat {
+					if now <= hLimiter.nextTime {
+						// in lock duration
+						_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 					} else {
-						//_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc - direct lock"), -1)
+						// out lock duration
+						hLimiter.blockStat = false
+						if rule.qps != 0 {
+							hLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(rule.qps))
+							hLimiter.qps.Allow()
+						}
+						if rule.qpm != 0 {
+							hLimiter.qpm = rate.NewLimiter(rate.Every(time.Minute), int(rule.qpm))
+							hLimiter.qpm.Allow()
+						}
+						if rule.qpd != 0 {
+							hLimiter.qpd = rate.NewLimiter(rate.Every(24*time.Hour), int(rule.qpd))
+							hLimiter.qpd.Allow()
+						}
+						//_ = proxywasm.SendHttpResponse(403, nil, []byte("pass - out lock"), -1)
 					}
 				} else {
-					//_ = proxywasm.SendHttpResponse(403, nil, []byte("pass - no lock"), -1)
+					qpsAllow := true
+					qpmAllow := true
+					qpdAllow := true
+					if hLimiter.qps != nil {
+						qpsAllow = hLimiter.qps.Allow()
+					}
+					if hLimiter.qpm != nil {
+						qpmAllow = hLimiter.qpm.Allow()
+					}
+					if hLimiter.qpd != nil {
+						qpdAllow = hLimiter.qpd.Allow()
+					}
+					if !qpsAllow || !qpmAllow || !qpdAllow {
+						_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+						if rule.hasBlock {
+							// new lock duration
+							//_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc - new lock"), -1)
+							hLimiter.blockStat = true
+							hLimiter.nextTime = now + rule.blockTime*1e9
+						} else {
+							//_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc - direct lock"), -1)
+						}
+					} else {
+						//_ = proxywasm.SendHttpResponse(403, nil, []byte("pass - no lock"), -1)
+					}
 				}
 			}
 		}
@@ -205,69 +206,71 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	if cookies == "" {
 		return types.ActionContinue
 	}
-	cookieValue := strings.Replace(cookies, ctx.p.config.cookieKey+"=", "", -1)
-	if cookieValue != "" {
-		cLimiter, isOk := ctx.p.cookieMap[cookieValue]
-		if !isOk {
-			var newCLimiter MyLimiter
-			if ctx.p.config.cookieQps != 0 {
-				newCLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(ctx.p.config.cookieQps))
-				newCLimiter.qps.Allow()
-			}
-			if ctx.p.config.cookieQpm != 0 {
-				newCLimiter.qpm = rate.NewLimiter(rate.Every(time.Minute), int(ctx.p.config.cookieQpm))
-				newCLimiter.qpm.Allow()
-			}
-			if ctx.p.config.cookieQpd != 0 {
-				newCLimiter.qpd = rate.NewLimiter(rate.Every(24*time.Hour), int(ctx.p.config.cookieQpd))
-				newCLimiter.qpd.Allow()
-			}
-			ctx.p.cookieMap[cookieValue] = &newCLimiter
+	for _, rule := range ctx.p.cookieSlice {
+		cookieValue := strings.Replace(cookies, rule.key+"=", "", -1)
+		if cookieValue != "" {
+			cLimiter, isOk := ctx.p.cookieMap[cookieValue]
+			if !isOk {
+				var newCLimiter MyLimiter
+				if rule.qps != 0 {
+					newCLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(rule.qps))
+					newCLimiter.qps.Allow()
+				}
+				if rule.qps != 0 {
+					newCLimiter.qpm = rate.NewLimiter(rate.Every(time.Minute), int(rule.qps))
+					newCLimiter.qpm.Allow()
+				}
+				if rule.qpd != 0 {
+					newCLimiter.qpd = rate.NewLimiter(rate.Every(24*time.Hour), int(rule.qpd))
+					newCLimiter.qpd.Allow()
+				}
+				ctx.p.cookieMap[cookieValue] = &newCLimiter
 
-		} else {
-			if cLimiter.blockStat {
-				if now <= cLimiter.nextTime {
-					// in lock duration
-					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-				} else {
-					// out lock duration
-					cLimiter.blockStat = false
-					if ctx.p.config.cookieQps != 0 {
-						cLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(ctx.p.config.cookieQps))
-						cLimiter.qps.Allow()
-					}
-					if ctx.p.config.cookieQpm != 0 {
-						cLimiter.qpm = rate.NewLimiter(rate.Every(time.Minute), int(ctx.p.config.cookieQpm))
-						cLimiter.qpm.Allow()
-					}
-					if ctx.p.config.cookieQpd != 0 {
-						cLimiter.qpd = rate.NewLimiter(rate.Every(24*time.Hour), int(ctx.p.config.cookieQpd))
-						cLimiter.qpd.Allow()
-					}
-					//_ = proxywasm.SendHttpResponse(403, nil, []byte("pass - out lock"), -1)
-				}
 			} else {
-				qpsAllow := true
-				qpmAllow := true
-				qpdAllow := true
-				if cLimiter.qps != nil {
-					qpsAllow = cLimiter.qps.Allow()
-				}
-				if cLimiter.qpm != nil {
-					qpmAllow = cLimiter.qpm.Allow()
-				}
-				if cLimiter.qpd != nil {
-					qpdAllow = cLimiter.qpd.Allow()
-				}
-				if !qpsAllow || !qpmAllow || !qpdAllow {
-					// new lock duration
-					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-					if ctx.p.config.hasCookieBlock {
-						cLimiter.nextTime = now + ctx.p.config.cookieBlockTime*1e9
-						cLimiter.blockStat = true
+				if cLimiter.blockStat {
+					if now <= cLimiter.nextTime {
+						// in lock duration
+						_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+					} else {
+						// out lock duration
+						cLimiter.blockStat = false
+						if rule.qps != 0 {
+							cLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(rule.qps))
+							cLimiter.qps.Allow()
+						}
+						if rule.qpm != 0 {
+							cLimiter.qpm = rate.NewLimiter(rate.Every(time.Minute), int(rule.qpm))
+							cLimiter.qpm.Allow()
+						}
+						if rule.qpd != 0 {
+							cLimiter.qpd = rate.NewLimiter(rate.Every(24*time.Hour), int(rule.qpd))
+							cLimiter.qpd.Allow()
+						}
+						//_ = proxywasm.SendHttpResponse(403, nil, []byte("pass - out lock"), -1)
 					}
 				} else {
-					//_ = proxywasm.SendHttpResponse(403, nil, []byte("pass - no lock"), -1)
+					qpsAllow := true
+					qpmAllow := true
+					qpdAllow := true
+					if cLimiter.qps != nil {
+						qpsAllow = cLimiter.qps.Allow()
+					}
+					if cLimiter.qpm != nil {
+						qpmAllow = cLimiter.qpm.Allow()
+					}
+					if cLimiter.qpd != nil {
+						qpdAllow = cLimiter.qpd.Allow()
+					}
+					if !qpsAllow || !qpmAllow || !qpdAllow {
+						// new lock duration
+						_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+						if rule.hasBlock {
+							cLimiter.nextTime = now + rule.blockTime*1e9
+							cLimiter.blockStat = true
+						}
+					} else {
+						//_ = proxywasm.SendHttpResponse(403, nil, []byte("pass - no lock"), -1)
+					}
 				}
 			}
 		}
