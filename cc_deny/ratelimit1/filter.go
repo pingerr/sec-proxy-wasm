@@ -173,10 +173,11 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 					qpdAllow = hLimiter.qpd.Allow()
 				}
 				if !qpsAllow || !qpmAllow || !qpdAllow {
-					// new lock duration
-					hLimiter.blockStat = true
-					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc - new lock"), -1)
+
 					if ctx.p.config.hasHeaderBlock {
+						// new lock duration
+						_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc - new lock"), -1)
+						hLimiter.blockStat = true
 						hLimiter.nextTime = now + ctx.p.config.headerBlockTime*1e9
 						if ctx.p.config.headerQps != 0 {
 							hLimiter.qps = rate.NewLimiter(rate.Every(time.Second), int(ctx.p.config.headerQps))
@@ -187,6 +188,8 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						if ctx.p.config.headerQpd != 0 {
 							hLimiter.qpd = rate.NewLimiter(rate.Every(24*time.Hour), int(ctx.p.config.headerQpd))
 						}
+					} else {
+						_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc - direct lock"), -1)
 					}
 				} else {
 					_ = proxywasm.SendHttpResponse(403, nil, []byte("pass - no lock"), -1)
