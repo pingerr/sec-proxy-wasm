@@ -129,7 +129,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	//defer ctx.pluginContext.mu.Unlock()
 
 	curNanoSec := time.Now().UnixMilli()
-	proxywasm.LogDebugf("[cur time: %d]", curNanoSec)
+	proxywasm.LogInfof("[cur time: %d]", curNanoSec)
 
 	for _, limitRule := range ctx.pluginContext.headerRuleSlice {
 		headerValue, _ := proxywasm.GetHttpRequestHeader(limitRule.key)
@@ -158,6 +158,10 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						if (limitRule.qps != 0 && curNanoSec < hLimiter.qpsLastLockTime+limitRule.blockNano) ||
 							(limitRule.qpm != 0 && curNanoSec < hLimiter.qpmLastLockTime+limitRule.blockNano) ||
 							(limitRule.qpd != 0 && curNanoSec < hLimiter.qpdLastLockTime+limitRule.blockNano) {
+							proxywasm.LogInfof("[-------in lock--------]")
+							proxywasm.LogInfof("[qpmLastLockTime:%d]", hLimiter.qpmLastLockTime)
+							proxywasm.LogInfof("[next LockTime:%d]", hLimiter.qpmLastLockTime+limitRule.blockNano)
+							proxywasm.LogInfof("[curNanoSec:%d]", curNanoSec)
 							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 						} else {
 							hLimiter.blockStat = false
@@ -168,6 +172,9 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 							if limitRule.qpm != 0 && curNanoSec > hLimiter.qpmLastLockTime+limitRule.blockNano {
 								hLimiter.qpmRemainTokens = limitRule.qpm
 								hLimiter.qpmLastFillTime = curNanoSec
+								proxywasm.LogInfof("[-------out lock--------]")
+								proxywasm.LogInfof("[curNanoSec: %d]", curNanoSec)
+								proxywasm.LogInfof("[next LockTime:%d]", hLimiter.qpmLastLockTime+limitRule.blockNano)
 							}
 							//if limitRule.qpd != 0 && curNanoSec > hLimiter.qpdLastLockTime+limitRule.blockNano {
 							//	hLimiter.qpdRemainTokens = limitRule.qpd
@@ -223,23 +230,31 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 					//		hLimiter.qpdLastLockTime = curNanoSec
 					//	}
 					//}
-					if limitRule.qpm != 0 && hLimiter.qpmRemainTokens == 0 {
-						if curNanoSec > hLimiter.qpmLastFillTime+1000*60 {
-							hLimiter.qpmRemainTokens = limitRule.qpm
-							hLimiter.qpmLastFillTime = hLimiter.qpmLastFillTime + 1000*60
-						} else {
+					if curNanoSec > hLimiter.qpmLastFillTime+1000*60 {
+						hLimiter.qpmRemainTokens = limitRule.qpm
+						hLimiter.qpmLastFillTime = hLimiter.qpmLastFillTime + 1000*60
+						proxywasm.LogInfof("[-------new fill--------]")
+						proxywasm.LogInfof("[curNanoSec: %d]", curNanoSec)
+						proxywasm.LogInfof("[next filltime: %d]", hLimiter.qpmLastFillTime+1000*60)
+					} else {
+						if limitRule.qpm != 0 && hLimiter.qpmRemainTokens == 0 {
+
 							hLimiter.blockStat = true
 							if limitRule.qpm != 0 {
 								hLimiter.qpmLastLockTime = curNanoSec
 							}
+							proxywasm.LogInfof("[-------new lock--------]")
+							proxywasm.LogInfof("[curNanoSec: %d]", curNanoSec)
 							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+
+							//hLimiter.blockStat = true
+							//if limitRule.qpm != 0 {
+							//	hLimiter.qpmLastLockTime = curNanoSec
+							//}
+							//_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 						}
-						//hLimiter.blockStat = true
-						//if limitRule.qpm != 0 {
-						//	hLimiter.qpmLastLockTime = curNanoSec
-						//}
-						//_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 					}
+
 					//if limitRule.qps != 0 {
 					//	hLimiter.qpsRemainTokens -= 1
 					//}
