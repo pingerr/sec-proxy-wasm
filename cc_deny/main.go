@@ -1,10 +1,11 @@
 package main
 
 import (
-	"cc_deny/ratelimit"
+	"cc_deny/periodLimit"
 )
 
 func main() {
 	//ccfilter.PluginStart()
-	ratelimit.PluginStart()
+	//ratelimit.PluginStart()
+	periodLimit.PluginStart()
 }
