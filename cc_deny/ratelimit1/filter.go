@@ -130,8 +130,10 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 
 	for _, rule := range ctx.p.headerSlice {
 		headerValue, _ := proxywasm.GetHttpRequestHeader(rule.key)
+
 		if headerValue != "" {
-			hLimiter, isOk := ctx.p.headerMap[headerValue]
+			key := rule.key + ":" + headerValue
+			hLimiter, isOk := ctx.p.headerMap[key]
 			if !isOk {
 				var newHLimiter MyLimiter
 				if rule.qps != 0 {
@@ -147,7 +149,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 					newHLimiter.qpd.Allow()
 				}
 
-				ctx.p.headerMap[headerValue] = &newHLimiter
+				ctx.p.headerMap[key] = &newHLimiter
 
 			} else {
 				if hLimiter.blockStat {
@@ -209,7 +211,8 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	for _, rule := range ctx.p.cookieSlice {
 		cookieValue := strings.Replace(cookies, rule.key+"=", "", -1)
 		if cookieValue != "" {
-			cLimiter, isOk := ctx.p.cookieMap[cookieValue]
+			key := rule.key + ":" + cookieValue
+			cLimiter, isOk := ctx.p.cookieMap[key]
 			if !isOk {
 				var newCLimiter MyLimiter
 				if rule.qps != 0 {
@@ -224,7 +227,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 					newCLimiter.qpd = rate.NewLimiter(rate.Every(24*time.Hour), int(rule.qpd))
 					newCLimiter.qpd.Allow()
 				}
-				ctx.p.cookieMap[cookieValue] = &newCLimiter
+				ctx.p.cookieMap[key] = &newCLimiter
 
 			} else {
 				if cLimiter.blockStat {
