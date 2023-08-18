@@ -132,11 +132,10 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 }
 
 func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
-	now := time.Now().UnixNano()
 
 	ctx.p.mu.Lock()
 	defer ctx.p.mu.Unlock()
-
+	now := time.Now().UnixNano()
 	headerValue, _ := proxywasm.GetHttpRequestHeader(ctx.p.hRule.key)
 	if headerValue != "" {
 		hLimitKeyBuf := bytes.NewBufferString(headerPre)
@@ -144,17 +143,17 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 		hLimiter, isOk := ctx.p.limitMap[hLimitKeyBuf.String()]
 		if !isOk {
 			var newHLimiter Limiter
-			if ctx.p.cRule.qps != 0 {
-				newHLimiter.sTokens = ctx.p.cRule.qps - 1
+			if ctx.p.hRule.qps != 0 {
+				newHLimiter.sTokens = ctx.p.hRule.qps - 1
 				newHLimiter.sRefillTime = now
 
 			}
-			if ctx.p.cRule.qpm != 0 {
-				newHLimiter.mTokens = ctx.p.cRule.qpm - 1
+			if ctx.p.hRule.qpm != 0 {
+				newHLimiter.mTokens = ctx.p.hRule.qpm - 1
 				newHLimiter.mRefillTime = now
 			}
-			if ctx.p.cRule.qpd != 0 {
-				newHLimiter.dTokens = ctx.p.cRule.qpd - 1
+			if ctx.p.hRule.qpd != 0 {
+				newHLimiter.dTokens = ctx.p.hRule.qpd - 1
 				newHLimiter.dRefillTime = now
 			}
 			ctx.p.limitMap[hLimitKeyBuf.String()] = &newHLimiter
@@ -171,39 +170,39 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 					} else {
 						// out lock duration
 						hLimiter.isBlock = false
-						if ctx.p.cRule.qps != 0 {
-							hLimiter.sTokens = ctx.p.cRule.qps - 1
+						if ctx.p.hRule.qps != 0 {
+							hLimiter.sTokens = ctx.p.hRule.qps - 1
 							hLimiter.sRefillTime = hLimiter.unlockTime
 						}
-						if ctx.p.cRule.qpm != 0 {
-							hLimiter.mTokens = ctx.p.cRule.qpm - 1
+						if ctx.p.hRule.qpm != 0 {
+							hLimiter.mTokens = ctx.p.hRule.qpm - 1
 							hLimiter.mRefillTime = hLimiter.unlockTime
 						}
-						if ctx.p.cRule.qpd != 0 {
-							hLimiter.dTokens = ctx.p.cRule.qpd - 1
+						if ctx.p.hRule.qpd != 0 {
+							hLimiter.dTokens = ctx.p.hRule.qpd - 1
 							hLimiter.dRefillTime = hLimiter.unlockTime
 						}
 						_ = proxywasm.SendHttpResponse(403, nil, []byte("out time lock"), -1)
 						return types.ActionContinue
 					}
 				} else {
-					if (ctx.p.cRule.qps != 0 && now < hLimiter.sRefillTime+secondNano) ||
-						(ctx.p.cRule.qpm != 0 && now < hLimiter.mRefillTime+minuteNano) ||
-						(ctx.p.cRule.qpd != 0 && now < hLimiter.dRefillTime+dayNano) {
+					if (ctx.p.hRule.qps != 0 && now < hLimiter.sRefillTime+secondNano) ||
+						(ctx.p.hRule.qpm != 0 && now < hLimiter.mRefillTime+minuteNano) ||
+						(ctx.p.hRule.qpd != 0 && now < hLimiter.dRefillTime+dayNano) {
 						_ = proxywasm.SendHttpResponse(403, nil, []byte("in direct lock"), -1)
 						return types.ActionContinue
 					} else {
 						hLimiter.isBlock = false
-						if ctx.p.cRule.qps != 0 && now > hLimiter.sRefillTime+secondNano {
-							hLimiter.sTokens = ctx.p.cRule.qps - 1
+						if ctx.p.hRule.qps != 0 && now > hLimiter.sRefillTime+secondNano {
+							hLimiter.sTokens = ctx.p.hRule.qps - 1
 							hLimiter.sRefillTime = hLimiter.sRefillTime + secondNano
 						}
-						if ctx.p.cRule.qpm != 0 && now > hLimiter.mRefillTime+minuteNano {
-							hLimiter.mTokens = ctx.p.cRule.qpm - 1
+						if ctx.p.hRule.qpm != 0 && now > hLimiter.mRefillTime+minuteNano {
+							hLimiter.mTokens = ctx.p.hRule.qpm - 1
 							hLimiter.mRefillTime = hLimiter.mRefillTime + minuteNano
 						}
-						if ctx.p.cRule.qpd != 0 && now > hLimiter.dRefillTime+dayNano {
-							hLimiter.dTokens = ctx.p.cRule.qpd - 1
+						if ctx.p.hRule.qpd != 0 && now > hLimiter.dRefillTime+dayNano {
+							hLimiter.dTokens = ctx.p.hRule.qpd - 1
 							hLimiter.dRefillTime = hLimiter.dRefillTime + dayNano
 						}
 						_ = proxywasm.SendHttpResponse(403, nil, []byte("out direct lock"), -1)
@@ -211,30 +210,16 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 					}
 				}
 			} else {
-				//sFill := ctx.p.cRule.qps != 0 && now > hLimiter.sRefillTime+secondNano
-				//if sFill {
-				//	hLimiter.sTokens = ctx.p.cRule.qps
-				//	hLimiter.sRefillTime = hLimiter.sRefillTime + secondNano
-				//}
-				//mFill := ctx.p.cRule.qpm != 0 && now > hLimiter.mRefillTime+minuteNano
-				//if mFill {
-				//	hLimiter.mTokens = ctx.p.cRule.qpm
-				//	hLimiter.mRefillTime = hLimiter.mRefillTime + minuteNano
-				//}
-				//dFill := ctx.p.cRule.qpd != 0 && now > hLimiter.dRefillTime+dayNano
-				//if dFill {
-				//	hLimiter.dTokens = ctx.p.cRule.qpd
-				//	hLimiter.dRefillTime = hLimiter.dRefillTime + dayNano
-				//}
 
-				sBlock := ctx.p.cRule.qps != 0 && hLimiter.sTokens == 0
-				mBlock := ctx.p.cRule.qpm != 0 && hLimiter.mTokens == 0
-				dBlock := ctx.p.cRule.qpd != 0 && hLimiter.dTokens == 0
+				sBlock := ctx.p.hRule.qps != 0 && hLimiter.sTokens == 0
+				mBlock := ctx.p.hRule.qpm != 0 && hLimiter.mTokens == 0
+				dBlock := ctx.p.hRule.qpd != 0 && hLimiter.dTokens == 0
 				if sBlock || mBlock || dBlock {
+					proxywasm.LogInfof("[sBlock: %s, mBlock: %s, dBlock: %s]", sBlock, mBlock, dBlock)
 					hLimiter.isBlock = true
-					if ctx.p.cRule.needBlock {
+					if ctx.p.hRule.needBlock {
 						// new lock duration
-						hLimiter.unlockTime = now + ctx.p.cRule.blockTime*secondNano
+						hLimiter.unlockTime = now + ctx.p.hRule.blockTime*secondNano
 						_ = proxywasm.SendHttpResponse(403, nil, []byte("new period lock"), -1)
 						return types.ActionContinue
 					} else {
@@ -243,13 +228,13 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 					}
 					//_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 				} else {
-					if ctx.p.cRule.qps != 0 {
+					if ctx.p.hRule.qps != 0 {
 						hLimiter.sTokens--
 					}
-					if ctx.p.cRule.qpm != 0 {
+					if ctx.p.hRule.qpm != 0 {
 						hLimiter.mTokens--
 					}
-					if ctx.p.cRule.qpd != 0 {
+					if ctx.p.hRule.qpd != 0 {
 						hLimiter.dTokens--
 					}
 					_ = proxywasm.SendHttpResponse(403, nil, []byte("no lock"), -1)
