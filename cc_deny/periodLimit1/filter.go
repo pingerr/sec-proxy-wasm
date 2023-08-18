@@ -159,7 +159,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 			ctx.p.limitMap[hLimitKeyBuf.String()] = &newHLimiter
 
 			//_ = proxywasm.SendHttpResponse(403, nil, []byte("init h limiter"), -1)
-			return types.ActionContinue
+			//return types.ActionContinue
 		} else {
 			if hLimiter.isBlock {
 				if ctx.p.hRule.needBlock {
@@ -167,7 +167,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						// in lock duration
 						//_ = proxywasm.SendHttpResponse(403, nil, []byte("in h time lock"), -1)
 						_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-						return types.ActionContinue
+						//return types.ActionContinue
 					} else {
 						// out lock duration
 						hLimiter.isBlock = false
@@ -184,7 +184,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 							hLimiter.dRefillTime = hLimiter.unlockTime
 						}
 						//_ = proxywasm.SendHttpResponse(403, nil, []byte("out h time lock"), -1)
-						return types.ActionContinue
+						//return types.ActionContinue
 					}
 				} else {
 					if (ctx.p.hRule.qps != 0 && now < hLimiter.sRefillTime+secondNano) ||
@@ -192,7 +192,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						(ctx.p.hRule.qpd != 0 && now < hLimiter.dRefillTime+dayNano) {
 						//_ = proxywasm.SendHttpResponse(403, nil, []byte("in h direct lock"), -1)
 						_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-						return types.ActionContinue
+						//return types.ActionContinue
 					} else {
 						hLimiter.isBlock = false
 						if ctx.p.hRule.qps != 0 && now > hLimiter.sRefillTime+secondNano {
@@ -208,7 +208,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 							hLimiter.dRefillTime = hLimiter.dRefillTime + dayNano
 						}
 						//_ = proxywasm.SendHttpResponse(403, nil, []byte("out h direct lock"), -1)
-						return types.ActionContinue
+						//return types.ActionContinue
 					}
 				}
 			} else {
@@ -224,10 +224,10 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						// new lock duration
 						hLimiter.unlockTime = now + ctx.p.hRule.blockTime*secondNano
 						//_ = proxywasm.SendHttpResponse(403, nil, []byte("new h period lock"), -1)
-						return types.ActionContinue
+						//return types.ActionContinue
 					} else {
 						//_ = proxywasm.SendHttpResponse(403, nil, []byte("new h direct lock"), -1)
-						return types.ActionContinue
+						//return types.ActionContinue
 					}
 
 				} else {
@@ -241,7 +241,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						hLimiter.dTokens--
 					}
 					//_ = proxywasm.SendHttpResponse(403, nil, []byte("no h lock"), -1)
-					return types.ActionContinue
+					//return types.ActionContinue
 				}
 			}
 		}
@@ -284,7 +284,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						// in lock duration
 						//_ = proxywasm.SendHttpResponse(403, nil, []byte("in c time lock"), -1)
 						_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-						return types.ActionContinue
+						//return types.ActionContinue
 					} else {
 						// out lock duration
 						cLimiter.isBlock = false
@@ -301,7 +301,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 							cLimiter.dRefillTime = cLimiter.unlockTime
 						}
 						//_ = proxywasm.SendHttpResponse(403, nil, []byte("out c time lock"), -1)
-						return types.ActionContinue
+						//return types.ActionContinue
 					}
 				} else {
 					if (ctx.p.cRule.qps != 0 && now < cLimiter.sRefillTime+secondNano) ||
@@ -309,7 +309,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						(ctx.p.cRule.qpd != 0 && now < cLimiter.dRefillTime+dayNano) {
 						//_ = proxywasm.SendHttpResponse(403, nil, []byte("in c direct lock"), -1)
 						_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-						return types.ActionContinue
+						//return types.ActionContinue
 					} else {
 						cLimiter.isBlock = false
 						if ctx.p.cRule.qps != 0 && now > cLimiter.sRefillTime+secondNano {
@@ -325,7 +325,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 							cLimiter.dRefillTime = cLimiter.dRefillTime + dayNano
 						}
 						//_ = proxywasm.SendHttpResponse(403, nil, []byte("out c direct lock"), -1)
-						return types.ActionContinue
+						//return types.ActionContinue
 					}
 				}
 			} else {
@@ -333,19 +333,17 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 				mBlock := ctx.p.cRule.qpm != 0 && cLimiter.mTokens == 0
 				dBlock := ctx.p.cRule.qpd != 0 && cLimiter.dTokens == 0
 				if sBlock || mBlock || dBlock {
-					//proxywasm.LogInfof("[c sBlock: %s, mBlock: %s, dBlock: %s]", sBlock, mBlock, dBlock)
 					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 					cLimiter.isBlock = true
 					if ctx.p.cRule.needBlock {
 						// new lock duration
 						cLimiter.unlockTime = now + ctx.p.cRule.blockTime*secondNano
 						//_ = proxywasm.SendHttpResponse(403, nil, []byte("new c period lock"), -1)
-						return types.ActionContinue
+						//return types.ActionContinue
 					} else {
 						//_ = proxywasm.SendHttpResponse(403, nil, []byte("new c direct lock"), -1)
-						return types.ActionContinue
+						//return types.ActionContinue
 					}
-					//_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 				} else {
 					if ctx.p.cRule.qps != 0 {
 						cLimiter.sTokens--
@@ -357,7 +355,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						cLimiter.dTokens--
 					}
 					//_ = proxywasm.SendHttpResponse(403, nil, []byte("no c lock"), -1)
-					return types.ActionContinue
+					//return types.ActionContinue
 				}
 			}
 		}

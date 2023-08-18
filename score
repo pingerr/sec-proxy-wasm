@@ -333,12 +333,6 @@ ip
     bitTree 测试
     lc tree 实现
 
-cc
-    固定窗口 ok
-    固定窗口多rule
-    固定窗口优化
-    cpp实现
-
 waf
     rule  1 +
     transformation base64flat 1 +
@@ -346,8 +340,13 @@ waf
     cpp实现
     正则预编译
 
+cc
+    固定窗口 ok
+    tinygo 内存泄露 0.25 ok
+    固定窗口多rule
+    固定窗口优化
+    cpp实现
 
-tinygo 内存泄露 0.25 ok
 使用共享内存
 
 性能测试工具 wrk
