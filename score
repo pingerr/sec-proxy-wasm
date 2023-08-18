@@ -316,6 +316,8 @@ waf-404: 36.6600 -> (91.76, 91.663)
 2023-08-18 14:12:11 score:87.3200
 1.0.1-test-1 ip(myIpLookup)+waf(88)+cc(pLimit1)
 
+2023-08-18 17:19:51 score:87.8300
+1.0.1-cc27 ip(myIpLookup)+waf(88)+cc(pLimit1)
 
 ip
 
