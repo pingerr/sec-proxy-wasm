@@ -313,14 +313,14 @@ cc: 4.00 -> (0.00, ?)
 waf-404: 36.6600 -> (91.76, 91.663)
 
 ip
-    前缀hash
-    my bit tree 1  todo 压缩
-    iplookup
+    my bit tree 1
+    iplookup 1
     lc tree
+    tinygo 0.25 内存泄露
 
 cc
-    令牌桶 1
     全局令牌桶 todo
+    tinygo 0.25 内存泄露
 
 waf
     rule  half

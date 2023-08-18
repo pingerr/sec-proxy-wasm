@@ -1,7 +1,7 @@
 package main
 
 import (
-	"cc_deny/denyall"
+	"cc_deny/periodLimit1"
 )
 
 func main() {
@@ -9,6 +9,7 @@ func main() {
 	//ratelimit.PluginStart()
 	//ratelimit1.PluginStart()
 	//periodLimit.PluginStart()
+	periodLimit1.PluginStart()
 	//keyLimit.PluginStart()
-	denyall.PluginStart()
+	//denyall.PluginStart()
 }
