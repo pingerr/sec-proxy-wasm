@@ -312,21 +312,31 @@ cc: 4.00 -> (0.00, ?)
 
 waf-404: 36.6600 -> (91.76, 91.663)
 
+
+2023-08-18 14:12:11 score:87.3200
+1.0.1-test-1 ip(myIpLookup)+waf(88)+cc(pLimit1)
+
+
 ip
-    my bit tree 1
+
     iplookup 1
-    lc tree
-    tinygo 0.25 内存泄露
+    bitTree 测试
+    lc tree 实现
 
 cc
-    全局令牌桶 todo
-    tinygo 0.25 内存泄露
+    固定窗口 1
+    固定窗口优化
+    cpp实现
 
 waf
-    rule  half
-    rx ?
-    transformation base64flat
-    placeholder
+    rule  1 +
+    transformation base64flat 1 +
+    placeholder +
+    cpp实现
+    正则预编译
 
 
+tinygo 内存泄露 0.25
+使用共享内存
 
+性能测试工具 wrk
