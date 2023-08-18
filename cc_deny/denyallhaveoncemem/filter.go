@@ -86,10 +86,12 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	}
 	cSub := bytes.NewBufferString(ctx.p.cRule.key)
 	cSub.WriteString("=")
-	cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
-	if cookieValue != "" {
-		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-		return types.ActionContinue
+	if strings.HasPrefix(cookies, cSub.String()) {
+		cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
+		if cookieValue != "" {
+			_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+			return types.ActionContinue
+		}
 	}
 
 	return types.ActionContinue

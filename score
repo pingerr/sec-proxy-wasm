@@ -330,8 +330,10 @@ waf-404: 36.6600 -> (91.76, 91.663)
 ip
 
     iplookup ok
+    tinygo 内存泄露 0.25 ok (23.27->23.37)
     bitTree 测试
     lc tree 实现
+
 
 waf
     rule  1 +
@@ -342,7 +344,7 @@ waf
 
 cc
     固定窗口 ok
-    tinygo 内存泄露 0.25 ok
+    tinygo 内存泄露 0.25 ok (denyall 34.46 -> 35.92)
     固定窗口多rule
     固定窗口优化
     cpp实现
