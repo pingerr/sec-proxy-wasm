@@ -319,14 +319,23 @@ waf-404: 36.6600 -> (91.76, 91.663)
 2023-08-18 17:19:51 score:87.8300
 1.0.1-cc27 ip(myIpLookup)+waf(88)+cc(pLimit1)
 
+
+1.0.1-25 ip(myIpLookup)+waf(88)+cc(pLimit1)
+
+
+
+
+
+
 ip
 
-    iplookup 1
+    iplookup ok
     bitTree 测试
     lc tree 实现
 
 cc
-    固定窗口 1
+    固定窗口 ok
+    固定窗口多rule
     固定窗口优化
     cpp实现
 
@@ -338,7 +347,7 @@ waf
     正则预编译
 
 
-tinygo 内存泄露 0.25
+tinygo 内存泄露 0.25 ok
 使用共享内存
 
 性能测试工具 wrk
