@@ -132,8 +132,8 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	defer ctx.p.mu.Unlock()
 	now := time.Now().UnixNano()
 
-	headerValue, _ := proxywasm.GetHttpRequestHeader(ctx.p.hRule.key)
-	if headerValue != "" {
+	headerValue, err := proxywasm.GetHttpRequestHeader(ctx.p.hRule.key)
+	if err == nil && headerValue != "" {
 		hLimitKeyBuf := bytes.NewBufferString(headerPre)
 		hLimitKeyBuf.WriteString(headerValue)
 		hLimiter, isOk := ctx.p.limitMap[hLimitKeyBuf.String()]
@@ -152,6 +152,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 				newHLimiter.dRefillTime = now
 			}
 			ctx.p.limitMap[hLimitKeyBuf.String()] = &newHLimiter
+
 		} else {
 			if hLimiter.isBlock {
 				if ctx.p.hRule.needBlock {
@@ -241,8 +242,8 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 		}
 	}
 
-	cookies, _ := proxywasm.GetHttpRequestHeader("cookie")
-	if cookies == "" {
+	cookies, err := proxywasm.GetHttpRequestHeader("cookie")
+	if err != nil || cookies == "" {
 		return types.ActionContinue
 	}
 	cSub := bytes.NewBufferString(ctx.p.cRule.key)
