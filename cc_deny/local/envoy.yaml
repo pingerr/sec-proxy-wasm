@@ -55,6 +55,10 @@ static_resources:
                             "block_seconds": 10
                           },
                           {
+                            "header": "hd2",
+                            "qpm": 3,
+                          },
+                          {
                             "cookie": "uid",
                             "qps": 1
                           }
