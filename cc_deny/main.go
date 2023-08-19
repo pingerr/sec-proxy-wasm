@@ -1,8 +1,6 @@
 package main
 
-import (
-	"cc_deny/denyall"
-)
+import "cc_deny/denyallhaveoncemem"
 
 func main() {
 	//ccfilter.PluginStart()
@@ -12,7 +10,7 @@ func main() {
 	//periodLimit1.PluginStart()
 	//pLimit2.PluginStart()
 	//keyLimit.PluginStart()
-	denyall.PluginStart()
-	//denyallhaveoncemem.PluginStart()
+	//denyall.PluginStart()
+	denyallhaveoncemem.PluginStart()
 	//errortest.PluginStart()
 }

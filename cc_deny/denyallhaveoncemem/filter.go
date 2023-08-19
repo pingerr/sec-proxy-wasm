@@ -1,11 +1,9 @@
 package denyallhaveoncemem
 
 import (
-	"bytes"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 	"github.com/tidwall/gjson"
-	"strings"
 )
 
 func PluginStart() {
@@ -78,25 +76,25 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 
 	for _, rule := range ctx.p.rules {
 		if rule.isHeader {
-			headerValue, _ := proxywasm.GetHttpRequestHeader(rule.key)
-			if headerValue != "" {
+			headerValue, err := proxywasm.GetHttpRequestHeader(rule.key)
+			if err == nil && headerValue != "" {
 				_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 				return types.ActionContinue
 			}
-		} else {
-			cookies, _ := proxywasm.GetHttpRequestHeader("cookie")
-			if cookies == "" {
-				continue
-			}
-			cSub := bytes.NewBufferString(rule.key)
-			cSub.WriteString("=")
-			if strings.HasPrefix(cookies, cSub.String()) {
-				cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
-				if cookieValue != "" {
-					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-					return types.ActionContinue
-				}
-			}
+			//} else {
+			//	cookies, _ := proxywasm.GetHttpRequestHeader("cookie")
+			//	if cookies == "" {
+			//		continue
+			//	}
+			//	cSub := bytes.NewBufferString(rule.key)
+			//	cSub.WriteString("=")
+			//	if strings.HasPrefix(cookies, cSub.String()) {
+			//		cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
+			//		if cookieValue != "" {
+			//			_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+			//			return types.ActionContinue
+			//		}
+			//	}
 		}
 	}
 
