@@ -105,7 +105,7 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 				p.hRule.blockTime = headerBlockTime
 				p.hRule.needBlock = true
 			}
-			proxywasm.LogInfof("[h qps:%d, qpm:%d, qpd:%s, time:%d]", p.hRule.qps, p.hRule.qpm, p.hRule.qpd, p.hRule.blockTime)
+			//proxywasm.LogInfof("[h qps:%d, qpm:%d, qpd:%s, time:%d]", p.hRule.qps, p.hRule.qpm, p.hRule.qpd, p.hRule.blockTime)
 		} else if cookieKey := curMap["cookie"].Str; cookieKey != "" {
 			p.cRule.key = cookieKey
 			if qps := curMap["qps"].Int(); qps != 0 {
@@ -121,7 +121,7 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 				p.cRule.blockTime = cookieBlockTime
 				p.cRule.needBlock = true
 			}
-			proxywasm.LogInfof("[c qps:%d, qpm:%d, qpd:%s, time:%d]", p.cRule.qps, p.cRule.qpm, p.cRule.qpd, p.cRule.blockTime)
+			//proxywasm.LogInfof("[c qps:%d, qpm:%d, qpd:%s, time:%d]", p.cRule.qps, p.cRule.qpm, p.cRule.qpd, p.cRule.blockTime)
 		}
 	}
 
@@ -138,7 +138,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	if err == nil && headerValue != "" {
 		hLimitKeyBuf := bytes.NewBufferString(headerPre)
 		hLimitKeyBuf.WriteString(headerValue)
-		proxywasm.LogInfof("[h key %s]", hLimitKeyBuf.String())
+		//proxywasm.LogInfof("[h key %s]", hLimitKeyBuf.String())
 		hLimiter, isOk := ctx.p.limitMap[hLimitKeyBuf.String()]
 		if !isOk {
 			var newHLimiter Limiter
@@ -163,7 +163,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 					if now < hLimiter.unlockTime {
 						// in lock duration
 						_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-						proxywasm.LogInfo("[h in duration lock]")
+						//proxywasm.LogInfo("[h in duration lock]")
 
 					} else {
 						// out lock duration
@@ -180,7 +180,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 							hLimiter.dTokens = ctx.p.hRule.qpd
 							hLimiter.dRefillTime = now
 						}
-						proxywasm.LogInfo("[h out duration lock]")
+						//proxywasm.LogInfo("[h out duration lock]")
 					}
 				} else {
 					if (ctx.p.hRule.qps != 0 && now < hLimiter.sRefillTime+secondNano) ||
@@ -189,7 +189,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						//_ = proxywasm.SendHttpResponse(403, nil, []byte("in h direct lock"), -1)
 						_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 						//return types.ActionContinue
-						proxywasm.LogInfo("[h in nano lock]")
+						//proxywasm.LogInfo("[h in nano lock]")
 
 					} else {
 						hLimiter.isBlock = false
@@ -205,7 +205,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 							hLimiter.dTokens = ctx.p.hRule.qpd
 							hLimiter.dRefillTime = now
 						}
-						proxywasm.LogInfo("[h out nano lock]")
+						//proxywasm.LogInfo("[h out nano lock]")
 					}
 				}
 			} else {
@@ -236,10 +236,10 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						// new lock duration
 						hLimiter.unlockTime = now + ctx.p.hRule.blockTime*secondNano
 					}
-					proxywasm.LogInfo("[h new lock]")
+					//proxywasm.LogInfo("[h new lock]")
 
 				} else {
-					proxywasm.LogInfo("[h pass]")
+					//proxywasm.LogInfo("[h pass]")
 
 				}
 
@@ -267,7 +267,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 		if cookieValue != "" {
 			cLimitKeyBuf := bytes.NewBufferString(cookiePre)
 			cLimitKeyBuf.WriteString(cookieValue)
-			proxywasm.LogInfof("[c key %s]", cLimitKeyBuf.String())
+			//proxywasm.LogInfof("[c key %s]", cLimitKeyBuf.String())
 			cLimiter, isOk := ctx.p.limitMap[cLimitKeyBuf.String()]
 			if !isOk {
 				var limiter Limiter
@@ -284,7 +284,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 					limiter.dRefillTime = now
 				}
 				ctx.p.limitMap[cLimitKeyBuf.String()] = &limiter
-				proxywasm.LogInfo("[c init]")
+				//proxywasm.LogInfo("[c init]")
 
 			} else {
 				if cLimiter.isBlock {
