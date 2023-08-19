@@ -18,8 +18,7 @@ type (
 	}
 	pluginContext struct {
 		types.DefaultPluginContext
-		hRule *Rule
-		cRule *Rule
+		rules []*Rule
 	}
 
 	httpContext struct {
@@ -29,14 +28,14 @@ type (
 	}
 
 	Rule struct {
-		key string
+		isHeader bool
+		key      string
 	}
 )
 
 func (*vmContext) NewPluginContext(contextID uint32) types.PluginContext {
 	return &pluginContext{
-		hRule: &Rule{},
-		cRule: &Rule{},
+		rules: []*Rule{},
 	}
 }
 
@@ -62,11 +61,13 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 		if headerKey := curMap["header"].Str; headerKey != "" {
 			var hRule Rule
 			hRule.key = headerKey
-			p.hRule = &hRule
+			hRule.isHeader = true
+			p.rules = append(p.rules, &hRule)
 		} else if cookieKey := curMap["cookie"].Str; cookieKey != "" {
 			var cRule Rule
 			cRule.key = cookieKey
-			p.cRule = &cRule
+			cRule.isHeader = false
+			p.rules = append(p.rules, &cRule)
 		}
 	}
 
@@ -74,23 +75,28 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 }
 
 func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
-	headerValue, _ := proxywasm.GetHttpRequestHeader(ctx.p.hRule.key)
-	if headerValue != "" {
-		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-		return types.ActionContinue
-	}
 
-	cookies, _ := proxywasm.GetHttpRequestHeader("cookie")
-	if cookies == "" {
-		return types.ActionContinue
-	}
-	cSub := bytes.NewBufferString(ctx.p.cRule.key)
-	cSub.WriteString("=")
-	if strings.HasPrefix(cookies, cSub.String()) {
-		cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
-		if cookieValue != "" {
-			_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-			return types.ActionContinue
+	for _, rule := range ctx.p.rules {
+		if rule.isHeader {
+			headerValue, _ := proxywasm.GetHttpRequestHeader(rule.key)
+			if headerValue != "" {
+				_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+				return types.ActionContinue
+			}
+		} else {
+			cookies, _ := proxywasm.GetHttpRequestHeader("cookie")
+			if cookies == "" {
+				continue
+			}
+			cSub := bytes.NewBufferString(rule.key)
+			cSub.WriteString("=")
+			if strings.HasPrefix(cookies, cSub.String()) {
+				cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
+				if cookieValue != "" {
+					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+					return types.ActionContinue
+				}
+			}
 		}
 	}
 
