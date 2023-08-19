@@ -80,7 +80,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 		if rule.isHeader {
 			headerValue, err := proxywasm.GetHttpRequestHeader(rule.key)
 			if err == nil && headerValue != "" {
-				//_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+				_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 				return types.ActionContinue
 			}
 		} else {
