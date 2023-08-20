@@ -32,7 +32,7 @@ type (
 	}
 	pluginContext struct {
 		types.DefaultPluginContext
-		rules []*Rule
+		rules []Rule
 	}
 
 	httpContext struct {
@@ -63,7 +63,7 @@ type (
 
 func (*vmContext) NewPluginContext(contextID uint32) types.PluginContext {
 	return &pluginContext{
-		rules: []*Rule{},
+		rules: []Rule{},
 	}
 }
 
@@ -104,7 +104,7 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 				rule.blockTime = headerBlockTime * secondNano
 				rule.needBlock = true
 			}
-			p.rules = append(p.rules, &rule)
+			p.rules = append(p.rules, rule)
 			//proxywasm.LogInfof("[h qps:%d, qpm:%d, qpd:%s, time:%d]", p.hRule.qps, p.hRule.qpm, p.hRule.qpd, p.hRule.blockTime)
 		} else if cookieKey := curMap["cookie"].Str; cookieKey != "" {
 			var rule Rule
@@ -123,7 +123,7 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 				rule.blockTime = cookieBlockTime * secondNano
 				rule.needBlock = true
 			}
-			p.rules = append(p.rules, &rule)
+			p.rules = append(p.rules, rule)
 			//proxywasm.LogInfof("[c qps:%d, qpm:%d, qpd:%s, time:%d]", p.cRule.qps, p.cRule.qpm, p.cRule.qpd, p.cRule.blockTime)
 		}
 	}
@@ -134,7 +134,7 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	var isHAllow, isCAllow bool
 
-	var rule *Rule
+	var rule Rule
 
 	for _, rule = range ctx.p.rules {
 		if rule.isHeader {
@@ -172,7 +172,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 }
 
 // data=[count:sRefillTime:mRefillTime:dRefillTime:isBlock:lastBlockTime]
-func getEntry(shareDataKey string, rule *Rule) bool {
+func getEntry(shareDataKey string, rule Rule) bool {
 	var data []byte
 	var cas uint32
 	var sRequestCount int64
