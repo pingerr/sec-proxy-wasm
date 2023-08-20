@@ -16,13 +16,11 @@ func PluginStart() {
 }
 
 const (
-	secondNano       = 1000 * 1000 * 1000
-	minuteNano       = 60 * secondNano
-	hourNano         = 60 * minuteNano
-	dayNano          = 24 * hourNano
-	minuteSec        = 60
-	hourSec          = 60 * minuteSec
-	daySec           = 24 * hourSec
+	secondNano = 1000 * 1000 * 1000
+	minuteNano = 60 * secondNano
+	hourNano   = 60 * minuteNano
+	dayNano    = 24 * hourNano
+
 	cookiePre        = "c:"
 	headerPre        = "h:"
 	maxGetTokenRetry = 20
@@ -202,7 +200,7 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 		data, cas, err = proxywasm.GetSharedData(shareDataKey)
 
 		if err != nil && err == types.ErrorStatusNotFound {
-			requestCount = 0
+			requestCount = 1
 			refreshTime = now
 			isBlock = 0
 			lastBlockTime = 0
@@ -213,30 +211,30 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 			refreshTime, _ = strconv.ParseInt(parts[1], 0, 64)
 			isBlock, _ = strconv.Atoi(parts[2])
 			lastBlockTime, _ = strconv.ParseInt(parts[3], 0, 64)
-		} else {
-			return isAllow
-		}
 
-		if isBlock == 1 && now > lastBlockTime+rule.blockTime {
-			requestCount = 0
-			refreshTime = now
-			isBlock = 0
-		}
+			if isBlock == 1 && now > lastBlockTime+rule.blockTime {
+				requestCount = 0
+				refreshTime = now
+				isBlock = 0
+			}
 
-		if !rule.needBlock && requestCount <= 1 && now > refreshTime+rule.minDuration {
-			requestCount = 0
-			refreshTime = now
-		}
+			if !rule.needBlock && requestCount <= 1 && now > refreshTime+rule.minDuration {
+				requestCount = 0
+				refreshTime = now
+			}
 
-		requestCount++
+			requestCount++
 
-		if requestCount > 1 && now < refreshTime+rule.minDuration {
-			if rule.needBlock {
-				lastBlockTime = now
-				isBlock = 1
+			if requestCount >= 1 && now < refreshTime+rule.minDuration {
+				if rule.needBlock {
+					lastBlockTime = now
+					isBlock = 1
+				}
+			} else {
+				isAllow = true
 			}
 		} else {
-			isAllow = true
+			return isAllow
 		}
 
 		newData := bytes.NewBufferString(strconv.FormatInt(requestCount, 10))
