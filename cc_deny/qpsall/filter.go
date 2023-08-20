@@ -52,10 +52,12 @@ type (
 	}
 
 	Rule struct {
-		key         string
-		minDuration int64
-		needBlock   bool
-		blockTime   int64
+		key       string
+		qps       int64
+		qpm       int64
+		qpd       int64
+		needBlock bool
+		blockTime int64
 	}
 )
 
@@ -86,27 +88,15 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 	for i := range results {
 		curMap := results[i].Map()
 		if headerKey := curMap["header"].Str; headerKey != "" {
-			isInit := false
 			p.hRule.key = headerKey
 			if qps := curMap["qps"].Int(); qps != 0 {
-				p.hRule.minDuration = secondNano
-				isInit = true
+				p.hRule.qps = qps
 			}
 			if qpm := curMap["qpm"].Int(); qpm != 0 {
-				if !isInit {
-					p.hRule.minDuration = minuteNano / qpm
-					isInit = true
-				} else if minuteNano < p.hRule.minDuration*qpm {
-					p.hRule.minDuration = minuteNano / qpm
-				}
+				p.hRule.qpm = qpm
 			}
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
-				if !isInit {
-					p.hRule.minDuration = dayNano / qpd
-					isInit = true
-				} else if dayNano < p.hRule.minDuration*qpd {
-					p.hRule.minDuration = dayNano / qpd
-				}
+				p.hRule.qpd = qpd
 			}
 			if headerBlockTime := curMap["block_seconds"].Int(); headerBlockTime != 0 {
 				p.hRule.blockTime = headerBlockTime * secondNano
@@ -114,27 +104,15 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 			}
 			//proxywasm.LogInfof("[h qps:%d, qpm:%d, qpd:%s, time:%d]", p.hRule.qps, p.hRule.qpm, p.hRule.qpd, p.hRule.blockTime)
 		} else if cookieKey := curMap["cookie"].Str; cookieKey != "" {
-			isInit := false
 			p.cRule.key = cookieKey
 			if qps := curMap["qps"].Int(); qps != 0 {
-				p.cRule.minDuration = secondNano
-				isInit = true
+				p.cRule.qps = qps
 			}
 			if qpm := curMap["qpm"].Int(); qpm != 0 {
-				if !isInit {
-					p.cRule.minDuration = minuteNano / qpm
-					isInit = true
-				} else if minuteNano < p.cRule.minDuration*qpm {
-					p.cRule.minDuration = minuteNano / qpm
-				}
+				p.cRule.qpm = qpm
 			}
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
-				if !isInit {
-					p.cRule.minDuration = dayNano / qpd
-					isInit = true
-				} else if dayNano < p.cRule.minDuration*qpd {
-					p.cRule.minDuration = dayNano / qpd
-				}
+				p.cRule.qpd = qpd
 			}
 			if cookieBlockTime := curMap["block_seconds"].Int(); cookieBlockTime != 0 {
 				p.cRule.blockTime = cookieBlockTime * secondNano
@@ -181,26 +159,33 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	return types.ActionContinue
 }
 
-// data=[count:refreshTime:isBlock:lastBlockTime]
+// data=[count:sRefillTime:mRefillTime:dRefillTime:isBlock:lastBlockTime]
 func getEntry(shareDataKey string, rule *Rule) bool {
-	isAllow := false
-
 	var data []byte
 	var cas uint32
-	var requestCount int64
-	var refreshTime int64
+	var sRequestCount int64
+	var mRequestCount int64
+	var dRequestCount int64
+	var sRefillTime int64
+	var mRefillTime int64
+	var dRefillTime int64
 	var isBlock int
 	var lastBlockTime int64
 
 	var err error
 
 	for i := 0; i < maxGetTokenRetry; i++ {
+		isAllow := false
 		now := time.Now().UnixNano() //放入循环
 		data, cas, err = proxywasm.GetSharedData(shareDataKey)
 
 		if err != nil && err == types.ErrorStatusNotFound {
-			requestCount = 1
-			refreshTime = now
+			sRequestCount = 1
+			mRequestCount = 1
+			dRequestCount = 1
+			sRefillTime = now
+			mRefillTime = now
+			dRefillTime = now
 			isBlock = 0
 			lastBlockTime = 0
 			proxywasm.LogInfo("[getsharedata not found]")
@@ -208,47 +193,79 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 		} else if err == nil {
 			// Tokenize the string on :
 			parts := strings.Split(string(data), ":")
-			requestCount, _ = strconv.ParseInt(parts[0], 0, 64)
-			refreshTime, _ = strconv.ParseInt(parts[1], 0, 64)
-			isBlock, _ = strconv.Atoi(parts[2])
-			lastBlockTime, _ = strconv.ParseInt(parts[3], 0, 64)
+			sRequestCount, _ = strconv.ParseInt(parts[0], 0, 64)
+			mRequestCount, _ = strconv.ParseInt(parts[1], 0, 64)
+			dRequestCount, _ = strconv.ParseInt(parts[2], 0, 64)
+			sRefillTime, _ = strconv.ParseInt(parts[3], 0, 64)
+			mRefillTime, _ = strconv.ParseInt(parts[4], 0, 64)
+			dRefillTime, _ = strconv.ParseInt(parts[5], 0, 64)
+			isBlock, _ = strconv.Atoi(parts[6])
+			lastBlockTime, _ = strconv.ParseInt(parts[7], 0, 64)
 
-			if isBlock == 1 && now > lastBlockTime+rule.blockTime {
-				requestCount = 0
-				refreshTime = now
-				isBlock = 0
-				proxywasm.LogInfo("[out period lock]")
+			if rule.needBlock {
+				if isBlock == 1 && now > lastBlockTime+rule.blockTime {
+					sRequestCount = 0
+					mRequestCount = 0
+					dRequestCount = 0
+					sRefillTime = now
+					mRefillTime = now
+					dRefillTime = now
+					isBlock = 0
+					proxywasm.LogInfo("[out period lock]")
+				}
+			} else {
+				if rule.qps != 0 && now-sRefillTime > secondNano {
+					sRefillTime = now
+					sRequestCount = 0
+					proxywasm.LogInfo("[out s direct lock]")
+				}
+				if rule.qpm != 0 && now-mRefillTime > minuteNano {
+					mRefillTime = now
+					mRequestCount = 0
+					proxywasm.LogInfo("[out m direct lock]")
+				}
+				if rule.qpd != 0 && now-dRefillTime > dayNano {
+					dRefillTime = now
+					dRequestCount = 0
+					proxywasm.LogInfo("[out m direct lock]")
+				}
 			}
 
-			if !rule.needBlock && requestCount <= 1 && now > refreshTime+rule.minDuration {
-				requestCount = 0
-				refreshTime = now
-				proxywasm.LogInfo("[out direct lock]")
-			}
+			sRequestCount++
+			mRequestCount++
+			dRequestCount++
 
-			requestCount++
-
-			if requestCount >= 1 && now < refreshTime+rule.minDuration {
-
+			if (rule.qps != 0 && sRequestCount > rule.qps && now-sRefillTime < secondNano) ||
+				(rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano) ||
+				(rule.qpd != 0 && dRequestCount > rule.qpd && now-dRefillTime < dayNano) {
 				if rule.needBlock {
-					proxywasm.LogInfo("[in period lock]")
 					lastBlockTime = now
 					isBlock = 1
+					proxywasm.LogInfo("[new period lock]")
 				} else {
-					proxywasm.LogInfo("[in direct lock]")
+					proxywasm.LogInfo("[new direct lock]")
 				}
 			} else {
 				proxywasm.LogInfo("[pass]")
 				isAllow = true
 			}
+
 		} else {
 			proxywasm.LogInfo("[getsharedata other error]")
 			return isAllow
 		}
 
-		newData := bytes.NewBufferString(strconv.FormatInt(requestCount, 10))
+		newData := bytes.NewBufferString(strconv.FormatInt(sRequestCount, 10))
 		newData.WriteString(":")
-		newData.WriteString(strconv.FormatInt(refreshTime, 10))
+		newData.WriteString(strconv.FormatInt(mRequestCount, 10))
+		newData.WriteString(":")
+		newData.WriteString(strconv.FormatInt(dRequestCount, 10))
+		newData.WriteString(":")
+		newData.WriteString(strconv.FormatInt(sRefillTime, 10))
+		newData.WriteString(":")
+		newData.WriteString(strconv.FormatInt(mRefillTime, 10))
+		newData.WriteString(":")
+		newData.WriteString(strconv.FormatInt(dRefillTime, 10))
 		newData.WriteString(":")
 		newData.WriteString(strconv.FormatInt(int64(isBlock), 10))
 		newData.WriteString(":")
