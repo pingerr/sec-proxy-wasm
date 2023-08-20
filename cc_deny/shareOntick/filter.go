@@ -1,4 +1,4 @@
-package qpsall
+package shareOntick
 
 import (
 	"bytes"
@@ -24,6 +24,7 @@ const (
 	cookiePre        = "c:"
 	headerPre        = "h:"
 	maxGetTokenRetry = 20
+	tickMilliseconds = 100
 )
 
 type (
@@ -73,6 +74,11 @@ func (p *pluginContext) NewHttpContext(contextID uint32) types.HttpContext {
 }
 
 func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPluginStartStatus {
+	if err := proxywasm.SetTickPeriodMilliSeconds(tickMilliseconds); err != nil {
+		proxywasm.LogCriticalf("failed to set tick period: %v", err)
+		return types.OnPluginStartStatusFailed
+	}
+
 	data, err := proxywasm.GetPluginConfiguration()
 	if data == nil {
 		return types.OnPluginStartStatusOK
@@ -123,6 +129,10 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 	}
 
 	return types.OnPluginStartStatusOK
+}
+
+func (p *pluginContext) OnTick() {
+
 }
 
 func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
@@ -188,7 +198,7 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 			dRefillTime = now
 			isBlock = 0
 			lastBlockTime = 0
-			//proxywasm.LogInfo("[getsharedata not found]")
+			proxywasm.LogInfo("[getsharedata not found]")
 			isAllow = true
 
 		} else if err == nil {
@@ -213,26 +223,26 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 						mRefillTime = now
 						dRefillTime = now
 						isBlock = 0
-						//proxywasm.LogInfo("[out period lock]")
+						proxywasm.LogInfo("[out period lock]")
 					} else {
-						//proxywasm.LogInfo("[in period lock]")
+						proxywasm.LogInfo("[in period lock]")
 					}
 				}
 			} else {
 				if rule.qps != 0 && now-sRefillTime > secondNano {
 					sRefillTime = now
 					sRequestCount = 0
-					//proxywasm.LogInfo("[out s direct lock]")
+					proxywasm.LogInfo("[out s direct lock]")
 				}
 				if rule.qpm != 0 && now-mRefillTime > minuteNano {
 					mRefillTime = now
 					mRequestCount = 0
-					//proxywasm.LogInfo("[out m direct lock]")
+					proxywasm.LogInfo("[out m direct lock]")
 				}
 				if rule.qpd != 0 && now-dRefillTime > dayNano {
 					dRefillTime = now
 					dRequestCount = 0
-					//proxywasm.LogInfo("[out m direct lock]")
+					proxywasm.LogInfo("[out m direct lock]")
 				}
 			}
 
@@ -247,18 +257,18 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 					if isBlock == 0 {
 						lastBlockTime = now
 						isBlock = 1
-						//proxywasm.LogInfo("[new period lock]")
+						proxywasm.LogInfo("[new period lock]")
 					}
 				} else {
-					//proxywasm.LogInfo("[new direct lock]")
+					proxywasm.LogInfo("[new direct lock]")
 				}
 			} else {
-				//proxywasm.LogInfo("[pass]")
+				proxywasm.LogInfo("[pass]")
 				isAllow = true
 			}
 
 		} else {
-			//proxywasm.LogInfo("[getsharedata other error]")
+			proxywasm.LogInfo("[getsharedata other error]")
 			return isAllow
 		}
 
@@ -281,10 +291,10 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 		err := proxywasm.SetSharedData(shareDataKey, newData.Bytes(), cas)
 		if err != nil {
 			if errors.Is(err, types.ErrorStatusCasMismatch) {
-				//proxywasm.LogInfo("[gset sharedata mis]")
+				proxywasm.LogInfo("[gset sharedata mis]")
 				continue
 			} else {
-				//proxywasm.LogInfo("[gset sharedata other err]")
+				proxywasm.LogInfo("[gset sharedata other err]")
 				return false
 			}
 		}
