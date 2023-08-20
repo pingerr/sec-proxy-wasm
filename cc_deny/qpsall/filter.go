@@ -185,8 +185,6 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 func getEntry(shareDataKey string, rule *Rule) bool {
 	isAllow := false
 
-	now := time.Now().UnixNano() //放入循环？
-
 	var data []byte
 	var cas uint32
 	var requestCount int64
@@ -197,6 +195,7 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 	var err error
 
 	for i := 0; i < maxGetTokenRetry; i++ {
+		now := time.Now().UnixNano() //放入循环
 		data, cas, err = proxywasm.GetSharedData(shareDataKey)
 
 		if err != nil && err == types.ErrorStatusNotFound {
@@ -204,6 +203,8 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 			refreshTime = now
 			isBlock = 0
 			lastBlockTime = 0
+			proxywasm.LogInfo("[getsharedata not found]")
+
 		} else if err == nil {
 			// Tokenize the string on :
 			parts := strings.Split(string(data), ":")
@@ -216,24 +217,32 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 				requestCount = 0
 				refreshTime = now
 				isBlock = 0
+				proxywasm.LogInfo("[out period lock]")
 			}
 
 			if !rule.needBlock && requestCount <= 1 && now > refreshTime+rule.minDuration {
 				requestCount = 0
 				refreshTime = now
+				proxywasm.LogInfo("[out direct lock]")
 			}
 
 			requestCount++
 
 			if requestCount >= 1 && now < refreshTime+rule.minDuration {
+
 				if rule.needBlock {
+					proxywasm.LogInfo("[in period lock]")
 					lastBlockTime = now
 					isBlock = 1
+				} else {
+					proxywasm.LogInfo("[in direct lock]")
 				}
 			} else {
+				proxywasm.LogInfo("[pass]")
 				isAllow = true
 			}
 		} else {
+			proxywasm.LogInfo("[getsharedata other error]")
 			return isAllow
 		}
 
@@ -246,9 +255,16 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 		newData.WriteString(strconv.FormatInt(lastBlockTime, 10))
 
 		err := proxywasm.SetSharedData(shareDataKey, newData.Bytes(), cas)
-		if err != nil && errors.Is(err, types.ErrorStatusCasMismatch) {
-			continue
+		if err != nil {
+			if errors.Is(err, types.ErrorStatusCasMismatch) {
+				proxywasm.LogInfo("[gset sharedata mis]")
+				continue
+			} else {
+				proxywasm.LogInfo("[gset sharedata other err]")
+				return false
+			}
 		}
+
 		return isAllow
 	}
 	return false
