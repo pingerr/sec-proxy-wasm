@@ -203,15 +203,19 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 			lastBlockTime, _ = strconv.ParseInt(parts[7], 0, 64)
 
 			if rule.needBlock {
-				if isBlock == 1 && now > lastBlockTime+rule.blockTime {
-					sRequestCount = 0
-					mRequestCount = 0
-					dRequestCount = 0
-					sRefillTime = now
-					mRefillTime = now
-					dRefillTime = now
-					isBlock = 0
-					proxywasm.LogInfo("[out period lock]")
+				if isBlock == 1 {
+					if now > lastBlockTime+rule.blockTime {
+						sRequestCount = 0
+						mRequestCount = 0
+						dRequestCount = 0
+						sRefillTime = now
+						mRefillTime = now
+						dRefillTime = now
+						isBlock = 0
+						proxywasm.LogInfo("[out period lock]")
+					} else {
+						proxywasm.LogInfo("[in period lock]")
+					}
 				}
 			} else {
 				if rule.qps != 0 && now-sRefillTime > secondNano {
@@ -239,9 +243,11 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 				(rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano) ||
 				(rule.qpd != 0 && dRequestCount > rule.qpd && now-dRefillTime < dayNano) {
 				if rule.needBlock {
-					lastBlockTime = now
-					isBlock = 1
-					proxywasm.LogInfo("[new period lock]")
+					if isBlock == 0 {
+						lastBlockTime = now
+						isBlock = 1
+						proxywasm.LogInfo("[new period lock]")
+					}
 				} else {
 					proxywasm.LogInfo("[new direct lock]")
 				}
