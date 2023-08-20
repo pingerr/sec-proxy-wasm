@@ -273,23 +273,22 @@ func getEntry(shareDataKey string, rule Rule) bool {
 
 			if (rule.qps != 0 && sRequestCount > rule.qps && now-sRefillTime < secondNano) ||
 				(rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano) ||
-				(rule.qpd != 0 && dRequestCount > rule.qpd && now-dRefillTime < dayNano) {
+				(rule.qpd != 0 && dRequestCount > rule.qpd && now-dRefillTime < dayNano) ||
+				(rule.qps != 0 && (now-sRefillTime)/sRequestCount < secondNano/rule.qps) ||
+				(rule.qpm != 0 && (now-mRefillTime)/mRequestCount < minuteNano/rule.qpm) ||
+				(rule.qpd != 0 && (now-dRefillTime)/dRequestCount < dayNano/rule.qpd) {
 				if rule.needBlock {
 					if isBlock == 0 {
 						lastBlockTime = now
 						isBlock = 1
-						//proxywasm.LogInfo("[new period lock]")
 					}
-				} else {
-					//proxywasm.LogInfo("[new direct lock]")
 				}
 			} else {
-				//proxywasm.LogInfo("[pass]")
 				isAllow = true
 			}
 
 		} else {
-			//proxywasm.LogInfo("[getsharedata other error]")
+			//proxywasm.LogInfo("[get share data other error]")
 			return isAllow
 		}
 
