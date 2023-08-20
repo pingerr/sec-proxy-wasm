@@ -60,8 +60,40 @@ static_resources:
                             "qps": 2
                           },
                           {
-                            "cookie": "uidd",
+                            "cookie": "uid2",
                             "qps": 100
+                          },
+                          {
+                            "cookie": "uid3",
+                            "qps": 100
+                          },
+                          {
+                            "cookie": "uid4",
+                            "qps": 100
+                          },
+                          {
+                            "cookie": "uid5",
+                            "qps": 100
+                          },
+                          {
+                            "cookie": "uid6",
+                            "qps": 100
+                          },
+                          {
+                            "cookie": "uid7",
+                            "qps": 100
+                          },
+                          {
+                            "cookie": "uid8",
+                            "qps": 100
+                          },
+                          {
+                            "cookie": "uid9",
+                            "qps": 100
+                          },
+                          {
+                            "cookie": "uid10",
+                            "qpm": 10
                           }
                         ]
                       }
