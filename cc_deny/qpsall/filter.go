@@ -132,7 +132,7 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 }
 
 func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
-	var isHAllow, isCAllow bool
+	var isAllow bool
 
 	var rule Rule
 
@@ -144,10 +144,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 				hLimitKeyBuf.WriteString(rule.key)
 				hLimitKeyBuf.WriteString(":")
 				hLimitKeyBuf.WriteString(headerValue)
-				isHAllow = getEntry(hLimitKeyBuf.String(), rule)
-				if !isHAllow {
-					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-				}
+				isAllow = getEntry(hLimitKeyBuf.String(), rule)
 			}
 		} else {
 			cookies, err := proxywasm.GetHttpRequestHeader("cookie")
@@ -163,13 +160,13 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 					cLimitKeyBuf.WriteString(rule.key)
 					cLimitKeyBuf.WriteString(":")
 					cLimitKeyBuf.WriteString(cookieValue)
-					isCAllow = getEntry(cLimitKeyBuf.String(), rule)
-					if !isCAllow {
-						_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-					}
+					isAllow = getEntry(cLimitKeyBuf.String(), rule)
 				}
 			}
 		}
+	}
+	if !isAllow {
+		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 	}
 
 	return types.ActionContinue
