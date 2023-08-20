@@ -189,6 +189,7 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 			isBlock = 0
 			lastBlockTime = 0
 			proxywasm.LogInfo("[getsharedata not found]")
+			isAllow = true
 
 		} else if err == nil {
 			// Tokenize the string on :
