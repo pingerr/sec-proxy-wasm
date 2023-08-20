@@ -61,7 +61,7 @@ static_resources:
                           },
                           {
                             "cookie": "uid2",
-                            "qps": 100
+                            "qpm": 60
                           },
                           {
                             "cookie": "uid3",
