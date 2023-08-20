@@ -58,6 +58,10 @@ static_resources:
                           {
                             "cookie": "uid",
                             "qps": 2
+                          },
+                          {
+                            "cookie": "uidd",
+                            "qps": 100
                           }
                         ]
                       }
