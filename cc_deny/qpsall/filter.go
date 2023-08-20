@@ -141,6 +141,8 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 			headerValue, err := proxywasm.GetHttpRequestHeader(rule.key)
 			if err == nil && headerValue != "" {
 				hLimitKeyBuf := bytes.NewBufferString(headerPre)
+				hLimitKeyBuf.WriteString(rule.key)
+				hLimitKeyBuf.WriteString(":")
 				hLimitKeyBuf.WriteString(headerValue)
 				isHAllow = getEntry(hLimitKeyBuf.String(), rule)
 				if !isHAllow {
@@ -158,6 +160,8 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 				cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
 				if cookieValue != "" {
 					cLimitKeyBuf := bytes.NewBufferString(cookiePre)
+					cLimitKeyBuf.WriteString(rule.key)
+					cLimitKeyBuf.WriteString(":")
 					cLimitKeyBuf.WriteString(cookieValue)
 					isCAllow = getEntry(cLimitKeyBuf.String(), rule)
 					if !isCAllow {
