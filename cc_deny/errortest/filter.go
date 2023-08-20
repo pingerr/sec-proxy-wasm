@@ -85,7 +85,7 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 
 	results := gjson.Get(string(data), "cc_rules").Array()
 	s := make([]string, 3)
-	if len(results) >= 3 {
+	if len(results) <= 2 {
 		proxywasm.LogInfof("len: %d", s[5])
 	}
 
