@@ -51,7 +51,7 @@ static_resources:
                         "cc_rules": [
                           {
                             "header": "hd1",
-                            "qps": 3,
+                            "qpm": 3,
                             "block_seconds": 10
                           },
                           {

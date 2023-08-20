@@ -185,7 +185,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 func getEntry(shareDataKey string, rule *Rule) bool {
 	isAllow := false
 
-	now := time.Now().UnixNano()
+	now := time.Now().UnixNano() //放入循环？
 
 	var data []byte
 	var cas uint32
