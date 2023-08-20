@@ -54,10 +54,10 @@ type (
 	}
 
 	Rule struct {
-		key       string
-		qps       int64
-		needBlock bool
-		blockTime int64
+		key         string
+		minDuration int64
+		needBlock   bool
+		blockTime   int64
 	}
 )
 
@@ -91,23 +91,23 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 			isInit := false
 			p.hRule.key = headerKey
 			if qps := curMap["qps"].Int(); qps != 0 {
-				p.hRule.qps = qps
+				p.hRule.minDuration = secondNano
 				isInit = true
 			}
 			if qpm := curMap["qpm"].Int(); qpm != 0 {
 				if !isInit {
-					p.hRule.qps = qpm / minuteSec
+					p.hRule.minDuration = minuteNano / qpm
 					isInit = true
-				} else if qpm < p.hRule.qps*minuteSec {
-					p.hRule.qps = qpm / minuteSec
+				} else if minuteNano < p.hRule.minDuration*qpm {
+					p.hRule.minDuration = minuteNano / qpm
 				}
 			}
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
 				if !isInit {
-					p.hRule.qps = qpd / daySec
+					p.hRule.minDuration = dayNano / qpd
 					isInit = true
-				} else if qpd < p.hRule.qps*daySec {
-					p.hRule.qps = qpd / daySec
+				} else if dayNano < p.hRule.minDuration*qpd {
+					p.hRule.minDuration = dayNano / qpd
 				}
 			}
 			if headerBlockTime := curMap["block_seconds"].Int(); headerBlockTime != 0 {
@@ -119,23 +119,23 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 			isInit := false
 			p.cRule.key = cookieKey
 			if qps := curMap["qps"].Int(); qps != 0 {
-				p.cRule.qps = qps
+				p.cRule.minDuration = secondNano
 				isInit = true
 			}
 			if qpm := curMap["qpm"].Int(); qpm != 0 {
 				if !isInit {
-					p.cRule.qps = qpm / minuteSec
+					p.cRule.minDuration = minuteNano / qpm
 					isInit = true
-				} else if qpm < p.cRule.qps*minuteSec {
-					p.cRule.qps = qpm / minuteSec
+				} else if minuteNano < p.cRule.minDuration*qpm {
+					p.cRule.minDuration = minuteNano / qpm
 				}
 			}
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
 				if !isInit {
-					p.cRule.qps = qpd / minuteSec
+					p.cRule.minDuration = dayNano / qpd
 					isInit = true
-				} else if qpd < p.cRule.qps*minuteSec {
-					p.cRule.qps = qpd / minuteSec
+				} else if dayNano < p.cRule.minDuration*qpd {
+					p.cRule.minDuration = dayNano / qpd
 				}
 			}
 			if cookieBlockTime := curMap["block_seconds"].Int(); cookieBlockTime != 0 {
@@ -223,14 +223,14 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 			isBlock = 0
 		}
 
-		if !rule.needBlock && now > refreshTime+secondNano {
+		if !rule.needBlock && requestCount <= 1 && now > refreshTime+rule.minDuration {
 			requestCount = 0
 			refreshTime = now
 		}
 
 		requestCount++
 
-		if requestCount > rule.qps && now < refreshTime+secondNano {
+		if requestCount > 1 && now < refreshTime+rule.minDuration {
 			if rule.needBlock {
 				lastBlockTime = now
 				isBlock = 1
