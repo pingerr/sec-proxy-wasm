@@ -62,7 +62,9 @@ type (
 )
 
 func (*vmContext) NewPluginContext(contextID uint32) types.PluginContext {
-	return &pluginContext{}
+	return &pluginContext{
+		rules: []*Rule{},
+	}
 }
 
 func (p *pluginContext) NewHttpContext(contextID uint32) types.HttpContext {
@@ -82,8 +84,6 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 	}
 
 	results := gjson.Get(string(data), "cc_rules").Array()
-
-	p.rules = make([]*Rule, len(results))
 
 	for i := range results {
 		curMap := results[i].Map()
