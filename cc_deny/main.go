@@ -1,6 +1,8 @@
 package main
 
-import "cc_deny/denyallhaveoncemem"
+import (
+	"cc_deny/qpsall"
+)
 
 func main() {
 	//ccfilter.PluginStart()
@@ -11,6 +13,7 @@ func main() {
 	//pLimit2.PluginStart()
 	//keyLimit.PluginStart()
 	//denyall.PluginStart()
-	denyallhaveoncemem.PluginStart()
+	//denyallhaveoncemem.PluginStart()
 	//errortest.PluginStart()
+	qpsall.PluginStart()
 }
