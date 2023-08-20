@@ -8,6 +8,7 @@ resources:
       config:
         name: cc_deny
         vm_config:
+          vm_id: "cc_deny"
           runtime: envoy.wasm.runtime.v8
           code:
             local:

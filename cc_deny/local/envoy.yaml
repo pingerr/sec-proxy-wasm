@@ -39,6 +39,7 @@ static_resources:
                 config:
                   name: wasmdemo
                   vm_config:
+                    vm_id: "cc_deny"
                     runtime: envoy.wasm.runtime.v8
                     code:
                       local:
