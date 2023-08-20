@@ -225,21 +225,24 @@ func getEntry(shareDataKey string, rule Rule) bool {
 						sRequestCount = 0
 						mRequestCount = 0
 						dRequestCount = 0
-						if (now-sRefillTime)/secondNano*secondNano > secondNano {
-							sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
-						} else {
-							sRefillTime = now
-						}
-						if (now-mRefillTime)/minuteNano*minuteNano > minuteNano {
-							mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
-						} else {
-							mRefillTime = now
-						}
-						if (now-dRefillTime)/dayNano*dayNano > dayNano {
-							dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
-						} else {
-							dRefillTime = now
-						}
+						//if (now-sRefillTime)/secondNano*secondNano > secondNano {
+						//	sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
+						//} else {
+						//	sRefillTime = now
+						//}
+						//if (now-mRefillTime)/minuteNano*minuteNano > minuteNano {
+						//	mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
+						//} else {
+						//	mRefillTime = now
+						//}
+						//if (now-dRefillTime)/dayNano*dayNano > dayNano {
+						//	dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
+						//} else {
+						//	dRefillTime = now
+						//}
+						sRefillTime = lastBlockTime + rule.blockTime
+						mRefillTime = lastBlockTime + rule.blockTime
+						dRefillTime = lastBlockTime + rule.blockTime
 						isBlock = 0
 						//proxywasm.LogInfo("[out period lock]")
 					} else {
