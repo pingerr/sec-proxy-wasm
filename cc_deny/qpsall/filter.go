@@ -104,6 +104,7 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 				rule.blockTime = headerBlockTime * secondNano
 				rule.needBlock = true
 			}
+			p.rules = append(p.rules, &rule)
 			//proxywasm.LogInfof("[h qps:%d, qpm:%d, qpd:%s, time:%d]", p.hRule.qps, p.hRule.qpm, p.hRule.qpd, p.hRule.blockTime)
 		} else if cookieKey := curMap["cookie"].Str; cookieKey != "" {
 			var rule Rule
@@ -122,6 +123,7 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 				rule.blockTime = cookieBlockTime * secondNano
 				rule.needBlock = true
 			}
+			p.rules = append(p.rules, &rule)
 			//proxywasm.LogInfof("[c qps:%d, qpm:%d, qpd:%s, time:%d]", p.cRule.qps, p.cRule.qpm, p.cRule.qpd, p.cRule.blockTime)
 		}
 	}
