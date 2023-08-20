@@ -32,8 +32,7 @@ type (
 	}
 	pluginContext struct {
 		types.DefaultPluginContext
-		hRule *Rule
-		cRule *Rule
+		rules []*Rule
 	}
 
 	httpContext struct {
@@ -52,6 +51,7 @@ type (
 	}
 
 	Rule struct {
+		isHeader  bool
 		key       string
 		qps       int64
 		qpm       int64
@@ -62,10 +62,7 @@ type (
 )
 
 func (*vmContext) NewPluginContext(contextID uint32) types.PluginContext {
-	return &pluginContext{
-		hRule: &Rule{},
-		cRule: &Rule{},
-	}
+	return &pluginContext{}
 }
 
 func (p *pluginContext) NewHttpContext(contextID uint32) types.HttpContext {
@@ -85,38 +82,45 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 	}
 
 	results := gjson.Get(string(data), "cc_rules").Array()
+
+	p.rules = make([]*Rule, len(results))
+
 	for i := range results {
 		curMap := results[i].Map()
 		if headerKey := curMap["header"].Str; headerKey != "" {
-			p.hRule.key = headerKey
+			var rule Rule
+			rule.isHeader = true
+			rule.key = headerKey
 			if qps := curMap["qps"].Int(); qps != 0 {
-				p.hRule.qps = qps
+				rule.qps = qps
 			}
 			if qpm := curMap["qpm"].Int(); qpm != 0 {
-				p.hRule.qpm = qpm
+				rule.qpm = qpm
 			}
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
-				p.hRule.qpd = qpd
+				rule.qpd = qpd
 			}
 			if headerBlockTime := curMap["block_seconds"].Int(); headerBlockTime != 0 {
-				p.hRule.blockTime = headerBlockTime * secondNano
-				p.hRule.needBlock = true
+				rule.blockTime = headerBlockTime * secondNano
+				rule.needBlock = true
 			}
 			//proxywasm.LogInfof("[h qps:%d, qpm:%d, qpd:%s, time:%d]", p.hRule.qps, p.hRule.qpm, p.hRule.qpd, p.hRule.blockTime)
 		} else if cookieKey := curMap["cookie"].Str; cookieKey != "" {
-			p.cRule.key = cookieKey
+			var rule Rule
+			rule.isHeader = false
+			rule.key = cookieKey
 			if qps := curMap["qps"].Int(); qps != 0 {
-				p.cRule.qps = qps
+				rule.qps = qps
 			}
 			if qpm := curMap["qpm"].Int(); qpm != 0 {
-				p.cRule.qpm = qpm
+				rule.qpm = qpm
 			}
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
-				p.cRule.qpd = qpd
+				rule.qpd = qpd
 			}
 			if cookieBlockTime := curMap["block_seconds"].Int(); cookieBlockTime != 0 {
-				p.cRule.blockTime = cookieBlockTime * secondNano
-				p.cRule.needBlock = true
+				rule.blockTime = cookieBlockTime * secondNano
+				rule.needBlock = true
 			}
 			//proxywasm.LogInfof("[c qps:%d, qpm:%d, qpd:%s, time:%d]", p.cRule.qps, p.cRule.qpm, p.cRule.qpd, p.cRule.blockTime)
 		}
@@ -128,30 +132,36 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	var isHAllow, isCAllow bool
 
-	headerValue, err := proxywasm.GetHttpRequestHeader(ctx.p.hRule.key)
-	if err == nil && headerValue != "" {
-		hLimitKeyBuf := bytes.NewBufferString(headerPre)
-		hLimitKeyBuf.WriteString(headerValue)
-		isHAllow = getEntry(hLimitKeyBuf.String(), ctx.p.hRule)
-		if !isHAllow {
-			_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-		}
-	}
+	var rule *Rule
 
-	cookies, err := proxywasm.GetHttpRequestHeader("cookie")
-	if err != nil || cookies == "" {
-		return types.ActionContinue
-	}
-	cSub := bytes.NewBufferString(ctx.p.cRule.key)
-	cSub.WriteString("=")
-	if strings.HasPrefix(cookies, cSub.String()) {
-		cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
-		if cookieValue != "" {
-			cLimitKeyBuf := bytes.NewBufferString(cookiePre)
-			cLimitKeyBuf.WriteString(cookieValue)
-			isCAllow = getEntry(cLimitKeyBuf.String(), ctx.p.cRule)
-			if !isCAllow {
-				_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+	for _, rule = range ctx.p.rules {
+		if rule.isHeader {
+			headerValue, err := proxywasm.GetHttpRequestHeader(rule.key)
+			if err == nil && headerValue != "" {
+				hLimitKeyBuf := bytes.NewBufferString(headerPre)
+				hLimitKeyBuf.WriteString(headerValue)
+				isHAllow = getEntry(hLimitKeyBuf.String(), rule)
+				if !isHAllow {
+					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+				}
+			}
+		} else {
+			cookies, err := proxywasm.GetHttpRequestHeader("cookie")
+			if err != nil || cookies == "" {
+				return types.ActionContinue
+			}
+			cSub := bytes.NewBufferString(rule.key)
+			cSub.WriteString("=")
+			if strings.HasPrefix(cookies, cSub.String()) {
+				cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
+				if cookieValue != "" {
+					cLimitKeyBuf := bytes.NewBufferString(cookiePre)
+					cLimitKeyBuf.WriteString(cookieValue)
+					isCAllow = getEntry(cLimitKeyBuf.String(), rule)
+					if !isCAllow {
+						_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+					}
+				}
 			}
 		}
 	}
@@ -174,9 +184,10 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 
 	var err error
 
+	now := time.Now().UnixNano() //放入循环
+
 	for i := 0; i < maxGetTokenRetry; i++ {
 		isAllow := false
-		now := time.Now().UnixNano() //放入循环
 		data, cas, err = proxywasm.GetSharedData(shareDataKey)
 
 		if err != nil && err == types.ErrorStatusNotFound {
@@ -205,13 +216,13 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 
 			if rule.needBlock {
 				if isBlock == 1 {
-					if now > lastBlockTime+rule.blockTime {
+					if now-lastBlockTime > rule.blockTime {
 						sRequestCount = 0
 						mRequestCount = 0
 						dRequestCount = 0
-						sRefillTime = now
-						mRefillTime = now
-						dRefillTime = now
+						sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
+						mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
+						dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
 						isBlock = 0
 						proxywasm.LogInfo("[out period lock]")
 					} else {
@@ -220,17 +231,17 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 				}
 			} else {
 				if rule.qps != 0 && now-sRefillTime > secondNano {
-					sRefillTime = now
+					sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
 					sRequestCount = 0
 					proxywasm.LogInfo("[out s direct lock]")
 				}
 				if rule.qpm != 0 && now-mRefillTime > minuteNano {
-					mRefillTime = now
+					mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
 					mRequestCount = 0
 					proxywasm.LogInfo("[out m direct lock]")
 				}
 				if rule.qpd != 0 && now-dRefillTime > dayNano {
-					dRefillTime = now
+					dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
 					dRequestCount = 0
 					proxywasm.LogInfo("[out m direct lock]")
 				}

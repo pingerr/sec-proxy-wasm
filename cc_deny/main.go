@@ -1,7 +1,7 @@
 package main
 
 import (
-	"cc_deny/errortest"
+	"cc_deny/qpsall"
 )
 
 func main() {
@@ -14,6 +14,6 @@ func main() {
 	//keyLimit.PluginStart()
 	//denyall.PluginStart()
 	//denyallhaveoncemem.PluginStart()
-	errortest.PluginStart()
-	//qpsall.PluginStart()
+	//errortest.PluginStart()
+	qpsall.PluginStart()
 }
