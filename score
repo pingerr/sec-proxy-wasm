@@ -356,4 +356,6 @@ cc
 固定窗口+oldlock 32
 固定窗口+限制突发+oldlock 32
 限制突发+newlock 32
-限制突发+nolock
+限制突发+nolock 32
+固定窗口+nolock 32
+固定窗口+

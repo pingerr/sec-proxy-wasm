@@ -20,6 +20,9 @@ const (
 	minuteNano = 60 * secondNano
 	hourNano   = 60 * minuteNano
 	dayNano    = 24 * hourNano
+	secondFloat = secondNano * 1.0
+	hourFloat = minuteNano * 1.0
+	dayFloat = dayNano * 1.0
 
 	cookiePre        = "c:"
 	headerPre        = "h:"
@@ -219,86 +222,78 @@ func getEntry(shareDataKey string, rule Rule) bool {
 			isBlock, _ = strconv.Atoi(parts[6])
 			lastBlockTime, _ = strconv.ParseInt(parts[7], 0, 64)
 
-			//if rule.needBlock {
-			//	if isBlock == 1 {
-			//		if now-lastBlockTime > rule.blockTime {
-			//			sRequestCount = 0
-			//			mRequestCount = 0
-			//			dRequestCount = 0
-			//			//if (now-sRefillTime)/secondNano*secondNano > secondNano {
-			//			//	sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
-			//			//} else {
-			//			//	sRefillTime = now
-			//			//}
-			//			//if (now-mRefillTime)/minuteNano*minuteNano > minuteNano {
-			//			//	mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
-			//			//} else {
-			//			//	mRefillTime = now
-			//			//}
-			//			//if (now-dRefillTime)/dayNano*dayNano > dayNano {
-			//			//	dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
-			//			//} else {
-			//			//	dRefillTime = now
-			//			//}
-			//
-			//			//sRefillTime = lastBlockTime + rule.blockTime
-			//			//mRefillTime = lastBlockTime + rule.blockTime
-			//			//dRefillTime = lastBlockTime + rule.blockTime
-			//
-			//			if now-(lastBlockTime+rule.blockTime) > secondNano {
-			//				sRefillTime = (now-(lastBlockTime+rule.blockTime))/secondNano*secondNano + lastBlockTime + rule.blockTime
-			//			} else {
-			//				sRefillTime = lastBlockTime + rule.blockTime
-			//			}
-			//			if now-(lastBlockTime+rule.blockTime) > minuteNano {
-			//				mRefillTime = (now-(lastBlockTime+rule.blockTime))/minuteNano*minuteNano + lastBlockTime + rule.blockTime
-			//			} else {
-			//				mRefillTime = lastBlockTime + rule.blockTime
-			//			}
-			//			if now-(lastBlockTime+rule.blockTime) > dayNano {
-			//				dRefillTime = (now-(lastBlockTime+rule.blockTime))/dayNano*dayNano + lastBlockTime + rule.blockTime
-			//			} else {
-			//				dRefillTime = lastBlockTime + rule.blockTime
-			//			}
-			//
-			//			isBlock = 0
-			//			//proxywasm.LogInfo("[out period lock]")
-			//		} else {
-			//			//proxywasm.LogInfo("[in period lock]")
-			//		}
-			//	}
-			//} else {
-			//	if rule.qps != 0 && now-sRefillTime > secondNano {
-			//		sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
-			//		sRequestCount = 0
-			//		//proxywasm.LogInfo("[out s direct lock]")
-			//	}
-			//	if rule.qpm != 0 && now-mRefillTime > minuteNano {
-			//		mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
-			//		mRequestCount = 0
-			//		//proxywasm.LogInfo("[out m direct lock]")
-			//	}
-			//	if rule.qpd != 0 && now-dRefillTime > dayNano {
-			//		dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
-			//		dRequestCount = 0
-			//		//proxywasm.LogInfo("[out m direct lock]")
-			//	}
-			//}
+			if rule.needBlock {
+				if isBlock == 1 {
+					if now-lastBlockTime > rule.blockTime {
+						//isBlock = 0
+						//sRequestCount = 0
+						//mRequestCount = 0
+						//dRequestCount = 0
 
-			if rule.qps != 0 && now-sRefillTime > secondNano {
-				sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
-				sRequestCount = 0
-				//proxywasm.LogInfo("[out s direct lock]")
-			}
-			if rule.qpm != 0 && now-mRefillTime > minuteNano {
-				mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
-				mRequestCount = 0
-				//proxywasm.LogInfo("[out m direct lock]")
-			}
-			if rule.qpd != 0 && now-dRefillTime > dayNano {
-				dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
-				dRequestCount = 0
-				//proxywasm.LogInfo("[out m direct lock]")
+						//if (now-sRefillTime)/secondNano*secondNano > secondNano {
+						//	sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
+						//} else {
+						//	sRefillTime = now
+						//}
+						//if (now-mRefillTime)/minuteNano*minuteNano > minuteNano {
+						//	mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
+						//} else {
+						//	mRefillTime = now
+						//}
+						//if (now-dRefillTime)/dayNano*dayNano > dayNano {
+						//	dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
+						//} else {
+						//	dRefillTime = now
+						//}
+
+						//sRefillTime = lastBlockTime + rule.blockTime
+						//mRefillTime = lastBlockTime + rule.blockTime
+						//dRefillTime = lastBlockTime + rule.blockTime
+
+						//if now-(lastBlockTime+rule.blockTime) > secondNano {
+						//	sRefillTime = (now-(lastBlockTime+rule.blockTime))/secondNano*secondNano + lastBlockTime + rule.blockTime
+						//	sRequestCount
+						//} else {
+						//	sRefillTime = lastBlockTime + rule.blockTime
+						//}
+						//if now-(lastBlockTime+rule.blockTime) > minuteNano {
+						//	mRefillTime = (now-(lastBlockTime+rule.blockTime))/minuteNano*minuteNano + lastBlockTime + rule.blockTime
+						//} else {
+						//	mRefillTime = lastBlockTime + rule.blockTime
+						//}
+						//if now-(lastBlockTime+rule.blockTime) > dayNano {
+						//	dRefillTime = (now-(lastBlockTime+rule.blockTime))/dayNano*dayNano + lastBlockTime + rule.blockTime
+						//} else {
+						//	dRefillTime = lastBlockTime + rule.blockTime
+						//}
+
+
+						//proxywasm.LogInfo("[out period lock]")
+
+						if now  < lastBlockTime + secondNano {
+							sRefillTime = now
+							sRequestCount = 0
+						} else
+					} else {
+						//proxywasm.LogInfo("[in period lock]")
+					}
+				}
+			} else {
+				if rule.qps != 0 && now-sRefillTime > secondNano {
+					sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
+					sRequestCount = 0
+					//proxywasm.LogInfo("[out s direct lock]")
+				}
+				if rule.qpm != 0 && now-mRefillTime > minuteNano {
+					mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
+					mRequestCount = 0
+					//proxywasm.LogInfo("[out m direct lock]")
+				}
+				if rule.qpd != 0 && now-dRefillTime > dayNano {
+					dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
+					dRequestCount = 0
+					//proxywasm.LogInfo("[out m direct lock]")
+				}
 			}
 
 			sRequestCount++
