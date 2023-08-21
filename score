@@ -351,3 +351,9 @@ cc
 
 使用共享内存 ？没啥用
 性能测试工具 wrk hey
+
+
+固定窗口+oldlock 32
+固定窗口+限制突发+oldlock 32
+限制突发+newlock 32
+限制突发+nolock
