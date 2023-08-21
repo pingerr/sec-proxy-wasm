@@ -226,9 +226,9 @@ func getEntry(shareDataKey string, rule Rule) bool {
 				if isBlock == 1 {
 					if now-lastBlockTime > rule.blockTime {
 						isBlock = 0
-						sRequestCount = 0
-						mRequestCount = 0
-						dRequestCount = 0
+						//sRequestCount = 0
+						//mRequestCount = 0
+						//dRequestCount = 0
 
 						//if (now-sRefillTime)/secondNano*secondNano > secondNano {
 						//	sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
@@ -252,16 +252,19 @@ func getEntry(shareDataKey string, rule Rule) bool {
 
 						if now-(lastBlockTime+rule.blockTime) > secondNano {
 							sRefillTime = (now-(lastBlockTime+rule.blockTime))/secondNano*secondNano + lastBlockTime + rule.blockTime
+							sRequestCount = 0
 						} else {
 							sRefillTime = lastBlockTime + rule.blockTime
 						}
 						if now-(lastBlockTime+rule.blockTime) > minuteNano {
 							mRefillTime = (now-(lastBlockTime+rule.blockTime))/minuteNano*minuteNano + lastBlockTime + rule.blockTime
+							mRequestCount = 0
 						} else {
 							mRefillTime = lastBlockTime + rule.blockTime
 						}
 						if now-(lastBlockTime+rule.blockTime) > dayNano {
 							dRefillTime = (now-(lastBlockTime+rule.blockTime))/dayNano*dayNano + lastBlockTime + rule.blockTime
+							dRequestCount = 0
 						} else {
 							dRefillTime = lastBlockTime + rule.blockTime
 						}
