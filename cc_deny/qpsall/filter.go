@@ -137,6 +137,9 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	var rule Rule
 
+	noHeader := false
+	noCookie := false
+
 	for _, rule = range ctx.p.rules {
 		if rule.isHeader {
 			headerValue, err := proxywasm.GetHttpRequestHeader(rule.key)
@@ -149,29 +152,34 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 					return types.ActionContinue
 				}
-
+			} else {
+				noHeader = true
 			}
 		} else {
 			cookies, err := proxywasm.GetHttpRequestHeader("cookie")
 			if err != nil || cookies == "" {
-				return types.ActionContinue
-			}
-			cSub := bytes.NewBufferString(rule.key)
-			cSub.WriteString("=")
-			if strings.HasPrefix(cookies, cSub.String()) {
-				cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
-				if cookieValue != "" {
-					cLimitKeyBuf := bytes.NewBufferString(cookiePre)
-					cLimitKeyBuf.WriteString(rule.key)
-					cLimitKeyBuf.WriteString(":")
-					cLimitKeyBuf.WriteString(cookieValue)
-					if !getEntry(cLimitKeyBuf.String(), rule) {
-						_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-						return types.ActionContinue
+				noCookie = true
+			} else {
+				cSub := bytes.NewBufferString(rule.key)
+				cSub.WriteString("=")
+				if strings.HasPrefix(cookies, cSub.String()) {
+					cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
+					if cookieValue != "" {
+						cLimitKeyBuf := bytes.NewBufferString(cookiePre)
+						cLimitKeyBuf.WriteString(rule.key)
+						cLimitKeyBuf.WriteString(":")
+						cLimitKeyBuf.WriteString(cookieValue)
+						if !getEntry(cLimitKeyBuf.String(), rule) {
+							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+							return types.ActionContinue
+						}
 					}
 				}
 			}
 		}
+	}
+	if noHeader && noCookie {
+		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 	}
 
 	return types.ActionContinue
