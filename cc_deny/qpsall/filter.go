@@ -16,13 +16,13 @@ func PluginStart() {
 }
 
 const (
-	secondNano = 1000 * 1000 * 1000
-	minuteNano = 60 * secondNano
-	hourNano   = 60 * minuteNano
-	dayNano    = 24 * hourNano
+	secondNano  = 1000 * 1000 * 1000
+	minuteNano  = 60 * secondNano
+	hourNano    = 60 * minuteNano
+	dayNano     = 24 * hourNano
 	secondFloat = secondNano * 1.0
-	hourFloat = minuteNano * 1.0
-	dayFloat = dayNano * 1.0
+	hourFloat   = minuteNano * 1.0
+	dayFloat    = dayNano * 1.0
 
 	cookiePre        = "c:"
 	headerPre        = "h:"
@@ -225,10 +225,10 @@ func getEntry(shareDataKey string, rule Rule) bool {
 			if rule.needBlock {
 				if isBlock == 1 {
 					if now-lastBlockTime > rule.blockTime {
-						//isBlock = 0
-						//sRequestCount = 0
-						//mRequestCount = 0
-						//dRequestCount = 0
+						isBlock = 0
+						sRequestCount = 1
+						mRequestCount = 1
+						dRequestCount = 1
 
 						//if (now-sRefillTime)/secondNano*secondNano > secondNano {
 						//	sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
@@ -250,32 +250,52 @@ func getEntry(shareDataKey string, rule Rule) bool {
 						//mRefillTime = lastBlockTime + rule.blockTime
 						//dRefillTime = lastBlockTime + rule.blockTime
 
-						//if now-(lastBlockTime+rule.blockTime) > secondNano {
-						//	sRefillTime = (now-(lastBlockTime+rule.blockTime))/secondNano*secondNano + lastBlockTime + rule.blockTime
-						//	sRequestCount
-						//} else {
-						//	sRefillTime = lastBlockTime + rule.blockTime
-						//}
-						//if now-(lastBlockTime+rule.blockTime) > minuteNano {
-						//	mRefillTime = (now-(lastBlockTime+rule.blockTime))/minuteNano*minuteNano + lastBlockTime + rule.blockTime
-						//} else {
-						//	mRefillTime = lastBlockTime + rule.blockTime
-						//}
-						//if now-(lastBlockTime+rule.blockTime) > dayNano {
-						//	dRefillTime = (now-(lastBlockTime+rule.blockTime))/dayNano*dayNano + lastBlockTime + rule.blockTime
-						//} else {
-						//	dRefillTime = lastBlockTime + rule.blockTime
-						//}
+						if now-(lastBlockTime+rule.blockTime) > secondNano {
+							sRefillTime = (now-(lastBlockTime+rule.blockTime))/secondNano*secondNano + lastBlockTime + rule.blockTime
+						} else {
+							sRefillTime = lastBlockTime + rule.blockTime
+						}
+						if now-(lastBlockTime+rule.blockTime) > minuteNano {
+							mRefillTime = (now-(lastBlockTime+rule.blockTime))/minuteNano*minuteNano + lastBlockTime + rule.blockTime
+						} else {
+							mRefillTime = lastBlockTime + rule.blockTime
+						}
+						if now-(lastBlockTime+rule.blockTime) > dayNano {
+							dRefillTime = (now-(lastBlockTime+rule.blockTime))/dayNano*dayNano + lastBlockTime + rule.blockTime
+						} else {
+							dRefillTime = lastBlockTime + rule.blockTime
+						}
 
+					}
+				} else {
+					if rule.qps != 0 && now-sRefillTime > secondNano {
+						sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
+						sRequestCount = 0
+						//proxywasm.LogInfo("[out s direct lock]")
+					}
+					if rule.qpm != 0 && now-mRefillTime > minuteNano {
+						mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
+						mRequestCount = 0
+						//proxywasm.LogInfo("[out m direct lock]")
+					}
+					if rule.qpd != 0 && now-dRefillTime > dayNano {
+						dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
+						dRequestCount = 0
+						//proxywasm.LogInfo("[out m direct lock]")
+					}
 
-						//proxywasm.LogInfo("[out period lock]")
+					sRequestCount++
+					mRequestCount++
+					dRequestCount++
 
-						if now  < lastBlockTime + secondNano {
-							sRefillTime = now
-							sRequestCount = 0
-						} else
+					if (rule.qps != 0 && sRequestCount > rule.qps && now-sRefillTime < secondNano) ||
+						(rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano) ||
+						(rule.qpd != 0 && dRequestCount > rule.qpd && now-dRefillTime < dayNano) {
+						lastBlockTime = now
+						isBlock = 1
+						isAllow = false
 					} else {
-						//proxywasm.LogInfo("[in period lock]")
+						isAllow = true
 					}
 				}
 			} else {
@@ -294,11 +314,19 @@ func getEntry(shareDataKey string, rule Rule) bool {
 					dRequestCount = 0
 					//proxywasm.LogInfo("[out m direct lock]")
 				}
-			}
 
-			sRequestCount++
-			mRequestCount++
-			dRequestCount++
+				sRequestCount++
+				mRequestCount++
+				dRequestCount++
+
+				if (rule.qps != 0 && sRequestCount > rule.qps && now-sRefillTime < secondNano) ||
+					(rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano) ||
+					(rule.qpd != 0 && dRequestCount > rule.qpd && now-dRefillTime < dayNano) {
+					isAllow = false
+				} else {
+					isAllow = true
+				}
+			}
 
 			//(rule.qps != 0 && sRequestCount > rule.qps && now-sRefillTime < secondNano) ||
 			//	(rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano) ||
@@ -306,19 +334,6 @@ func getEntry(shareDataKey string, rule Rule) bool {
 			//(rule.qps != 0 && sRequestCount > 1 && (now-sRefillTime)/sRequestCount < secondNano/rule.qps) ||
 			//	(rule.qpm != 0 && mRequestCount > 1 && (now-mRefillTime)/mRequestCount < minuteNano/rule.qpm) ||
 			//	(rule.qpd != 0 && dRequestCount > 1 && (now-dRefillTime)/dRequestCount < dayNano/rule.qpd)
-
-			if (rule.qps != 0 && sRequestCount > rule.qps && now-sRefillTime < secondNano) ||
-				(rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano) ||
-				(rule.qpd != 0 && dRequestCount > rule.qpd && now-dRefillTime < dayNano) {
-				//if rule.needBlock {
-				//	if isBlock == 0 {
-				//		lastBlockTime = now
-				//		isBlock = 1
-				//	}
-				//}
-			} else {
-				isAllow = true
-			}
 
 		} else {
 			//proxywasm.LogInfo("[get share data other error]")
