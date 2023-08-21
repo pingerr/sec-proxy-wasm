@@ -268,17 +268,14 @@ func getEntry(shareDataKey string, rule Rule) bool {
 					if rule.qps != 0 && now-sRefillTime > secondNano {
 						sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
 						sRequestCount = 0
-						//proxywasm.LogInfo("[out s direct lock]")
 					}
 					if rule.qpm != 0 && now-mRefillTime > minuteNano {
 						mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
 						mRequestCount = 0
-						//proxywasm.LogInfo("[out m direct lock]")
 					}
 					if rule.qpd != 0 && now-dRefillTime > dayNano {
 						dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
 						dRequestCount = 0
-						//proxywasm.LogInfo("[out m direct lock]")
 					}
 
 					sRequestCount++
