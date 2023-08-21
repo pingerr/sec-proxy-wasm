@@ -308,10 +308,13 @@ func getEntry(shareDataKey string, rule Rule) bool {
 			//(rule.qps != 0 && sRequestCount > rule.qps && now-sRefillTime < secondNano) ||
 			//	(rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano) ||
 			//	(rule.qpd != 0 && dRequestCount > rule.qpd && now-dRefillTime < dayNano) ||
+			//(rule.qps != 0 && sRequestCount > 1 && (now-sRefillTime)/sRequestCount < secondNano/rule.qps) ||
+			//	(rule.qpm != 0 && mRequestCount > 1 && (now-mRefillTime)/mRequestCount < minuteNano/rule.qpm) ||
+			//	(rule.qpd != 0 && dRequestCount > 1 && (now-dRefillTime)/dRequestCount < dayNano/rule.qpd)
 
-			if (rule.qps != 0 && sRequestCount > 1 && (now-sRefillTime)/sRequestCount < secondNano/rule.qps) ||
-				(rule.qpm != 0 && mRequestCount > 1 && (now-mRefillTime)/mRequestCount < minuteNano/rule.qpm) ||
-				(rule.qpd != 0 && dRequestCount > 1 && (now-dRefillTime)/dRequestCount < dayNano/rule.qpd) {
+			if (rule.qps != 0 && sRequestCount > rule.qps && now-sRefillTime < secondNano) ||
+				(rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano) ||
+				(rule.qpd != 0 && dRequestCount > rule.qpd && now-dRefillTime < dayNano) {
 				//if rule.needBlock {
 				//	if isBlock == 0 {
 				//		lastBlockTime = now
