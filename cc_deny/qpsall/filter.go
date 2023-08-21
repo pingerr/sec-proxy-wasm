@@ -137,9 +137,8 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	var rule Rule
 
-	noHeader := false
-	noCookie := false
-	errorCookie := false
+	isHeaderBlock := false
+	isCookieBlock := false
 
 	for _, rule = range ctx.p.rules {
 		if rule.isHeader {
@@ -150,17 +149,14 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 				hLimitKeyBuf.WriteString(":")
 				hLimitKeyBuf.WriteString(headerValue)
 				if !getEntry(hLimitKeyBuf.String(), rule) {
-					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-					return types.ActionContinue
+					isHeaderBlock = true
+					//_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+					//return types.ActionContinue
 				}
-			} else {
-				noHeader = true
 			}
 		} else {
 			cookies, err := proxywasm.GetHttpRequestHeader("cookie")
-			if err != nil || cookies == "" {
-				noCookie = true
-			} else {
+			if err == nil && cookies != "" {
 				cSub := bytes.NewBufferString(rule.key)
 				cSub.WriteString("=")
 				if strings.HasPrefix(cookies, cSub.String()) {
@@ -171,17 +167,16 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						cLimitKeyBuf.WriteString(":")
 						cLimitKeyBuf.WriteString(cookieValue)
 						if !getEntry(cLimitKeyBuf.String(), rule) {
-							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-							return types.ActionContinue
+							isCookieBlock = true
+							//_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+							//return types.ActionContinue
 						}
 					}
-				} else {
-					errorCookie = true
 				}
 			}
 		}
 	}
-	if (noHeader && noCookie) || errorCookie {
+	if isHeaderBlock || isCookieBlock {
 		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 	}
 
