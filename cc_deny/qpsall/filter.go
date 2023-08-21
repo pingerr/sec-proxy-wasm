@@ -139,6 +139,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 
 	noHeader := false
 	noCookie := false
+	errorCookie := false
 
 	for _, rule = range ctx.p.rules {
 		if rule.isHeader {
@@ -174,11 +175,13 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 							return types.ActionContinue
 						}
 					}
+				} else {
+					errorCookie = true
 				}
 			}
 		}
 	}
-	if noHeader && noCookie {
+	if (noHeader && noCookie) || errorCookie {
 		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 	}
 
