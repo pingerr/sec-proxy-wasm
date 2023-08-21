@@ -226,9 +226,9 @@ func getEntry(shareDataKey string, rule Rule) bool {
 				if isBlock == 1 {
 					if now-lastBlockTime > rule.blockTime {
 						isBlock = 0
-						sRequestCount = 1
-						mRequestCount = 1
-						dRequestCount = 1
+						sRequestCount = 0
+						mRequestCount = 0
+						dRequestCount = 0
 
 						//if (now-sRefillTime)/secondNano*secondNano > secondNano {
 						//	sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
