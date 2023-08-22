@@ -149,38 +149,44 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 		if rule.isHeader {
 			headerValue, err := proxywasm.GetHttpRequestHeader(rule.key)
 			if err == nil && headerValue != "" {
-				hLimitKeyBuf := bytes.NewBufferString(headerPre)
-				hLimitKeyBuf.WriteString(rule.key)
-				hLimitKeyBuf.WriteString(":")
-				hLimitKeyBuf.WriteString(headerValue)
-
-				//ctx.p.set.Add(hLimitKeyBuf.String())
-
-				if !getEntry(hLimitKeyBuf.String(), rule) {
+				if len(headerValue) > 200 {
 					isBlock = true
-					//_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-					//return types.ActionContinue
+				} else {
+					hLimitKeyBuf := bytes.NewBufferString(headerPre)
+					hLimitKeyBuf.WriteString(rule.key)
+					hLimitKeyBuf.WriteString(":")
+					hLimitKeyBuf.WriteString(headerValue)
+
+					//ctx.p.set.Add(hLimitKeyBuf.String())
+
+					if !getEntry(hLimitKeyBuf.String(), rule) {
+						isBlock = true
+					}
 				}
 			}
 		} else {
 			cookies, err := proxywasm.GetHttpRequestHeader("cookie")
 			if err == nil && cookies != "" {
-				cSub := bytes.NewBufferString(rule.key)
-				cSub.WriteString("=")
-				if strings.HasPrefix(cookies, cSub.String()) {
-					cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
-					if cookieValue != "" {
-						cLimitKeyBuf := bytes.NewBufferString(cookiePre)
-						cLimitKeyBuf.WriteString(rule.key)
-						cLimitKeyBuf.WriteString(":")
-						cLimitKeyBuf.WriteString(cookieValue)
+				if len(cookies) > 200 {
+					isBlock = true
+				} else {
+					cSub := bytes.NewBufferString(rule.key)
+					cSub.WriteString("=")
+					if strings.HasPrefix(cookies, cSub.String()) {
+						cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
+						if cookieValue != "" {
+							cLimitKeyBuf := bytes.NewBufferString(cookiePre)
+							cLimitKeyBuf.WriteString(rule.key)
+							cLimitKeyBuf.WriteString(":")
+							cLimitKeyBuf.WriteString(cookieValue)
 
-						//ctx.p.set.Add(cLimitKeyBuf.String())
+							//ctx.p.set.Add(cLimitKeyBuf.String())
 
-						if !getEntry(cLimitKeyBuf.String(), rule) {
-							isBlock = true
-							//_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-							//return types.ActionContinue
+							if !getEntry(cLimitKeyBuf.String(), rule) {
+								isBlock = true
+								//_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+								//return types.ActionContinue
+							}
 						}
 					}
 				}
