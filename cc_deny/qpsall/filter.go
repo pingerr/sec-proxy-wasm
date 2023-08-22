@@ -33,6 +33,8 @@ const (
 	nullValue     = "n"
 
 	maxGetTokenRetry = 20
+
+	maxKeyStore = 10000
 )
 
 type (
@@ -41,8 +43,9 @@ type (
 	}
 	pluginContext struct {
 		types.DefaultPluginContext
-		rules []Rule
-		set   mapset.Set[string]
+		rules   []Rule
+		set     mapset.Set[string]
+		dateMap map[string]int64
 	}
 
 	httpContext struct {
@@ -73,8 +76,9 @@ type (
 
 func (*vmContext) NewPluginContext(contextID uint32) types.PluginContext {
 	return &pluginContext{
-		rules: []Rule{},
-		set:   mapset.NewSet("init"),
+		rules:   []Rule{},
+		set:     mapset.NewSet("init"),
+		dateMap: map[string]int64{},
 	}
 }
 
@@ -145,8 +149,10 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	var rule Rule
 
-	isBlock := false
+	now := time.Now().UnixNano()
 
+	isBlock := false
+	var md5Str string
 	for _, rule = range ctx.p.rules {
 		if rule.isHeader {
 			headerValue, err := proxywasm.GetHttpRequestHeader(rule.key)
@@ -157,10 +163,21 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 				hLimitKeyBuf.WriteString(":")
 				hLimitKeyBuf.WriteString(headerValue)
 
-				//ctx.p.set.Add(hLimitKeyBuf.String())
-
 				sum := md5.Sum(hLimitKeyBuf.Bytes())
-				if !getEntry(hex.EncodeToString(sum[:]), rule) {
+				md5Str = hex.EncodeToString(sum[:])
+
+				ctx.p.set.Add(md5Str)
+				ctx.p.dateMap[md5Str] = now
+				if ctx.p.set.Cardinality() > maxKeyStore {
+					for item := range ctx.p.set.Iterator().C {
+						if now-ctx.p.dateMap[item] > minuteNano {
+							_, cas, _ := proxywasm.GetSharedData(item)
+							_ = proxywasm.SetSharedData(item, []byte(nullValue), cas)
+						}
+					}
+				}
+
+				if !getEntry(md5Str, rule, now) {
 					isBlock = true
 				}
 
@@ -178,10 +195,20 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						cLimitKeyBuf.WriteString(":")
 						cLimitKeyBuf.WriteString(cookieValue)
 
-						//ctx.p.set.Add(cLimitKeyBuf.String())
-
 						sum := md5.Sum(cLimitKeyBuf.Bytes())
-						if !getEntry(hex.EncodeToString(sum[:]), rule) {
+						md5Str = hex.EncodeToString(sum[:])
+						ctx.p.set.Add(md5Str)
+						ctx.p.dateMap[md5Str] = now
+						if ctx.p.set.Cardinality() > maxKeyStore {
+							for item := range ctx.p.set.Iterator().C {
+								if now-ctx.p.dateMap[item] > minuteNano {
+									_, cas, _ := proxywasm.GetSharedData(item)
+									_ = proxywasm.SetSharedData(item, []byte(nullValue), cas)
+								}
+							}
+						}
+
+						if !getEntry(md5Str, rule, now) {
 							isBlock = true
 						}
 					}
@@ -197,7 +224,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 }
 
 // data=[count:sRefillTime:mRefillTime:dRefillTime:isBlock:lastBlockTime]
-func getEntry(shareDataKey string, rule Rule) bool {
+func getEntry(shareDataKey string, rule Rule, now int64) bool {
 	var data []byte
 	var cas uint32
 	var sRequestCount int64
@@ -211,13 +238,11 @@ func getEntry(shareDataKey string, rule Rule) bool {
 
 	var err error
 
-	now := time.Now().UnixNano() //放入循环
-
 	for i := 0; i < maxGetTokenRetry; i++ {
 		isAllow := false
 		data, cas, err = proxywasm.GetSharedData(shareDataKey)
 
-		if err != nil && err == types.ErrorStatusNotFound {
+		if (err != nil && err == types.ErrorStatusNotFound) || isNull(string(data)) {
 			sRequestCount = 1
 			mRequestCount = 1
 			dRequestCount = 1
@@ -385,11 +410,6 @@ func getEntry(shareDataKey string, rule Rule) bool {
 	return false
 }
 
-//func isNull(s string) bool {
-//	return strings.EqualFold(s, nullValue)
-//}
-
-//func refreshKeyAccessDate(key string) {
-//
-//	proxywasm.SetSharedData()
-//}
+func isNull(s string) bool {
+	return strings.EqualFold(s, nullValue)
+}
