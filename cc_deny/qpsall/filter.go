@@ -178,7 +178,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 				}
 				ctx.p.dateMap[md5Str] = now
 				if count > maxKeyStore {
-					for itemKey, itemValue := range ctx.p.dateMap {
+					for itemKey, itemValue := range ctx.p.set {
 						if itemValue == 1 && now-ctx.p.dateMap[itemKey] > minuteNano {
 							_, cas, _ := proxywasm.GetSharedData(itemKey)
 							_ = proxywasm.SetSharedData(itemKey, []byte(nullValue), cas)
@@ -216,7 +216,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						}
 						ctx.p.dateMap[md5Str] = now
 						if count > maxKeyStore {
-							for itemKey, itemValue := range ctx.p.dateMap {
+							for itemKey, itemValue := range ctx.p.set {
 								if itemValue == 1 && now-ctx.p.dateMap[itemKey] > minuteNano {
 									_, cas, _ := proxywasm.GetSharedData(itemKey)
 									_ = proxywasm.SetSharedData(itemKey, []byte(nullValue), cas)
