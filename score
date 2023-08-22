@@ -358,4 +358,9 @@ cc
 限制突发+newlock 32
 限制突发+nolock 32
 固定窗口+nolock 32
-固定窗口+
+固定窗口+block 32
+nocookie+noheader 0
+errcookie 0
+LRU
+CC 大负载
+CC 脚本ua
