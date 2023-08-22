@@ -1,19 +1,20 @@
 package main
 
 import (
-	"waf_deny/denyall"
+	wasilibs "github.com/corazawaf/coraza-wasilibs"
+	"waf_deny/pingerPlugins"
+	"waf_deny/wasmplugin"
 )
 
 func main() {
 	//wasilibs.RegisterRX()
 
-	//wasilibs.RegisterPM()
-	//wasilibs.RegisterSQLi()
-	//wasilibs.RegisterXSS()
-	//
-	//_ = pingerPlugins.RegisterPingerTransformations()
-	//pingerPlugins.RegisterRX()
+	wasilibs.RegisterPM()
+	wasilibs.RegisterSQLi()
+	wasilibs.RegisterXSS()
 
-	//wasmplugin.PluginStart()
-	denyall.PluginStart()
+	_ = pingerPlugins.RegisterPingerTransformations()
+	pingerPlugins.RegisterRX()
+
+	wasmplugin.PluginStart()
 }

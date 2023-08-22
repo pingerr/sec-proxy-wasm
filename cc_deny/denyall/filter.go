@@ -9,14 +9,14 @@ import (
 
 func PluginStart() {
 	wrapper.SetCtx(
-		"cc-deny",
+		"waf-deny",
 		wrapper.ParseConfigBy(parseConfig),
 		wrapper.ProcessRequestHeadersBy(onHttpRequestHeaders),
 	)
 }
 
 type CCConfig struct {
-	headerQps int64
+	headerQps uint8
 }
 
 func parseConfig(json gjson.Result, config *CCConfig, log wrapper.Log) error {
