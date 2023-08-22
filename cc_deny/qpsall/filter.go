@@ -3,6 +3,7 @@ package qpsall
 import (
 	"bytes"
 	"errors"
+	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 	"github.com/tidwall/gjson"
@@ -24,8 +25,11 @@ const (
 	hourFloat   = minuteNano * 1.0
 	dayFloat    = dayNano * 1.0
 
-	cookiePre        = "c:"
-	headerPre        = "h:"
+	cookiePre     = "c:"
+	headerPre     = "h:"
+	lastAccessSuf = ":l"
+	nullValue     = "n"
+
 	maxGetTokenRetry = 20
 )
 
@@ -36,6 +40,7 @@ type (
 	pluginContext struct {
 		types.DefaultPluginContext
 		rules []Rule
+		set   mapset.Set[string]
 	}
 
 	httpContext struct {
@@ -67,6 +72,7 @@ type (
 func (*vmContext) NewPluginContext(contextID uint32) types.PluginContext {
 	return &pluginContext{
 		rules: []Rule{},
+		set:   mapset.NewSet("init"),
 	}
 }
 
@@ -137,8 +143,7 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	var rule Rule
 
-	isHeaderBlock := false
-	isCookieBlock := false
+	isBlock := false
 
 	for _, rule = range ctx.p.rules {
 		if rule.isHeader {
@@ -148,8 +153,11 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 				hLimitKeyBuf.WriteString(rule.key)
 				hLimitKeyBuf.WriteString(":")
 				hLimitKeyBuf.WriteString(headerValue)
+
+				//ctx.p.set.Add(hLimitKeyBuf.String())
+
 				if !getEntry(hLimitKeyBuf.String(), rule) {
-					isHeaderBlock = true
+					isBlock = true
 					//_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 					//return types.ActionContinue
 				}
@@ -166,8 +174,11 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						cLimitKeyBuf.WriteString(rule.key)
 						cLimitKeyBuf.WriteString(":")
 						cLimitKeyBuf.WriteString(cookieValue)
+
+						//ctx.p.set.Add(cLimitKeyBuf.String())
+
 						if !getEntry(cLimitKeyBuf.String(), rule) {
-							isCookieBlock = true
+							isBlock = true
 							//_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 							//return types.ActionContinue
 						}
@@ -176,7 +187,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 			}
 		}
 	}
-	if isHeaderBlock || isCookieBlock {
+	if isBlock {
 		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 	}
 
@@ -371,3 +382,12 @@ func getEntry(shareDataKey string, rule Rule) bool {
 	}
 	return false
 }
+
+//func isNull(s string) bool {
+//	return strings.EqualFold(s, nullValue)
+//}
+
+//func refreshKeyAccessDate(key string) {
+//
+//	proxywasm.SetSharedData()
+//}

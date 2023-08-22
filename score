@@ -362,5 +362,14 @@ cc
 nocookie+noheader 0
 errcookie 0
 LRU
-CC 大负载
+没有检测字段：
+    cookie
+    cookie:uid
+    header：hd1
+    user-agent
+CC 大负载 4096byte
+    cookie:uid 超长
+    header:hd1 超长
+    user-agent 超长
 CC 脚本ua
+    user-agent blacklist

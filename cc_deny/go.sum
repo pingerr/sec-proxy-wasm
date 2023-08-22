@@ -1,8 +1,8 @@
-fortio.org/log v1.8.1 h1:Ybtjp+qDXb124ESnZ0XVuXJ6khDrWcom/C55YPupoKg=
-fortio.org/log v1.8.1/go.mod h1:u/8/2lyczXq52aT5Nw6reD+3cR6m/EbS2jBiIYhgiTU=
 github.com/alibaba/higress/plugins/wasm-go v0.0.0-20230726025556-3700ada7e6b6 h1:pGV3R18Z8O/QHjup+vClQU1ozvPjLwrLl9+h8uySXvM=
 github.com/alibaba/higress/plugins/wasm-go v0.0.0-20230726025556-3700ada7e6b6/go.mod h1:AzSnkuon5c26nIePTiJQIAFsKdhkNdncLcTuahpGtQs=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
+github.com/deckarep/golang-set/v2 v2.3.1 h1:vjmkvJt/IV27WXPyYQpAh4bRyWJc5Y435D17XQ9QU5A=
+github.com/deckarep/golang-set/v2 v2.3.1/go.mod h1:VAky9rY/yGXJOLEDv3OMci+7wtDpOF4IN+y82NBOac4=
 github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
 github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
