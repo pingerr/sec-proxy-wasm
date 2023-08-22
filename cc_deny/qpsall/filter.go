@@ -5,7 +5,6 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"errors"
-	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 	"github.com/tidwall/gjson"
@@ -27,10 +26,11 @@ const (
 	hourFloat   = minuteNano * 1.0
 	dayFloat    = dayNano * 1.0
 
-	cookiePre     = "c:"
-	headerPre     = "h:"
-	lastAccessSuf = ":l"
-	nullValue     = "n"
+	cookiePre = "c:"
+	headerPre = "h:"
+	nullValue = "n"
+	keyCount  = 0
+	keyName   = "c"
 
 	maxGetTokenRetry = 20
 
@@ -44,7 +44,7 @@ type (
 	pluginContext struct {
 		types.DefaultPluginContext
 		rules   []Rule
-		set     mapset.Set[string]
+		set     map[string]uint8
 		dateMap map[string]int64
 	}
 
@@ -77,7 +77,7 @@ type (
 func (*vmContext) NewPluginContext(contextID uint32) types.PluginContext {
 	return &pluginContext{
 		rules:   []Rule{},
-		set:     mapset.NewSet("init"),
+		set:     map[string]uint8{},
 		dateMap: map[string]int64{},
 	}
 }
@@ -143,6 +143,8 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 		}
 	}
 
+	_ = proxywasm.SetSharedData(keyName, []byte(strconv.Itoa(keyCount)), 0)
+
 	return types.OnPluginStartStatusOK
 }
 
@@ -150,6 +152,9 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	var rule Rule
 
 	now := time.Now().UnixNano()
+
+	countByte, c, _ := proxywasm.GetSharedData(keyName)
+	count, _ := strconv.Atoi(string(countByte))
 
 	isBlock := false
 	var md5Str string
@@ -166,13 +171,19 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 				sum := md5.Sum(hLimitKeyBuf.Bytes())
 				md5Str = hex.EncodeToString(sum[:])
 
-				ctx.p.set.Add(md5Str)
+				v, isOk := ctx.p.set[md5Str]
+				if !isOk || (isOk && v == 0) {
+					ctx.p.set[md5Str] = 1
+					count++
+				}
 				ctx.p.dateMap[md5Str] = now
-				if ctx.p.set.Cardinality() > maxKeyStore {
-					for item := range ctx.p.set.Iterator().C {
-						if now-ctx.p.dateMap[item] > minuteNano {
-							_, cas, _ := proxywasm.GetSharedData(item)
-							_ = proxywasm.SetSharedData(item, []byte(nullValue), cas)
+				if count > maxKeyStore {
+					for itemKey, itemValue := range ctx.p.dateMap {
+						if itemValue == 1 && now-ctx.p.dateMap[itemKey] > minuteNano {
+							_, cas, _ := proxywasm.GetSharedData(itemKey)
+							_ = proxywasm.SetSharedData(itemKey, []byte(nullValue), cas)
+							ctx.p.dateMap[itemKey] = 0
+							count--
 						}
 					}
 				}
@@ -197,13 +208,20 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 
 						sum := md5.Sum(cLimitKeyBuf.Bytes())
 						md5Str = hex.EncodeToString(sum[:])
-						ctx.p.set.Add(md5Str)
+
+						v, isOk := ctx.p.set[md5Str]
+						if !isOk || (isOk && v == 0) {
+							ctx.p.set[md5Str] = 1
+							count++
+						}
 						ctx.p.dateMap[md5Str] = now
-						if ctx.p.set.Cardinality() > maxKeyStore {
-							for item := range ctx.p.set.Iterator().C {
-								if now-ctx.p.dateMap[item] > minuteNano {
-									_, cas, _ := proxywasm.GetSharedData(item)
-									_ = proxywasm.SetSharedData(item, []byte(nullValue), cas)
+						if count > maxKeyStore {
+							for itemKey, itemValue := range ctx.p.dateMap {
+								if itemValue == 1 && now-ctx.p.dateMap[itemKey] > minuteNano {
+									_, cas, _ := proxywasm.GetSharedData(itemKey)
+									_ = proxywasm.SetSharedData(itemKey, []byte(nullValue), cas)
+									ctx.p.dateMap[itemKey] = 0
+									count--
 								}
 							}
 						}
@@ -219,6 +237,8 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	if isBlock {
 		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 	}
+
+	_ = proxywasm.SetSharedData(keyName, []byte(strconv.Itoa(count)), c)
 
 	return types.ActionContinue
 }
