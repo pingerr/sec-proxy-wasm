@@ -34,7 +34,7 @@ const (
 
 	maxGetTokenRetry = 20
 
-	maxKeyStore = 10000
+	maxKeyStore = 2000
 )
 
 type (
@@ -217,7 +217,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						ctx.p.dateMap[md5Str] = now
 						if count > maxKeyStore {
 							for itemKey, itemValue := range ctx.p.set {
-								if itemValue == 1 && now-ctx.p.dateMap[itemKey] > minuteNano {
+								if itemValue == 1 && now-ctx.p.dateMap[itemKey] > secondNano*5 {
 									_, cas, _ := proxywasm.GetSharedData(itemKey)
 									_ = proxywasm.SetSharedData(itemKey, []byte(nullValue), cas)
 									ctx.p.dateMap[itemKey] = 0
