@@ -115,8 +115,8 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
 				rule.qpd = qpd
 			}
-			if headerBlockTime := curMap["block_seconds"].Int(); headerBlockTime != 0 {
-				rule.blockTime = headerBlockTime * secondNano
+			if headerBlockTime := curMap["block_seconds"].Float(); headerBlockTime != 0.000000 {
+				rule.blockTime = int64(headerBlockTime * secondNano)
 				rule.needBlock = true
 			}
 			p.rules = append(p.rules, rule)
@@ -134,8 +134,8 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
 				rule.qpd = qpd
 			}
-			if cookieBlockTime := curMap["block_seconds"].Int(); cookieBlockTime != 0 {
-				rule.blockTime = cookieBlockTime * secondNano
+			if cookieBlockTime := curMap["block_seconds"].Float(); cookieBlockTime != 0.000000 {
+				rule.blockTime = int64(cookieBlockTime * secondNano)
 				rule.needBlock = true
 			}
 			p.rules = append(p.rules, rule)
@@ -143,7 +143,7 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 		}
 	}
 
-	_ = proxywasm.SetSharedData(keyName, []byte(strconv.Itoa(keyCount)), 0)
+	//_ = proxywasm.SetSharedData(keyName, []byte(strconv.Itoa(keyCount)), 0)
 
 	return types.OnPluginStartStatusOK
 }
@@ -153,8 +153,8 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 
 	now := time.Now().UnixNano()
 
-	countByte, c, _ := proxywasm.GetSharedData(keyName)
-	count, _ := strconv.Atoi(string(countByte))
+	//countByte, c, _ := proxywasm.GetSharedData(keyName)
+	//count, _ := strconv.Atoi(string(countByte))
 
 	isBlock := false
 	var md5Str string
@@ -171,22 +171,22 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 				sum := md5.Sum(hLimitKeyBuf.Bytes())
 				md5Str = hex.EncodeToString(sum[:])
 
-				v, isOk := ctx.p.set[md5Str]
-				if !isOk || (isOk && v == 0) {
-					ctx.p.set[md5Str] = 1
-					count++
-				}
-				ctx.p.dateMap[md5Str] = now
-				if count > maxKeyStore {
-					for itemKey, itemValue := range ctx.p.set {
-						if itemValue == 1 && now-ctx.p.dateMap[itemKey] > minuteNano {
-							_, cas, _ := proxywasm.GetSharedData(itemKey)
-							_ = proxywasm.SetSharedData(itemKey, []byte(nullValue), cas)
-							ctx.p.dateMap[itemKey] = 0
-							count--
-						}
-					}
-				}
+				//v, isOk := ctx.p.set[md5Str]
+				//if !isOk || (isOk && v == 0) {
+				//	ctx.p.set[md5Str] = 1
+				//	count++
+				//}
+				//ctx.p.dateMap[md5Str] = now
+				//if count > maxKeyStore {
+				//	for itemKey, itemValue := range ctx.p.set {
+				//		if itemValue == 1 && now-ctx.p.dateMap[itemKey] > minuteNano {
+				//			_, cas, _ := proxywasm.GetSharedData(itemKey)
+				//			_ = proxywasm.SetSharedData(itemKey, []byte(nullValue), cas)
+				//			ctx.p.dateMap[itemKey] = 0
+				//			count--
+				//		}
+				//	}
+				//}
 
 				if !getEntry(md5Str, rule, now) {
 					isBlock = true
@@ -209,22 +209,22 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						sum := md5.Sum(cLimitKeyBuf.Bytes())
 						md5Str = hex.EncodeToString(sum[:])
 
-						v, isOk := ctx.p.set[md5Str]
-						if !isOk || (isOk && v == 0) {
-							ctx.p.set[md5Str] = 1
-							count++
-						}
-						ctx.p.dateMap[md5Str] = now
-						if count > maxKeyStore {
-							for itemKey, itemValue := range ctx.p.set {
-								if itemValue == 1 && now-ctx.p.dateMap[itemKey] > secondNano*5 {
-									_, cas, _ := proxywasm.GetSharedData(itemKey)
-									_ = proxywasm.SetSharedData(itemKey, []byte(nullValue), cas)
-									ctx.p.dateMap[itemKey] = 0
-									count--
-								}
-							}
-						}
+						//v, isOk := ctx.p.set[md5Str]
+						//if !isOk || (isOk && v == 0) {
+						//	ctx.p.set[md5Str] = 1
+						//	count++
+						//}
+						//ctx.p.dateMap[md5Str] = now
+						//if count > maxKeyStore {
+						//	for itemKey, itemValue := range ctx.p.set {
+						//		if itemValue == 1 && now-ctx.p.dateMap[itemKey] > secondNano*5 {
+						//			_, cas, _ := proxywasm.GetSharedData(itemKey)
+						//			_ = proxywasm.SetSharedData(itemKey, []byte(nullValue), cas)
+						//			ctx.p.dateMap[itemKey] = 0
+						//			count--
+						//		}
+						//	}
+						//}
 
 						if !getEntry(md5Str, rule, now) {
 							isBlock = true
@@ -238,7 +238,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 	}
 
-	_ = proxywasm.SetSharedData(keyName, []byte(strconv.Itoa(count)), c)
+	//_ = proxywasm.SetSharedData(keyName, []byte(strconv.Itoa(count)), c)
 
 	return types.ActionContinue
 }

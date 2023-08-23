@@ -361,15 +361,16 @@ cc
 固定窗口+block 32
 nocookie+noheader 0
 errcookie 0
-LRU
+LRU 0
 没有检测字段：
-    cookie
-    cookie:uid
-    header：hd1
+    cookie  0
+    cookie:uid 0
+    header：hd1 0
     user-agent
-CC 大负载 4096byte
-    cookie:uid 超长
-    header:hd1 超长
+CC 大负载 4096byte 0
+    cookie:uid 超长 0
+    header:hd1 超长 0
     user-agent 超长
 CC 脚本ua
     user-agent blacklist
+block s 浮点数
