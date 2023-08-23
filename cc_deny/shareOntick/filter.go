@@ -18,13 +18,14 @@ func PluginStart() {
 }
 
 const (
-	secondNano  = 1000 * 1000 * 1000
-	minuteNano  = 60 * secondNano
-	hourNano    = 60 * minuteNano
-	dayNano     = 24 * hourNano
-	secondFloat = secondNano * 1.0
-	hourFloat   = minuteNano * 1.0
-	dayFloat    = dayNano * 1.0
+	nano        time.Duration = 1
+	secondNano                = 1000 * 1000 * 1000 * nano
+	minuteNano                = 60 * secondNano
+	hourNano                  = 60 * minuteNano
+	dayNano                   = 24 * hourNano
+	secondFloat               = secondNano * 1.0
+	hourFloat                 = minuteNano * 1.0
+	dayFloat                  = dayNano * 1.0
 
 	cookiePre = "c:"
 	headerPre = "h:"
