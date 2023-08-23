@@ -2,6 +2,8 @@ package shareOntick
 
 import (
 	"bytes"
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
@@ -16,15 +18,18 @@ func PluginStart() {
 }
 
 const (
-	secondNano = 1000 * 1000 * 1000
-	minuteNano = 60 * secondNano
-	hourNano   = 60 * minuteNano
-	dayNano    = 24 * hourNano
+	secondNano  = 1000 * 1000 * 1000
+	minuteNano  = 60 * secondNano
+	hourNano    = 60 * minuteNano
+	dayNano     = 24 * hourNano
+	secondFloat = secondNano * 1.0
+	hourFloat   = minuteNano * 1.0
+	dayFloat    = dayNano * 1.0
 
-	cookiePre        = "c:"
-	headerPre        = "h:"
+	cookiePre = "c:"
+	headerPre = "h:"
+
 	maxGetTokenRetry = 20
-	tickMilliseconds = 100
 )
 
 type (
@@ -33,8 +38,7 @@ type (
 	}
 	pluginContext struct {
 		types.DefaultPluginContext
-		hRule *Rule
-		cRule *Rule
+		rules []Rule
 	}
 
 	httpContext struct {
@@ -43,16 +47,8 @@ type (
 		p         *pluginContext
 	}
 
-	Entry struct {
-		shareDataKey string
-		cas          uint32
-
-		requestCount  int64
-		refreshTime   int64
-		lastBlockTime int64
-	}
-
 	Rule struct {
+		isHeader  bool
 		key       string
 		qps       int64
 		qpm       int64
@@ -64,8 +60,7 @@ type (
 
 func (*vmContext) NewPluginContext(contextID uint32) types.PluginContext {
 	return &pluginContext{
-		hRule: &Rule{},
-		cRule: &Rule{},
+		rules: []Rule{},
 	}
 }
 
@@ -74,11 +69,6 @@ func (p *pluginContext) NewHttpContext(contextID uint32) types.HttpContext {
 }
 
 func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPluginStartStatus {
-	if err := proxywasm.SetTickPeriodMilliSeconds(tickMilliseconds); err != nil {
-		proxywasm.LogCriticalf("failed to set tick period: %v", err)
-		return types.OnPluginStartStatusFailed
-	}
-
 	data, err := proxywasm.GetPluginConfiguration()
 	if data == nil {
 		return types.OnPluginStartStatusOK
@@ -91,86 +81,109 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 	}
 
 	results := gjson.Get(string(data), "cc_rules").Array()
+
 	for i := range results {
 		curMap := results[i].Map()
 		if headerKey := curMap["header"].Str; headerKey != "" {
-			p.hRule.key = headerKey
+			var rule Rule
+			rule.isHeader = true
+			rule.key = headerKey
 			if qps := curMap["qps"].Int(); qps != 0 {
-				p.hRule.qps = qps
+				rule.qps = qps
 			}
 			if qpm := curMap["qpm"].Int(); qpm != 0 {
-				p.hRule.qpm = qpm
+				rule.qpm = qpm
 			}
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
-				p.hRule.qpd = qpd
+				rule.qpd = qpd
 			}
 			if headerBlockTime := curMap["block_seconds"].Int(); headerBlockTime != 0 {
-				p.hRule.blockTime = headerBlockTime * secondNano
-				p.hRule.needBlock = true
+				rule.blockTime = headerBlockTime * secondNano
+				rule.needBlock = true
 			}
-			//proxywasm.LogInfof("[h qps:%d, qpm:%d, qpd:%s, time:%d]", p.hRule.qps, p.hRule.qpm, p.hRule.qpd, p.hRule.blockTime)
+			p.rules = append(p.rules, rule)
 		} else if cookieKey := curMap["cookie"].Str; cookieKey != "" {
-			p.cRule.key = cookieKey
+			var rule Rule
+			rule.isHeader = false
+			rule.key = cookieKey
 			if qps := curMap["qps"].Int(); qps != 0 {
-				p.cRule.qps = qps
+				rule.qps = qps
 			}
 			if qpm := curMap["qpm"].Int(); qpm != 0 {
-				p.cRule.qpm = qpm
+				rule.qpm = qpm
 			}
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
-				p.cRule.qpd = qpd
+				rule.qpd = qpd
 			}
 			if cookieBlockTime := curMap["block_seconds"].Int(); cookieBlockTime != 0 {
-				p.cRule.blockTime = cookieBlockTime * secondNano
-				p.cRule.needBlock = true
+				rule.blockTime = cookieBlockTime * secondNano
+				rule.needBlock = true
 			}
-			//proxywasm.LogInfof("[c qps:%d, qpm:%d, qpd:%s, time:%d]", p.cRule.qps, p.cRule.qpm, p.cRule.qpd, p.cRule.blockTime)
+			p.rules = append(p.rules, rule)
 		}
 	}
 
 	return types.OnPluginStartStatusOK
 }
 
-func (p *pluginContext) OnTick() {
-
-}
-
 func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
-	var isHAllow, isCAllow bool
+	var rule Rule
 
-	headerValue, err := proxywasm.GetHttpRequestHeader(ctx.p.hRule.key)
-	if err == nil && headerValue != "" {
-		hLimitKeyBuf := bytes.NewBufferString(headerPre)
-		hLimitKeyBuf.WriteString(headerValue)
-		isHAllow = getEntry(hLimitKeyBuf.String(), ctx.p.hRule)
-		if !isHAllow {
-			_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-		}
-	}
+	now := time.Now().UnixNano()
 
-	cookies, err := proxywasm.GetHttpRequestHeader("cookie")
-	if err != nil || cookies == "" {
-		return types.ActionContinue
-	}
-	cSub := bytes.NewBufferString(ctx.p.cRule.key)
-	cSub.WriteString("=")
-	if strings.HasPrefix(cookies, cSub.String()) {
-		cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
-		if cookieValue != "" {
-			cLimitKeyBuf := bytes.NewBufferString(cookiePre)
-			cLimitKeyBuf.WriteString(cookieValue)
-			isCAllow = getEntry(cLimitKeyBuf.String(), ctx.p.cRule)
-			if !isCAllow {
-				_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+	isBlock := false
+	var md5Str string
+	for _, rule = range ctx.p.rules {
+		if rule.isHeader {
+			headerValue, err := proxywasm.GetHttpRequestHeader(rule.key)
+			if err == nil && headerValue != "" {
+
+				hLimitKeyBuf := bytes.NewBufferString(headerPre)
+				hLimitKeyBuf.WriteString(rule.key)
+				hLimitKeyBuf.WriteString(":")
+				hLimitKeyBuf.WriteString(headerValue)
+
+				sum := md5.Sum(hLimitKeyBuf.Bytes())
+				md5Str = hex.EncodeToString(sum[:])
+
+				if !getEntry(md5Str, rule, now) {
+					isBlock = true
+				}
+
+			}
+		} else {
+			cookies, err := proxywasm.GetHttpRequestHeader("cookie")
+			if err == nil && cookies != "" {
+				cSub := bytes.NewBufferString(rule.key)
+				cSub.WriteString("=")
+				if strings.HasPrefix(cookies, cSub.String()) {
+					cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
+					if cookieValue != "" {
+						cLimitKeyBuf := bytes.NewBufferString(cookiePre)
+						cLimitKeyBuf.WriteString(rule.key)
+						cLimitKeyBuf.WriteString(":")
+						cLimitKeyBuf.WriteString(cookieValue)
+
+						sum := md5.Sum(cLimitKeyBuf.Bytes())
+						md5Str = hex.EncodeToString(sum[:])
+
+						if !getEntry(md5Str, rule, now) {
+							isBlock = true
+						}
+					}
+				}
 			}
 		}
+	}
+	if isBlock {
+		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 	}
 
 	return types.ActionContinue
 }
 
 // data=[count:sRefillTime:mRefillTime:dRefillTime:isBlock:lastBlockTime]
-func getEntry(shareDataKey string, rule *Rule) bool {
+func getEntry(shareDataKey string, rule Rule, now int64) bool {
 	var data []byte
 	var cas uint32
 	var sRequestCount int64
@@ -185,8 +198,7 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 	var err error
 
 	for i := 0; i < maxGetTokenRetry; i++ {
-		isAllow := false
-		now := time.Now().UnixNano() //放入循环
+		isAllow := true
 		data, cas, err = proxywasm.GetSharedData(shareDataKey)
 
 		if err != nil && err == types.ErrorStatusNotFound {
@@ -198,7 +210,7 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 			dRefillTime = now
 			isBlock = 0
 			lastBlockTime = 0
-			proxywasm.LogInfo("[getsharedata not found]")
+			//proxywasm.LogInfo("[share data not found]")
 			isAllow = true
 
 		} else if err == nil {
@@ -213,63 +225,131 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 			isBlock, _ = strconv.Atoi(parts[6])
 			lastBlockTime, _ = strconv.ParseInt(parts[7], 0, 64)
 
-			if rule.needBlock {
+			//if rule.needBlock {
+			if false {
 				if isBlock == 1 {
-					if now > lastBlockTime+rule.blockTime {
+					if now-lastBlockTime > rule.blockTime {
+						isBlock = 0
+
 						sRequestCount = 0
 						mRequestCount = 0
 						dRequestCount = 0
-						sRefillTime = now
-						mRefillTime = now
-						dRefillTime = now
-						isBlock = 0
-						proxywasm.LogInfo("[out period lock]")
+						if now-(lastBlockTime+rule.blockTime) > secondNano {
+							sRefillTime = (now-(lastBlockTime+rule.blockTime))/secondNano*secondNano + lastBlockTime + rule.blockTime
+						} else {
+							sRefillTime = lastBlockTime + rule.blockTime
+						}
+						if now-(lastBlockTime+rule.blockTime) > minuteNano {
+							mRefillTime = (now-(lastBlockTime+rule.blockTime))/minuteNano*minuteNano + lastBlockTime + rule.blockTime
+						} else {
+							mRefillTime = lastBlockTime + rule.blockTime
+						}
+						if now-(lastBlockTime+rule.blockTime) > dayNano {
+							dRefillTime = (now-(lastBlockTime+rule.blockTime))/dayNano*dayNano + lastBlockTime + rule.blockTime
+						} else {
+							dRefillTime = lastBlockTime + rule.blockTime
+						}
+
+					}
+				} else {
+					//if rule.qps != 0 && now-sRefillTime > secondNano {
+					//	sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
+					//	sRequestCount = 0
+					//}
+					//if rule.qpm != 0 && now-mRefillTime > minuteNano {
+					//	mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
+					//	mRequestCount = 0
+					//}
+					//if rule.qpd != 0 && now-dRefillTime > dayNano {
+					//	dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
+					//	dRequestCount = 0
+					//}
+					if rule.qps != 0 && now-sRefillTime > secondNano {
+						if (now-sRefillTime)/secondNano > 2 {
+							sRequestCount = 0
+						} else {
+							sRequestCount = rule.qps - int64((now-sRefillTime-secondNano)/secondFloat*rule.qps)
+						}
+						sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
+					}
+					if rule.qpm != 0 && now-mRefillTime > minuteNano {
+						if (now-mRefillTime)/minuteNano > 2 {
+							mRequestCount = 0
+						} else {
+							mRequestCount = rule.qpm - int64((now-mRefillTime-minuteNano)/secondFloat*rule.qpm)
+						}
+						mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
+					}
+					if rule.qpd != 0 && now-dRefillTime > dayNano {
+						if (now-dRefillTime)/dayNano > 2 {
+							dRequestCount = 0
+						} else {
+							dRequestCount = rule.qpd - int64((now-dRefillTime-dayNano)/dayFloat*rule.qpm)
+						}
+						dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
+					}
+
+					sRequestCount++
+					mRequestCount++
+					dRequestCount++
+
+					if (rule.qps != 0 && sRequestCount > rule.qps && now-sRefillTime < secondNano) ||
+						(rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano) ||
+						(rule.qpd != 0 && dRequestCount > rule.qpd && now-dRefillTime < dayNano) {
+						lastBlockTime = now
+						isBlock = 1
+						isAllow = false
 					} else {
-						proxywasm.LogInfo("[in period lock]")
+						isAllow = true
 					}
 				}
 			} else {
 				if rule.qps != 0 && now-sRefillTime > secondNano {
-					sRefillTime = now
-					sRequestCount = 0
-					proxywasm.LogInfo("[out s direct lock]")
+					if (now-sRefillTime)/secondNano > 2 {
+						sRequestCount = 0
+					} else {
+						sRequestCount = rule.qps - int64((now-sRefillTime-secondNano)/secondFloat*rule.qps)
+					}
+					sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
 				}
 				if rule.qpm != 0 && now-mRefillTime > minuteNano {
-					mRefillTime = now
-					mRequestCount = 0
-					proxywasm.LogInfo("[out m direct lock]")
+					if (now-mRefillTime)/minuteNano > 2 {
+						mRequestCount = 0
+					} else {
+						mRequestCount = rule.qpm - int64((now-mRefillTime-minuteNano)/secondFloat*rule.qpm)
+					}
+					mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
 				}
 				if rule.qpd != 0 && now-dRefillTime > dayNano {
-					dRefillTime = now
-					dRequestCount = 0
-					proxywasm.LogInfo("[out m direct lock]")
-				}
-			}
-
-			sRequestCount++
-			mRequestCount++
-			dRequestCount++
-
-			if (rule.qps != 0 && sRequestCount > rule.qps && now-sRefillTime < secondNano) ||
-				(rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano) ||
-				(rule.qpd != 0 && dRequestCount > rule.qpd && now-dRefillTime < dayNano) {
-				if rule.needBlock {
-					if isBlock == 0 {
-						lastBlockTime = now
-						isBlock = 1
-						proxywasm.LogInfo("[new period lock]")
+					if (now-dRefillTime)/dayNano > 2 {
+						dRequestCount = 0
+					} else {
+						dRequestCount = rule.qpd - int64((now-dRefillTime-dayNano)/dayFloat*rule.qpm)
 					}
-				} else {
-					proxywasm.LogInfo("[new direct lock]")
+					dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
 				}
-			} else {
-				proxywasm.LogInfo("[pass]")
-				isAllow = true
+
+				sRequestCount++
+				mRequestCount++
+				dRequestCount++
+
+				if (rule.qps != 0 && sRequestCount > rule.qps && now-sRefillTime < secondNano) ||
+					(rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano) ||
+					(rule.qpd != 0 && dRequestCount > rule.qpd && now-dRefillTime < dayNano) {
+					isAllow = false
+				} else {
+					isAllow = true
+				}
 			}
+
+			//rate
+			//(rule.qps != 0 && sRequestCount > 1 && (now-sRefillTime)/sRequestCount < secondNano/rule.qps) ||
+			//	(rule.qpm != 0 && mRequestCount > 1 && (now-mRefillTime)/mRequestCount < minuteNano/rule.qpm) ||
+			//	(rule.qpd != 0 && dRequestCount > 1 && (now-dRefillTime)/dRequestCount < dayNano/rule.qpd)
 
 		} else {
-			proxywasm.LogInfo("[getsharedata other error]")
-			return isAllow
+			//proxywasm.LogInfo("[get share data other error]")
+			continue
 		}
 
 		newData := bytes.NewBufferString(strconv.FormatInt(sRequestCount, 10))
@@ -291,15 +371,15 @@ func getEntry(shareDataKey string, rule *Rule) bool {
 		err := proxywasm.SetSharedData(shareDataKey, newData.Bytes(), cas)
 		if err != nil {
 			if errors.Is(err, types.ErrorStatusCasMismatch) {
-				proxywasm.LogInfo("[gset sharedata mis]")
+				//proxywasm.LogInfo("[gset sharedata mis]")
 				continue
 			} else {
-				proxywasm.LogInfo("[gset sharedata other err]")
-				return false
+				//proxywasm.LogInfo("[gset sharedata other err]")
+				continue
 			}
 		}
 
 		return isAllow
 	}
-	return false
+	return true
 }

@@ -373,4 +373,4 @@ CC 大负载 4096byte 0
     user-agent 超长
 CC 脚本ua
     user-agent blacklist
-block s 浮点数
+block s 浮点数 0

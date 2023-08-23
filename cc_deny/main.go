@@ -1,7 +1,7 @@
 package main
 
 import (
-	"cc_deny/qpsall"
+	"cc_deny/shareOntick"
 )
 
 func main() {
@@ -15,5 +15,6 @@ func main() {
 	//denyall.PluginStart()
 	//denyallhaveoncemem.PluginStart()
 	//errortest.PluginStart()
-	qpsall.PluginStart()
+	//qpsall.PluginStart()
+	shareOntick.PluginStart()
 }

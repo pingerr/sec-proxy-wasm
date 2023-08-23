@@ -53,12 +53,11 @@ static_resources:
                           {
                             "header": "hd1",
                             "qpm": 3,
-                            "block_seconds": 0.9
+                            "block_seconds": 5
                           },
                           {
                             "cookie": "uid",
                             "qps": 2,
-                            "block_seconds": 0.1
                           },
                           {
                             "cookie": "uid2",

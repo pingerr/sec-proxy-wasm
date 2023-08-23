@@ -115,8 +115,8 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
 				rule.qpd = qpd
 			}
-			if headerBlockTime := curMap["block_seconds"].Float(); headerBlockTime != 0.000000 {
-				rule.blockTime = int64(headerBlockTime * secondNano)
+			if headerBlockTime := curMap["block_seconds"].Int(); headerBlockTime != 0 {
+				rule.blockTime = headerBlockTime * secondNano
 				rule.needBlock = true
 			}
 			p.rules = append(p.rules, rule)
@@ -134,8 +134,8 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 			if qpd := curMap["qpd"].Int(); qpd != 0 {
 				rule.qpd = qpd
 			}
-			if cookieBlockTime := curMap["block_seconds"].Float(); cookieBlockTime != 0.000000 {
-				rule.blockTime = int64(cookieBlockTime * secondNano)
+			if cookieBlockTime := curMap["block_seconds"].Int(); cookieBlockTime != 0 {
+				rule.blockTime = cookieBlockTime * secondNano
 				rule.needBlock = true
 			}
 			p.rules = append(p.rules, rule)
