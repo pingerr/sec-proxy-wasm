@@ -18,19 +18,18 @@ func PluginStart() {
 }
 
 const (
-	nano        time.Duration = 1
-	secondNano                = 1000 * 1000 * 1000 * nano
-	minuteNano                = 60 * secondNano
-	hourNano                  = 60 * minuteNano
-	dayNano                   = 24 * hourNano
-	secondFloat               = secondNano * 1.0
-	hourFloat                 = minuteNano * 1.0
-	dayFloat                  = dayNano * 1.0
+	secondNano  = 1000 * 1000 * 1000
+	minuteNano  = 60 * secondNano
+	hourNano    = 60 * minuteNano
+	dayNano     = 24 * hourNano
+	secondFloat = secondNano * 1.0
+	hourFloat   = minuteNano * 1.0
+	dayFloat    = dayNano * 1.0
 
 	cookiePre = "c:"
 	headerPre = "h:"
 
-	maxGetTokenRetry = 20
+	maxGetTokenRetry = 10
 )
 
 type (
@@ -49,13 +48,14 @@ type (
 	}
 
 	Rule struct {
-		isHeader  bool
-		key       string
-		qps       int64
-		qpm       int64
-		qpd       int64
-		needBlock bool
-		blockTime int64
+		isHeader   bool
+		isBlockAll bool
+		key        string
+		qps        int64
+		qpm        int64
+		qpd        int64
+		needBlock  bool
+		blockTime  int64
 	}
 )
 
@@ -89,36 +89,62 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 			var rule Rule
 			rule.isHeader = true
 			rule.key = headerKey
-			if qps := curMap["qps"].Int(); qps != 0 {
-				rule.qps = qps
+			if curMap["qps"].Exists() {
+				rule.qps = curMap["qps"].Int()
+				if rule.qps == 0 {
+					rule.isBlockAll = true
+				}
 			}
-			if qpm := curMap["qpm"].Int(); qpm != 0 {
-				rule.qpm = qpm
+			if curMap["qpm"].Exists() {
+				rule.qpm = curMap["qpm"].Int()
+				if rule.qpm == 0 {
+					rule.isBlockAll = true
+				}
 			}
-			if qpd := curMap["qpd"].Int(); qpd != 0 {
-				rule.qpd = qpd
+			if curMap["qpd"].Exists() {
+				rule.qpd = curMap["qpd"].Int()
+				if rule.qpd == 0 {
+					rule.isBlockAll = true
+				}
 			}
-			if headerBlockTime := curMap["block_seconds"].Int(); headerBlockTime != 0 {
-				rule.blockTime = headerBlockTime * secondNano
-				rule.needBlock = true
+			if curMap["block_seconds"].Exists() {
+				rule.blockTime = curMap["block_seconds"].Int() * secondNano
+				if rule.blockTime == 0 {
+					rule.needBlock = false
+				} else {
+					rule.needBlock = true
+				}
 			}
 			p.rules = append(p.rules, rule)
 		} else if cookieKey := curMap["cookie"].Str; cookieKey != "" {
 			var rule Rule
 			rule.isHeader = false
 			rule.key = cookieKey
-			if qps := curMap["qps"].Int(); qps != 0 {
-				rule.qps = qps
+			if curMap["qps"].Exists() {
+				rule.qps = curMap["qps"].Int()
+				if rule.qps == 0 {
+					rule.isBlockAll = true
+				}
 			}
-			if qpm := curMap["qpm"].Int(); qpm != 0 {
-				rule.qpm = qpm
+			if curMap["qpm"].Exists() {
+				rule.qpm = curMap["qpm"].Int()
+				if rule.qpm == 0 {
+					rule.isBlockAll = true
+				}
 			}
-			if qpd := curMap["qpd"].Int(); qpd != 0 {
-				rule.qpd = qpd
+			if curMap["qpd"].Exists() {
+				rule.qpd = curMap["qpd"].Int()
+				if rule.qpd == 0 {
+					rule.isBlockAll = true
+				}
 			}
-			if cookieBlockTime := curMap["block_seconds"].Int(); cookieBlockTime != 0 {
-				rule.blockTime = cookieBlockTime * secondNano
-				rule.needBlock = true
+			if curMap["block_seconds"].Exists() {
+				rule.blockTime = curMap["block_seconds"].Int() * secondNano
+				if rule.blockTime == 0 {
+					rule.needBlock = false
+				} else {
+					rule.needBlock = true
+				}
 			}
 			p.rules = append(p.rules, rule)
 		}
@@ -135,41 +161,45 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	isBlock := false
 	var md5Str string
 	for _, rule = range ctx.p.rules {
-		if rule.isHeader {
-			headerValue, err := proxywasm.GetHttpRequestHeader(rule.key)
-			if err == nil && headerValue != "" {
-
-				hLimitKeyBuf := bytes.NewBufferString(headerPre)
-				hLimitKeyBuf.WriteString(rule.key)
-				hLimitKeyBuf.WriteString(":")
-				hLimitKeyBuf.WriteString(headerValue)
-
-				sum := md5.Sum(hLimitKeyBuf.Bytes())
-				md5Str = hex.EncodeToString(sum[:])
-
-				if !getEntry(md5Str, rule, now) {
-					isBlock = true
-				}
-
-			}
+		if rule.isBlockAll {
+			isBlock = true
 		} else {
-			cookies, err := proxywasm.GetHttpRequestHeader("cookie")
-			if err == nil && cookies != "" {
-				cSub := bytes.NewBufferString(rule.key)
-				cSub.WriteString("=")
-				if strings.HasPrefix(cookies, cSub.String()) {
-					cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
-					if cookieValue != "" {
-						cLimitKeyBuf := bytes.NewBufferString(cookiePre)
-						cLimitKeyBuf.WriteString(rule.key)
-						cLimitKeyBuf.WriteString(":")
-						cLimitKeyBuf.WriteString(cookieValue)
+			if rule.isHeader {
+				headerValue, err := proxywasm.GetHttpRequestHeader(rule.key)
+				if err == nil && headerValue != "" {
 
-						sum := md5.Sum(cLimitKeyBuf.Bytes())
-						md5Str = hex.EncodeToString(sum[:])
+					hLimitKeyBuf := bytes.NewBufferString(headerPre)
+					hLimitKeyBuf.WriteString(rule.key)
+					hLimitKeyBuf.WriteString(":")
+					hLimitKeyBuf.WriteString(headerValue)
 
-						if !getEntry(md5Str, rule, now) {
-							isBlock = true
+					sum := md5.Sum(hLimitKeyBuf.Bytes())
+					md5Str = hex.EncodeToString(sum[:])
+
+					if !getEntry(md5Str, rule, now) {
+						isBlock = true
+					}
+
+				}
+			} else {
+				cookies, err := proxywasm.GetHttpRequestHeader("cookie")
+				if err == nil && cookies != "" {
+					cSub := bytes.NewBufferString(rule.key)
+					cSub.WriteString("=")
+					if strings.HasPrefix(cookies, cSub.String()) {
+						cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
+						if cookieValue != "" {
+							cLimitKeyBuf := bytes.NewBufferString(cookiePre)
+							cLimitKeyBuf.WriteString(rule.key)
+							cLimitKeyBuf.WriteString(":")
+							cLimitKeyBuf.WriteString(cookieValue)
+
+							sum := md5.Sum(cLimitKeyBuf.Bytes())
+							md5Str = hex.EncodeToString(sum[:])
+
+							if !getEntry(md5Str, rule, now) {
+								isBlock = true
+							}
 						}
 					}
 				}
@@ -227,7 +257,7 @@ func getEntry(shareDataKey string, rule Rule, now int64) bool {
 			lastBlockTime, _ = strconv.ParseInt(parts[7], 0, 64)
 
 			//if rule.needBlock {
-			if false {
+			if rule.needBlock {
 				if isBlock == 1 {
 					if now-lastBlockTime > rule.blockTime {
 						isBlock = 0
