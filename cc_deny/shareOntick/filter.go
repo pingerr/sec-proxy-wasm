@@ -213,6 +213,13 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	return types.ActionContinue
 }
 
+func (ctx *httpContext) OnHttpRequestBody(bodySize int, _ bool) types.Action {
+	if bodySize > 10*1024 {
+		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+	}
+	return types.ActionContinue
+}
+
 // data=[count:sRefillTime:mRefillTime:dRefillTime:isBlock:lastBlockTime]
 func getEntry(shareDataKey string, rule Rule, now int64) bool {
 	var data []byte
