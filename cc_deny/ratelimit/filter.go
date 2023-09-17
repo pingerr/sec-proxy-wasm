@@ -251,22 +251,8 @@ func getEntry(shareDataKey string, rule Rule, now int64) bool {
 			sRefillTime = now
 			mRefillTime = now
 			dRefillTime = now
-
-			if rule.needBlock {
-				if (rule.qps != 0 && sRequestCount >= rule.qps) ||
-					(rule.qpm != 0 && mRequestCount >= rule.qpm) ||
-					(rule.qpd != 0 && dRequestCount >= rule.qpd) {
-					lastBlockTime = now
-					isBlock = 1
-					isAllow = false
-				}
-			} else {
-				if (rule.qps != 0 && sRequestCount > rule.qps && now-sRefillTime < secondNano) ||
-					(rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano) ||
-					(rule.qpd != 0 && dRequestCount > rule.qpd && now-dRefillTime < dayNano) {
-					isAllow = false
-				}
-			}
+			isBlock = 0
+			lastBlockTime = 0
 		}
 
 		if err == nil {
