@@ -251,8 +251,22 @@ func getEntry(shareDataKey string, rule Rule, now int64) bool {
 			sRefillTime = now
 			mRefillTime = now
 			dRefillTime = now
-			isBlock = 0
-			lastBlockTime = 0
+
+			if rule.needBlock {
+				if (rule.qps != 0 && sRequestCount >= rule.qps) ||
+					(rule.qpm != 0 && mRequestCount >= rule.qpm) ||
+					(rule.qpd != 0 && dRequestCount >= rule.qpd) {
+					lastBlockTime = now
+					isBlock = 1
+					isAllow = false
+				}
+			} else {
+				if (rule.qps != 0 && sRequestCount > rule.qps && now-sRefillTime < secondNano) ||
+					(rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano) ||
+					(rule.qpd != 0 && dRequestCount > rule.qpd && now-dRefillTime < dayNano) {
+					isAllow = false
+				}
+			}
 		}
 
 		if err == nil {
@@ -305,30 +319,6 @@ func getEntry(shareDataKey string, rule Rule, now int64) bool {
 						dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
 						dRequestCount = 0
 					}
-					//if rule.qps != 0 && now-sRefillTime > secondNano {
-					//	if (now-sRefillTime)/secondNano > 2 {
-					//		sRequestCount = 0
-					//	} else {
-					//		sRequestCount = rule.qps - int64((now-sRefillTime-secondNano)/secondFloat*rule.qps)
-					//	}
-					//	sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
-					//}
-					//if rule.qpm != 0 && now-mRefillTime > minuteNano {
-					//	if (now-mRefillTime)/minuteNano > 2 {
-					//		mRequestCount = 0
-					//	} else {
-					//		mRequestCount = rule.qpm - int64((now-mRefillTime-minuteNano)/secondFloat*rule.qpm)
-					//	}
-					//	mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
-					//}
-					//if rule.qpd != 0 && now-dRefillTime > dayNano {
-					//	if (now-dRefillTime)/dayNano > 2 {
-					//		dRequestCount = 0
-					//	} else {
-					//		dRequestCount = rule.qpd - int64((now-dRefillTime-dayNano)/dayFloat*rule.qpm)
-					//	}
-					//	dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
-					//}
 
 					sRequestCount++
 					mRequestCount++

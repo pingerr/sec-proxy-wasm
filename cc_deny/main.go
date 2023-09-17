@@ -5,6 +5,5 @@ import (
 )
 
 func main() {
-	//qpsall.PluginStart()
 	ratelimit.PluginStart()
 }
