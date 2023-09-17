@@ -153,7 +153,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 
 	now := time.Now().UnixNano()
 
-	isBlock := false
+	//isBlock := false
 	var md5Str string
 	for _, rule := range ctx.p.rules {
 		if rule.isHeader {
@@ -161,7 +161,9 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 			if err == nil && headerValue != "" {
 
 				if rule.isBlockAll {
-					isBlock = true
+					//isBlock = true
+					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+					return types.ActionContinue
 				}
 
 				hLimitKeyBuf := bytes.NewBufferString(headerPre)
@@ -173,7 +175,9 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 				md5Str = hex.EncodeToString(sum[:])
 
 				if !getEntry(md5Str, rule, now) {
-					isBlock = true
+					//isBlock = true
+					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+					return types.ActionContinue
 				}
 
 			}
@@ -187,7 +191,9 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 					if cookieValue != "" {
 
 						if rule.isBlockAll {
-							isBlock = true
+							//isBlock = true
+							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+							return types.ActionContinue
 						}
 
 						cLimitKeyBuf := bytes.NewBufferString(cookiePre)
@@ -199,16 +205,18 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						md5Str = hex.EncodeToString(sum[:])
 
 						if !getEntry(md5Str, rule, now) {
-							isBlock = true
+							//isBlock = true
+							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+							return types.ActionContinue
 						}
 					}
 				}
 			}
 		}
 	}
-	if isBlock {
-		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-	}
+	//if isBlock {
+	//	_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+	//}
 
 	return types.ActionContinue
 }
