@@ -85,10 +85,10 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 
 	for i := range results {
 		curMap := results[i].Map()
-		if headerKey := curMap["header"].Str; headerKey != "" {
+		if curMap["header"].Exists() {
 			var rule Rule
 			rule.isHeader = true
-			rule.key = headerKey
+			rule.key = curMap["header"].String()
 			if curMap["qps"].Exists() {
 				rule.qps = curMap["qps"].Int()
 				if rule.qps == 0 {
@@ -116,10 +116,10 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 				}
 			}
 			p.rules = append(p.rules, rule)
-		} else if cookieKey := curMap["cookie"].Str; cookieKey != "" {
+		} else if curMap["cookie"].Exists() {
 			var rule Rule
 			rule.isHeader = false
-			rule.key = cookieKey
+			rule.key = curMap["cookie"].String()
 			if curMap["qps"].Exists() {
 				rule.qps = curMap["qps"].Int()
 				if rule.qps == 0 {
@@ -161,45 +161,51 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	isBlock := false
 	var md5Str string
 	for _, rule = range ctx.p.rules {
-		if rule.isBlockAll {
-			isBlock = true
-		} else {
-			if rule.isHeader {
-				headerValue, err := proxywasm.GetHttpRequestHeader(rule.key)
-				if err == nil && headerValue != "" {
 
-					hLimitKeyBuf := bytes.NewBufferString(headerPre)
-					hLimitKeyBuf.WriteString(rule.key)
-					hLimitKeyBuf.WriteString(":")
-					hLimitKeyBuf.WriteString(headerValue)
+		if rule.isHeader {
+			headerValue, err := proxywasm.GetHttpRequestHeader(rule.key)
+			if err == nil && headerValue != "" {
 
-					sum := md5.Sum(hLimitKeyBuf.Bytes())
-					md5Str = hex.EncodeToString(sum[:])
-
-					if !getEntry(md5Str, rule, now) {
-						isBlock = true
-					}
-
+				if rule.isBlockAll {
+					isBlock = true
 				}
-			} else {
-				cookies, err := proxywasm.GetHttpRequestHeader("cookie")
-				if err == nil && cookies != "" {
-					cSub := bytes.NewBufferString(rule.key)
-					cSub.WriteString("=")
-					if strings.HasPrefix(cookies, cSub.String()) {
-						cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
-						if cookieValue != "" {
-							cLimitKeyBuf := bytes.NewBufferString(cookiePre)
-							cLimitKeyBuf.WriteString(rule.key)
-							cLimitKeyBuf.WriteString(":")
-							cLimitKeyBuf.WriteString(cookieValue)
 
-							sum := md5.Sum(cLimitKeyBuf.Bytes())
-							md5Str = hex.EncodeToString(sum[:])
+				hLimitKeyBuf := bytes.NewBufferString(headerPre)
+				hLimitKeyBuf.WriteString(rule.key)
+				hLimitKeyBuf.WriteString(":")
+				hLimitKeyBuf.WriteString(headerValue)
 
-							if !getEntry(md5Str, rule, now) {
-								isBlock = true
-							}
+				sum := md5.Sum(hLimitKeyBuf.Bytes())
+				md5Str = hex.EncodeToString(sum[:])
+
+				if !getEntry(md5Str, rule, now) {
+					isBlock = true
+				}
+
+			}
+		} else {
+			cookies, err := proxywasm.GetHttpRequestHeader("cookie")
+			if err == nil && cookies != "" {
+				cSub := bytes.NewBufferString(rule.key)
+				cSub.WriteString("=")
+				if strings.HasPrefix(cookies, cSub.String()) {
+					cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
+					if cookieValue != "" {
+
+						if rule.isBlockAll {
+							isBlock = true
+						}
+
+						cLimitKeyBuf := bytes.NewBufferString(cookiePre)
+						cLimitKeyBuf.WriteString(rule.key)
+						cLimitKeyBuf.WriteString(":")
+						cLimitKeyBuf.WriteString(cookieValue)
+
+						sum := md5.Sum(cLimitKeyBuf.Bytes())
+						md5Str = hex.EncodeToString(sum[:])
+
+						if !getEntry(md5Str, rule, now) {
+							isBlock = true
 						}
 					}
 				}
@@ -210,13 +216,6 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 	}
 
-	return types.ActionContinue
-}
-
-func (ctx *httpContext) OnHttpRequestBody(bodySize int, _ bool) types.Action {
-	if bodySize > 10*1024 {
-		_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-	}
 	return types.ActionContinue
 }
 
