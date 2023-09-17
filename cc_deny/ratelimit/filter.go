@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/hex"
-	"errors"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 	"github.com/tidwall/gjson"
@@ -18,13 +17,10 @@ func PluginStart() {
 }
 
 const (
-	secondNano  = 1000 * 1000 * 1000
-	minuteNano  = 60 * secondNano
-	hourNano    = 60 * minuteNano
-	dayNano     = 24 * hourNano
-	secondFloat = secondNano * 1.0
-	hourFloat   = minuteNano * 1.0
-	dayFloat    = dayNano * 1.0
+	secondNano = 1000 * 1000 * 1000
+	minuteNano = 60 * secondNano
+	hourNano   = 60 * minuteNano
+	dayNano    = 24 * hourNano
 
 	cookiePre = "c:"
 	headerPre = "h:"
@@ -154,14 +150,12 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 }
 
 func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
-	var rule Rule
 
 	now := time.Now().UnixNano()
 
 	isBlock := false
 	var md5Str string
-	for _, rule = range ctx.p.rules {
-
+	for _, rule := range ctx.p.rules {
 		if rule.isHeader {
 			headerValue, err := proxywasm.GetHttpRequestHeader(rule.key)
 			if err == nil && headerValue != "" {
@@ -238,6 +232,10 @@ func getEntry(shareDataKey string, rule Rule, now int64) bool {
 		isAllow := true
 		data, cas, err = proxywasm.GetSharedData(shareDataKey)
 
+		if err != nil && err != types.ErrorStatusNotFound {
+			continue
+		}
+
 		if err != nil && err == types.ErrorStatusNotFound {
 			sRequestCount = 1
 			mRequestCount = 1
@@ -247,10 +245,9 @@ func getEntry(shareDataKey string, rule Rule, now int64) bool {
 			dRefillTime = now
 			isBlock = 0
 			lastBlockTime = 0
-			//proxywasm.LogInfo("[share data not found]")
-			isAllow = true
+		}
 
-		} else if err == nil {
+		if err == nil {
 			// Tokenize the string on :
 			parts := strings.Split(string(data), ":")
 			sRequestCount, _ = strconv.ParseInt(parts[0], 0, 64)
@@ -262,7 +259,6 @@ func getEntry(shareDataKey string, rule Rule, now int64) bool {
 			isBlock, _ = strconv.Atoi(parts[6])
 			lastBlockTime, _ = strconv.ParseInt(parts[7], 0, 64)
 
-			//if rule.needBlock {
 			if rule.needBlock {
 				if isBlock == 1 {
 					if now-lastBlockTime > rule.blockTime {
@@ -289,42 +285,42 @@ func getEntry(shareDataKey string, rule Rule, now int64) bool {
 
 					}
 				} else {
-					//if rule.qps != 0 && now-sRefillTime > secondNano {
-					//	sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
-					//	sRequestCount = 0
-					//}
-					//if rule.qpm != 0 && now-mRefillTime > minuteNano {
-					//	mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
-					//	mRequestCount = 0
-					//}
-					//if rule.qpd != 0 && now-dRefillTime > dayNano {
-					//	dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
-					//	dRequestCount = 0
-					//}
 					if rule.qps != 0 && now-sRefillTime > secondNano {
-						if (now-sRefillTime)/secondNano > 2 {
-							sRequestCount = 0
-						} else {
-							sRequestCount = rule.qps - int64((now-sRefillTime-secondNano)/secondFloat*rule.qps)
-						}
 						sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
+						sRequestCount = 0
 					}
 					if rule.qpm != 0 && now-mRefillTime > minuteNano {
-						if (now-mRefillTime)/minuteNano > 2 {
-							mRequestCount = 0
-						} else {
-							mRequestCount = rule.qpm - int64((now-mRefillTime-minuteNano)/secondFloat*rule.qpm)
-						}
 						mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
+						mRequestCount = 0
 					}
 					if rule.qpd != 0 && now-dRefillTime > dayNano {
-						if (now-dRefillTime)/dayNano > 2 {
-							dRequestCount = 0
-						} else {
-							dRequestCount = rule.qpd - int64((now-dRefillTime-dayNano)/dayFloat*rule.qpm)
-						}
 						dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
+						dRequestCount = 0
 					}
+					//if rule.qps != 0 && now-sRefillTime > secondNano {
+					//	if (now-sRefillTime)/secondNano > 2 {
+					//		sRequestCount = 0
+					//	} else {
+					//		sRequestCount = rule.qps - int64((now-sRefillTime-secondNano)/secondFloat*rule.qps)
+					//	}
+					//	sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
+					//}
+					//if rule.qpm != 0 && now-mRefillTime > minuteNano {
+					//	if (now-mRefillTime)/minuteNano > 2 {
+					//		mRequestCount = 0
+					//	} else {
+					//		mRequestCount = rule.qpm - int64((now-mRefillTime-minuteNano)/secondFloat*rule.qpm)
+					//	}
+					//	mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
+					//}
+					//if rule.qpd != 0 && now-dRefillTime > dayNano {
+					//	if (now-dRefillTime)/dayNano > 2 {
+					//		dRequestCount = 0
+					//	} else {
+					//		dRequestCount = rule.qpd - int64((now-dRefillTime-dayNano)/dayFloat*rule.qpm)
+					//	}
+					//	dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
+					//}
 
 					sRequestCount++
 					mRequestCount++
@@ -336,33 +332,19 @@ func getEntry(shareDataKey string, rule Rule, now int64) bool {
 						lastBlockTime = now
 						isBlock = 1
 						isAllow = false
-					} else {
-						isAllow = true
 					}
 				}
 			} else {
 				if rule.qps != 0 && now-sRefillTime > secondNano {
-					if (now-sRefillTime)/secondNano > 2 {
-						sRequestCount = 0
-					} else {
-						sRequestCount = rule.qps - int64((now-sRefillTime-secondNano)/secondFloat*rule.qps)
-					}
+					sRequestCount = 0
 					sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
 				}
 				if rule.qpm != 0 && now-mRefillTime > minuteNano {
-					if (now-mRefillTime)/minuteNano > 2 {
-						mRequestCount = 0
-					} else {
-						mRequestCount = rule.qpm - int64((now-mRefillTime-minuteNano)/secondFloat*rule.qpm)
-					}
+					mRequestCount = 0
 					mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
 				}
 				if rule.qpd != 0 && now-dRefillTime > dayNano {
-					if (now-dRefillTime)/dayNano > 2 {
-						dRequestCount = 0
-					} else {
-						dRequestCount = rule.qpd - int64((now-dRefillTime-dayNano)/dayFloat*rule.qpm)
-					}
+					dRequestCount = 0
 					dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
 				}
 
@@ -374,19 +356,8 @@ func getEntry(shareDataKey string, rule Rule, now int64) bool {
 					(rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano) ||
 					(rule.qpd != 0 && dRequestCount > rule.qpd && now-dRefillTime < dayNano) {
 					isAllow = false
-				} else {
-					isAllow = true
 				}
 			}
-
-			//rate
-			//(rule.qps != 0 && sRequestCount > 1 && (now-sRefillTime)/sRequestCount < secondNano/rule.qps) ||
-			//	(rule.qpm != 0 && mRequestCount > 1 && (now-mRefillTime)/mRequestCount < minuteNano/rule.qpm) ||
-			//	(rule.qpd != 0 && dRequestCount > 1 && (now-dRefillTime)/dRequestCount < dayNano/rule.qpd)
-
-		} else {
-			//proxywasm.LogInfo("[get share data other error]")
-			continue
 		}
 
 		newData := bytes.NewBufferString(strconv.FormatInt(sRequestCount, 10))
@@ -407,13 +378,7 @@ func getEntry(shareDataKey string, rule Rule, now int64) bool {
 
 		err := proxywasm.SetSharedData(shareDataKey, newData.Bytes(), cas)
 		if err != nil {
-			if errors.Is(err, types.ErrorStatusCasMismatch) {
-				//proxywasm.LogInfo("[gset sharedata mis]")
-				continue
-			} else {
-				//proxywasm.LogInfo("[gset sharedata other err]")
-				continue
-			}
+			continue
 		}
 
 		return isAllow
