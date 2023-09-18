@@ -53,47 +53,11 @@ static_resources:
                           {
                             "header": "hd1",
                             "qpm": 3,
-                            "block_seconds": 5
-                          },
-                          {
-                            "cookie": "uid",
-                            "qps": 2,
-                          },
+                            "block_seconds": 6
+                          }
                           {
                             "cookie": "uid2",
                             "qpm": 60
-                          },
-                          {
-                            "cookie": "uid3",
-                            "qps": 100
-                          },
-                          {
-                            "cookie": "uid4",
-                            "qps": 100
-                          },
-                          {
-                            "cookie": "uid5",
-                            "qps": 100
-                          },
-                          {
-                            "cookie": "uid6",
-                            "qps": 100
-                          },
-                          {
-                            "cookie": "uid7",
-                            "qps": 100
-                          },
-                          {
-                            "cookie": "uid8",
-                            "qps": 100
-                          },
-                          {
-                            "cookie": "uid9",
-                            "qps": 100
-                          },
-                          {
-                            "cookie": "uid10",
-                            "qpm": 10
                           }
                         ]
                       }
