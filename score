@@ -351,7 +351,9 @@ waf-404: 36.6600 -> (91.76, 91.663)
 1.1.10 feat:cc-short circle
 32
 
-1.1.10 feat:cc blockt error + block no refresh refilltime
+1.1.11 feat:cc- realtime
+
+1.1.12 feat:cc blockt error + block no refresh refilltime
 
 feat:cc- bot block
 
