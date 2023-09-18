@@ -334,9 +334,12 @@ waf-404: 36.6600 -> (91.76, 91.663)
 1.1.4 feat:cc-qpm=1初始化block
 32
 
-1.1.5 feat:cc-bot block
+1.1.5 cc-tinygo 0.28.1
+32
 
 1.1.6 feat:cc-block状态其他计数短路
+
+feat:cc-bot block
 
 1.1.7 feat:ip-lc trie
 
