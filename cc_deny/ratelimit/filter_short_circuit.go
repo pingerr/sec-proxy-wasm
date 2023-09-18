@@ -35,8 +35,7 @@ package ratelimit
 //	}
 //	pluginContext struct {
 //		types.DefaultPluginContext
-//		headerRule Rule
-//		cookieRule Rule
+//		rules []Rule
 //	}
 //
 //	httpContext struct {
@@ -46,6 +45,7 @@ package ratelimit
 //	}
 //
 //	Rule struct {
+//		isHeader   bool
 //		isBlockAll bool
 //		key        string
 //		qps        int64
@@ -58,8 +58,7 @@ package ratelimit
 //
 //func (*vmContext) NewPluginContext(contextID uint32) types.PluginContext {
 //	return &pluginContext{
-//		headerRule: Rule{},
-//		cookieRule: Rule{},
+//		rules: []Rule{},
 //	}
 //}
 //
@@ -84,63 +83,67 @@ package ratelimit
 //	for i := range results {
 //		curMap := results[i].Map()
 //		if curMap["header"].Exists() {
-//
-//			p.headerRule.key = curMap["header"].String()
+//			var rule Rule
+//			rule.isHeader = true
+//			rule.key = curMap["header"].String()
 //			if curMap["qps"].Exists() {
-//				p.headerRule.qps = curMap["qps"].Int()
-//				if p.headerRule.qps == 0 {
-//					p.headerRule.isBlockAll = true
+//				rule.qps = curMap["qps"].Int()
+//				if rule.qps == 0 {
+//					rule.isBlockAll = true
 //				}
 //			}
 //			if curMap["qpm"].Exists() {
-//				p.headerRule.qpm = curMap["qpm"].Int()
-//				if p.headerRule.qpm == 0 {
-//					p.headerRule.isBlockAll = true
+//				rule.qpm = curMap["qpm"].Int()
+//				if rule.qpm == 0 {
+//					rule.isBlockAll = true
 //				}
 //			}
 //			if curMap["qpd"].Exists() {
-//				p.headerRule.qpd = curMap["qpd"].Int()
-//				if p.headerRule.qpd == 0 {
-//					p.headerRule.isBlockAll = true
+//				rule.qpd = curMap["qpd"].Int()
+//				if rule.qpd == 0 {
+//					rule.isBlockAll = true
 //				}
 //			}
 //			if curMap["block_seconds"].Exists() {
-//				p.headerRule.blockTime = curMap["block_seconds"].Int() * secondNano
-//				if p.headerRule.blockTime == 0 {
-//					p.headerRule.needBlock = false
+//				rule.blockTime = curMap["block_seconds"].Int() * secondNano
+//				if rule.blockTime == 0 {
+//					rule.needBlock = false
 //				} else {
-//					p.headerRule.needBlock = true
+//					rule.needBlock = true
 //				}
 //			}
-//
+//			p.rules = append(p.rules, rule)
 //		} else if curMap["cookie"].Exists() {
-//			p.cookieRule.key = curMap["cookie"].String()
+//			var rule Rule
+//			rule.isHeader = false
+//			rule.key = curMap["cookie"].String()
 //			if curMap["qps"].Exists() {
-//				p.cookieRule.qps = curMap["qps"].Int()
-//				if p.cookieRule.qps == 0 {
-//					p.cookieRule.isBlockAll = true
+//				rule.qps = curMap["qps"].Int()
+//				if rule.qps == 0 {
+//					rule.isBlockAll = true
 //				}
 //			}
 //			if curMap["qpm"].Exists() {
-//				p.cookieRule.qpm = curMap["qpm"].Int()
-//				if p.cookieRule.qpm == 0 {
-//					p.cookieRule.isBlockAll = true
+//				rule.qpm = curMap["qpm"].Int()
+//				if rule.qpm == 0 {
+//					rule.isBlockAll = true
 //				}
 //			}
 //			if curMap["qpd"].Exists() {
-//				p.cookieRule.qpd = curMap["qpd"].Int()
-//				if p.cookieRule.qpd == 0 {
-//					p.cookieRule.isBlockAll = true
+//				rule.qpd = curMap["qpd"].Int()
+//				if rule.qpd == 0 {
+//					rule.isBlockAll = true
 //				}
 //			}
 //			if curMap["block_seconds"].Exists() {
-//				p.cookieRule.blockTime = curMap["block_seconds"].Int() * secondNano
-//				if p.cookieRule.blockTime == 0 {
-//					p.cookieRule.needBlock = false
+//				rule.blockTime = curMap["block_seconds"].Int() * secondNano
+//				if rule.blockTime == 0 {
+//					rule.needBlock = false
 //				} else {
-//					p.cookieRule.needBlock = true
+//					rule.needBlock = true
 //				}
 //			}
+//			p.rules = append(p.rules, rule)
 //		}
 //	}
 //
@@ -151,54 +154,67 @@ package ratelimit
 //
 //	now := time.Now().UnixNano()
 //
-//	headerValue, _ := proxywasm.GetHttpRequestHeader(ctx.p.headerRule.key)
-//	var cookieValue string
-//	cookies, _ := proxywasm.GetHttpRequestHeader("cookie")
-//	if cookies != "" {
-//		cSub := ctx.p.cookieRule.key + "="
-//		if strings.HasPrefix(cookies, cSub) {
-//			cookieValue = strings.Replace(cookies, cSub, "", -1)
+//	//isBlock := false
+//	var md5Str string
+//	for _, rule := range ctx.p.rules {
+//		if rule.isHeader {
+//			headerValue, err := proxywasm.GetHttpRequestHeader(rule.key)
+//			if err == nil && headerValue != "" {
+//
+//				if rule.isBlockAll {
+//					//isBlock = true
+//					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+//					return types.ActionContinue
+//				}
+//
+//				hLimitKeyBuf := bytes.NewBufferString(headerPre)
+//				hLimitKeyBuf.WriteString(rule.key)
+//				hLimitKeyBuf.WriteString(":")
+//				hLimitKeyBuf.WriteString(headerValue)
+//
+//				sum := md5.Sum(hLimitKeyBuf.Bytes())
+//				md5Str = hex.EncodeToString(sum[:])
+//
+//				if !getEntry(md5Str, rule, now) {
+//					//isBlock = true
+//					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+//					return types.ActionContinue
+//				}
+//
+//			}
+//		} else {
+//			cookies, err := proxywasm.GetHttpRequestHeader("cookie")
+//			if err == nil && cookies != "" {
+//				cSub := bytes.NewBufferString(rule.key)
+//				cSub.WriteString("=")
+//				if strings.HasPrefix(cookies, cSub.String()) {
+//					cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
+//					if cookieValue != "" {
+//
+//						if rule.isBlockAll {
+//							//isBlock = true
+//							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+//							return types.ActionContinue
+//						}
+//
+//						cLimitKeyBuf := bytes.NewBufferString(cookiePre)
+//						cLimitKeyBuf.WriteString(rule.key)
+//						cLimitKeyBuf.WriteString(":")
+//						cLimitKeyBuf.WriteString(cookieValue)
+//
+//						sum := md5.Sum(cLimitKeyBuf.Bytes())
+//						md5Str = hex.EncodeToString(sum[:])
+//
+//						if !getEntry(md5Str, rule, now) {
+//							//isBlock = true
+//							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+//							return types.ActionContinue
+//						}
+//					}
+//				}
+//			}
 //		}
 //	}
-//
-//	if headerValue != "" && cookieValue != "" {
-//
-//	} else if headerValue != "" {
-//		if ctx.p.headerRule.isBlockAll {
-//			//isBlock = true
-//			_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-//			return types.ActionContinue
-//		}
-//		hLimitKeyBuf := bytes.NewBufferString(headerPre)
-//		hLimitKeyBuf.WriteString(ctx.p.headerRule.key)
-//		hLimitKeyBuf.WriteString(":")
-//		hLimitKeyBuf.WriteString(headerValue)
-//		if !getEntry(hLimitKeyBuf.String(), ctx.p.headerRule, now) {
-//			//isBlock = true
-//			_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-//			return types.ActionContinue
-//		}
-//	} else if cookieValue != "" {
-//		if ctx.p.cookieRule.isBlockAll {
-//			_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-//			return types.ActionContinue
-//		}
-//		cLimitKeyBuf := bytes.NewBufferString(cookiePre)
-//		cLimitKeyBuf.WriteString(rule.key)
-//		cLimitKeyBuf.WriteString(":")
-//		cLimitKeyBuf.WriteString(cookieValue)
-//		if !getEntry(cLimitKeyBuf.String(), ctx.p.cookieRule, now) {
-//			_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-//			return types.ActionContinue
-//		}
-//	}
-//
-//
-//
-//
-//
-//	}
-//
 //	//if isBlock {
 //	//	_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 //	//}
@@ -301,6 +317,3 @@ package ratelimit
 //	}
 //	return true
 //}
-//
-//
-//func getTwoEntry()

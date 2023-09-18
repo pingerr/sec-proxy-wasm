@@ -297,6 +297,8 @@ func getEntry(shareDataKey string, rule Rule, now int64) bool {
 							isAllow = false
 						}
 
+					} else {
+						isAllow = false
 					}
 				} else {
 					if rule.qps != 0 && now-sRefillTime > secondNano {
