@@ -337,7 +337,8 @@ waf-404: 36.6600 -> (91.76, 91.663)
 1.1.5 cc-tinygo 0.28.1
 32
 
-feat:cc nottinygc
+1.1.6 feat:cc nottinygc
+32
 
 feat:cc ontick
 
