@@ -374,7 +374,7 @@ aliyun cc 防护逻辑参考
 32
 
 1.2.8 feat:cc interval, max取最大，block no refresh
-32
+59.53
 
 1.2.8 feat:cc interval, max取最小，max<1取1，block refresh
 

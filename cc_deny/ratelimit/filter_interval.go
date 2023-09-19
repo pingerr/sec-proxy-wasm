@@ -130,7 +130,6 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 			var rule Rule
 			rule.isHeader = false
 			rule.key = curMap["cookie"].String()
-			rule.key = curMap["header"].String()
 			if curMap["qps"].Exists() {
 				if curMap["qps"].Int() == 0 {
 					rule.isBlockAll = true
