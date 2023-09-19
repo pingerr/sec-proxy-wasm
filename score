@@ -366,7 +366,7 @@ aliyun cc 防护逻辑参考
 0
 1.2.5 feat:cc 只用 qps, no block refresh
 
-1.2.6 feat:cc 只用 qps,但按qpm计算， no block refresh
+1.2.6 feat:cc interval, max取最大，block refresh
 
 
 
