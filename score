@@ -351,11 +351,13 @@ waf-404: 36.6600 -> (91.76, 91.663)
 1.1.10 feat:cc-short circle
 32
 
-1.1.11 feat:cc- realtime
+1.2.1 feat:cc- realtime
+32
 
-1.1.12 feat:cc blockt error + block no refresh refilltime
+1.2.3 feat:cc- bot block
 
-feat:cc- bot block
+
+1.2.3 feat:cc blockt error + block no refresh refilltime
 
 feat:waf- nottinygc+0.28.1
 feat:ip- nottinygc+0.28.1
