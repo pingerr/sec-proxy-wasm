@@ -244,14 +244,14 @@ func getEntry(shareDataKey string, rule Rule) bool {
 					if now-lastBlockTime > rule.blockTime {
 						isBlock = 0
 
-						if rule.qpm != 0 && now-mRefillTime > minuteNano {
+						if rule.maxReqCount != 0 && now-mRefillTime > minuteNano {
 							mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
 							mRequestCount = 0
 						}
 
 						mRequestCount++
 
-						if rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano {
+						if rule.maxReqCount != 0 && mRequestCount > rule.maxReqCount && now-mRefillTime < minuteNano {
 							lastBlockTime = now
 							isBlock = 1
 							isAllow = false
@@ -261,28 +261,28 @@ func getEntry(shareDataKey string, rule Rule) bool {
 						isAllow = false
 					}
 				} else {
-					if rule.qpm != 0 && now-mRefillTime > minuteNano {
+					if rule.maxReqCount != 0 && now-mRefillTime > minuteNano {
 						mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
 						mRequestCount = 0
 					}
 
 					mRequestCount++
 
-					if rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano {
+					if rule.maxReqCount != 0 && mRequestCount > rule.maxReqCount && now-mRefillTime < minuteNano {
 						lastBlockTime = now
 						isBlock = 1
 						isAllow = false
 					}
 				}
 			} else {
-				if rule.qpm != 0 && now-mRefillTime > minuteNano {
+				if rule.maxReqCount != 0 && now-mRefillTime > minuteNano {
 					mRequestCount = 0
 					mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
 				}
 
 				mRequestCount++
 
-				if rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano {
+				if rule.maxReqCount != 0 && mRequestCount > rule.maxReqCount && now-mRefillTime < minuteNano {
 					isAllow = false
 				}
 			}
