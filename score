@@ -374,13 +374,15 @@ aliyun cc 防护逻辑参考
 32
 
 1.2.8 feat:cc interval, max取最大，block no refresh
-59.53  bug
+59.53  bug 32
 
-1.2.9 feat:cc min interval, max maxtoken，只用时间间隔大的qp， block refresh
+1.2.9 feat:cc min interval, max maxtoken，只用时间间隔大的qp， block refresh, 1000
 
 
-1.3.1 feat:cc 一致性hash，防止内存占满无法存储新的key
+1.3.1 feat:cc 一致性hash，防止内存占满无法存储新的key, 1000 key
+32
 
+1.3.2 feat:cc 一致性hash，防止内存占满无法存储新的key, 10000 key,only header
 
 
 

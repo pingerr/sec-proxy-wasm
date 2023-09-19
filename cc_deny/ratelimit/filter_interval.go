@@ -21,7 +21,7 @@ const (
 	hourNano   = 60 * minuteNano
 	dayNano    = 24 * hourNano
 
-	maxKeyNum = 1000
+	maxKeyNum = 10000
 
 	cookiePre = "c:"
 	headerPre = "h:"
@@ -209,35 +209,36 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 				}
 
 			}
-		} else {
-			cookies, err := proxywasm.GetHttpRequestHeader("cookie")
-			if err == nil && cookies != "" {
-				cSub := bytes.NewBufferString(rule.key)
-				cSub.WriteString("=")
-				if strings.HasPrefix(cookies, cSub.String()) {
-					cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
-					if cookieValue != "" {
-
-						if rule.isBlockAll || rule.maxTokens <= 0 {
-							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-							return types.ActionContinue
-						}
-
-						cLimitKeyBuf := bytes.NewBufferString(cookiePre)
-						cLimitKeyBuf.WriteString(rule.key)
-						cLimitKeyBuf.WriteString(":")
-						cLimitKeyBuf.WriteString(cookieValue)
-
-						cookieHs := murmur3.Sum64(cLimitKeyBuf.Bytes()) % maxKeyNum
-
-						if !getEntry("c"+strconv.FormatUint(cookieHs, 10), rule) {
-							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-							return types.ActionContinue
-						}
-					}
-				}
-			}
 		}
+		//} else {
+		//	cookies, err := proxywasm.GetHttpRequestHeader("cookie")
+		//	if err == nil && cookies != "" {
+		//		cSub := bytes.NewBufferString(rule.key)
+		//		cSub.WriteString("=")
+		//		if strings.HasPrefix(cookies, cSub.String()) {
+		//			cookieValue := strings.Replace(cookies, cSub.String(), "", -1)
+		//			if cookieValue != "" {
+		//
+		//				if rule.isBlockAll || rule.maxTokens <= 0 {
+		//					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+		//					return types.ActionContinue
+		//				}
+		//
+		//				cLimitKeyBuf := bytes.NewBufferString(cookiePre)
+		//				cLimitKeyBuf.WriteString(rule.key)
+		//				cLimitKeyBuf.WriteString(":")
+		//				cLimitKeyBuf.WriteString(cookieValue)
+		//
+		//				cookieHs := murmur3.Sum64(cLimitKeyBuf.Bytes()) % maxKeyNum
+		//
+		//				if !getEntry("c"+strconv.FormatUint(cookieHs, 10), rule) {
+		//					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
+		//					return types.ActionContinue
+		//				}
+		//			}
+		//		}
+		//	}
+		//}
 	}
 
 	return types.ActionContinue
