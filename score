@@ -354,12 +354,17 @@ waf-404: 36.6600 -> (91.76, 91.663)
 1.2.1 feat:cc- realtime
 32
 
-1.2.3 feat:cc- bot block
+1.2.2 feat:cc- bot block
 0
 
-1.2.3 feat:cc blockt error + block no refresh refilltime
+1.2.3 feat:cc-block header
+32
 
-feat:waf- nottinygc+0.28.1
+ feat:cc blockt error + block no refresh refilltime
+
+1.2.4 feat:waf- nottinygc+0.28.1
+
+
 feat:ip- nottinygc+0.28.1
 
 feat:ip-lc trie
