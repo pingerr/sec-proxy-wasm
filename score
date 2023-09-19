@@ -362,7 +362,8 @@ waf-404: 36.6600 -> (91.76, 91.663)
 
  feat:cc blockt error + block no refresh refilltime
 
-1.2.4 feat:waf- nottinygc+0.28.1
+1.2.4 feat:cc 只用 qpm
+
 
 
 feat:ip- nottinygc+0.28.1

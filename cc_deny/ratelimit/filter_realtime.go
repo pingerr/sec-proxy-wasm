@@ -374,5 +374,5 @@ package ratelimit
 //
 //		return isAllow
 //	}
-//	return true
+//	return false
 //}
