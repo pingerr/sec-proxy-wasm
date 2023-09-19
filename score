@@ -374,7 +374,9 @@ aliyun cc 防护逻辑参考
 32
 
 1.2.8 feat:cc interval, max取最大，block no refresh
-59.53
+59.53  bug
+
+1.2.8 feat:cc min interval, max maxtoken，只用时间间隔大的qp， block refresh
 
 1.2.8 feat:cc interval, max取最小，max<1取1，block refresh
 
