@@ -2,8 +2,6 @@ package ratelimit
 
 import (
 	"bytes"
-	"crypto/md5"
-	"encoding/hex"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 	"github.com/tidwall/gjson"
@@ -85,7 +83,7 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 			rule.key = curMap["header"].String()
 			if curMap["qps"].Exists() {
 				rule.maxReqCount = curMap["qps"].Int() * 60
-				if rule.qps == 0 {
+				if curMap["qps"].Int() == 0 {
 					rule.isBlockAll = true
 				}
 			}
@@ -113,7 +111,7 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 			rule.key = curMap["cookie"].String()
 			if curMap["qps"].Exists() {
 				rule.maxReqCount = curMap["qps"].Int() * 60
-				if rule.qps == 0 {
+				if curMap["qps"].Int() == 0 {
 					rule.isBlockAll = true
 				}
 			}
