@@ -360,15 +360,24 @@ waf-404: 36.6600 -> (91.76, 91.663)
 1.2.3 feat:cc-block header
 32
 
- feat:cc blockt error + block no refresh refilltime
 
-1.2.4 feat:cc 只用 qpm
+aliyun cc 防护逻辑参考
+1.2.4 feat:cc 只用 qpm, no block refresh
+0
+1.2.5 feat:cc 只用 qps, no block refresh
+
+1.2.6 feat:cc 只用 qps,但按qpm计算， no block refresh
 
 
 
 feat:ip- nottinygc+0.28.1
 
 feat:ip-lc trie
+
+ feat:cc blockt error + block no refresh refilltime
+
+
+
 
 ip
 
@@ -392,7 +401,6 @@ cc
     固定窗口优化
     cpp实现
 
-使用共享内存 ？没啥用
 性能测试工具 wrk hey
 
 

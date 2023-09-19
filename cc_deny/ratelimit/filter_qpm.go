@@ -46,6 +46,7 @@ type (
 		isBlockAll  bool
 		key         string
 		maxReqCount int64
+		duration    int64
 		needBlock   bool
 		blockTime   int64
 	}
@@ -82,18 +83,12 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 			rule.isHeader = true
 			rule.key = curMap["header"].String()
 			if curMap["qps"].Exists() {
-				rule.maxReqCount = curMap["qps"].Int() * 60
+				rule.maxReqCount = curMap["qps"].Int()
 				if curMap["qps"].Int() == 0 {
 					rule.isBlockAll = true
 				}
-			}
-			if curMap["qpm"].Exists() {
-				if curMap["qpm"].Int() == 0 {
-					rule.isBlockAll = true
-				}
-				if curMap["qpm"].Int() < rule.maxReqCount {
-					rule.maxReqCount = curMap["qpm"].Int()
-				}
+			} else {
+				continue
 			}
 
 			if curMap["block_seconds"].Exists() {
@@ -110,19 +105,14 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 			rule.isHeader = false
 			rule.key = curMap["cookie"].String()
 			if curMap["qps"].Exists() {
-				rule.maxReqCount = curMap["qps"].Int() * 60
+				rule.maxReqCount = curMap["qps"].Int()
 				if curMap["qps"].Int() == 0 {
 					rule.isBlockAll = true
 				}
+			} else {
+				continue
 			}
-			if curMap["qpm"].Exists() {
-				if curMap["qpm"].Int() == 0 {
-					rule.isBlockAll = true
-				}
-				if curMap["qpm"].Int() < rule.maxReqCount {
-					rule.maxReqCount = curMap["qpm"].Int()
-				}
-			}
+
 			if curMap["block_seconds"].Exists() {
 				rule.blockTime = curMap["block_seconds"].Int() * secondNano
 				if rule.blockTime == 0 {
@@ -242,14 +232,14 @@ func getEntry(shareDataKey string, rule Rule) bool {
 					if now-lastBlockTime > rule.blockTime {
 						isBlock = 0
 
-						if rule.maxReqCount != 0 && now-mRefillTime > minuteNano {
-							mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
+						if rule.maxReqCount != 0 && now-mRefillTime > secondNano {
+							mRefillTime = (now-mRefillTime)/secondNano*secondNano + mRefillTime
 							mRequestCount = 0
 						}
 
 						mRequestCount++
 
-						if rule.maxReqCount != 0 && mRequestCount > rule.maxReqCount && now-mRefillTime < minuteNano {
+						if rule.maxReqCount != 0 && mRequestCount > rule.maxReqCount && now-mRefillTime < secondNano {
 							lastBlockTime = now
 							isBlock = 1
 							isAllow = false
@@ -259,28 +249,28 @@ func getEntry(shareDataKey string, rule Rule) bool {
 						isAllow = false
 					}
 				} else {
-					if rule.maxReqCount != 0 && now-mRefillTime > minuteNano {
-						mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
+					if rule.maxReqCount != 0 && now-mRefillTime > secondNano {
+						mRefillTime = (now-mRefillTime)/secondNano*secondNano + mRefillTime
 						mRequestCount = 0
 					}
 
 					mRequestCount++
 
-					if rule.maxReqCount != 0 && mRequestCount > rule.maxReqCount && now-mRefillTime < minuteNano {
+					if rule.maxReqCount != 0 && mRequestCount > rule.maxReqCount && now-mRefillTime < secondNano {
 						lastBlockTime = now
 						isBlock = 1
 						isAllow = false
 					}
 				}
 			} else {
-				if rule.maxReqCount != 0 && now-mRefillTime > minuteNano {
+				if rule.maxReqCount != 0 && now-mRefillTime > secondNano {
 					mRequestCount = 0
-					mRefillTime = (now-mRefillTime)/minuteNano*minuteNano + mRefillTime
+					mRefillTime = mRefillTime + (now-mRefillTime)/secondNano*secondNano
 				}
 
 				mRequestCount++
 
-				if rule.maxReqCount != 0 && mRequestCount > rule.maxReqCount && now-mRefillTime < minuteNano {
+				if rule.maxReqCount != 0 && mRequestCount > rule.maxReqCount && now-mRefillTime < secondNano {
 					isAllow = false
 				}
 			}
