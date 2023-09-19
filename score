@@ -368,6 +368,9 @@ aliyun cc 防护逻辑参考
 
 1.2.6 feat:cc interval, max取最大，block refresh
 
+1.2.7 feat:cc interval, max取最小，block refresh
+
+1.2.8 feat:cc interval, max取最小，max<1取1，block refresh
 
 
 feat:ip- nottinygc+0.28.1
