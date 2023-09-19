@@ -365,10 +365,16 @@ aliyun cc 防护逻辑参考
 1.2.4 feat:cc 只用 qpm, no block refresh
 0
 1.2.5 feat:cc 只用 qps, no block refresh
+32
 
 1.2.6 feat:cc interval, max取最大，block refresh
+32
 
 1.2.7 feat:cc interval, max取最小，block refresh
+32
+
+1.2.8 feat:cc interval, max取最大，block no refresh
+32
 
 1.2.8 feat:cc interval, max取最小，max<1取1，block refresh
 
