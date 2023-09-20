@@ -21,11 +21,13 @@ const (
 	hourNano   = 60 * minuteNano
 	dayNano    = 24 * hourNano
 
+	// shareDataKey 前缀
 	cookiePre = "c:"
 	headerPre = "h:"
 
+	// shareDataKey最大存储数量
 	maxKeyNum = 10000
-
+	// cas最大重试次数
 	maxGetTokenRetry = 10
 )
 
@@ -35,6 +37,7 @@ type (
 	}
 	pluginContext struct {
 		types.DefaultPluginContext
+		//cc规则
 		rules []Rule
 	}
 
@@ -44,15 +47,20 @@ type (
 		p         *pluginContext
 	}
 
+	// Rule cc防护规则
 	Rule struct {
-		isHeader   bool
+		//规则类别，true为header规则，false为cookie规则
+		isHeader bool
+		//如果qps存在且等于0，当作黑名单
 		isBlockAll bool
 		key        string
 		qps        int64
 		qpm        int64
 		qpd        int64
-		needBlock  bool
-		blockTime  int64
+		//是否要屏蔽
+		needBlock bool
+		//屏蔽时间
+		blockTime int64
 	}
 )
 
@@ -81,62 +89,41 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 	results := gjson.Get(string(data), "cc_rules").Array()
 
 	for i := range results {
+		var rule Rule
 		curMap := results[i].Map()
 		if curMap["header"].Exists() {
-			var rule Rule
 			rule.isHeader = true
 			rule.key = curMap["header"].String()
-			if curMap["qps"].Exists() {
-				rule.qps = curMap["qps"].Int()
-				if rule.qps == 0 {
-					rule.isBlockAll = true
-				}
-			}
-			if curMap["qpm"].Exists() {
-				rule.qpm = curMap["qpm"].Int()
-				if rule.qpm == 0 {
-					rule.isBlockAll = true
-				}
-			}
-			if curMap["qpd"].Exists() {
-				rule.qpd = curMap["qpd"].Int()
-				if rule.qpd == 0 {
-					rule.isBlockAll = true
-				}
-			}
-			if curMap["block_seconds"].Exists() {
-				rule.needBlock = true
-				rule.blockTime = curMap["block_seconds"].Int() * secondNano
-			}
-			p.rules = append(p.rules, rule)
 		} else if curMap["cookie"].Exists() {
-			var rule Rule
 			rule.isHeader = false
 			rule.key = curMap["cookie"].String()
-			if curMap["qps"].Exists() {
-				rule.qps = curMap["qps"].Int()
-				if rule.qps == 0 {
-					rule.isBlockAll = true
-				}
-			}
-			if curMap["qpm"].Exists() {
-				rule.qpm = curMap["qpm"].Int()
-				if rule.qpm == 0 {
-					rule.isBlockAll = true
-				}
-			}
-			if curMap["qpd"].Exists() {
-				rule.qpd = curMap["qpd"].Int()
-				if rule.qpd == 0 {
-					rule.isBlockAll = true
-				}
-			}
-			if curMap["block_seconds"].Exists() {
-				rule.needBlock = true
-				rule.blockTime = curMap["block_seconds"].Int() * secondNano
-			}
-			p.rules = append(p.rules, rule)
+		} else {
+			continue
 		}
+		if curMap["qps"].Exists() {
+			rule.qps = curMap["qps"].Int()
+			if rule.qps == 0 {
+				// 存在且为0，相当于黑名单
+				rule.isBlockAll = true
+			}
+		}
+		if curMap["qpm"].Exists() {
+			rule.qpm = curMap["qpm"].Int()
+			if rule.qpm == 0 {
+				rule.isBlockAll = true
+			}
+		}
+		if curMap["qpd"].Exists() {
+			rule.qpd = curMap["qpd"].Int()
+			if rule.qpd == 0 {
+				rule.isBlockAll = true
+			}
+		}
+		if curMap["block_seconds"].Exists() {
+			rule.needBlock = true
+			rule.blockTime = curMap["block_seconds"].Int() * secondNano
+		}
+		p.rules = append(p.rules, rule)
 	}
 
 	return types.OnPluginStartStatusOK
@@ -145,12 +132,11 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 
 	for _, rule := range ctx.p.rules {
-		if rule.isHeader {
+		if rule.isHeader { //header规则限流检测
 			headerValue, err := proxywasm.GetHttpRequestHeader(rule.key)
 			if err == nil && headerValue != "" {
 
 				if rule.isBlockAll {
-					//isBlock = true
 					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 					return types.ActionContinue
 				}
@@ -160,16 +146,17 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 				hLimitKeyBuf.WriteString(":")
 				hLimitKeyBuf.WriteString(headerValue)
 
+				// 将key hash为整数后取模，实现key到整数[0, maxKeyNum]范围的映射，限制key的内存上限
 				headerHs := murmur3.Sum64(hLimitKeyBuf.Bytes()) % maxKeyNum
 
-				if !getEntry("h:"+strconv.FormatUint(headerHs, 10), rule) {
-					//isBlock = true
+				if !getEntry(headerPre+strconv.FormatUint(headerHs, 10), rule) {
+					// 未通过限流
 					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 					return types.ActionContinue
 				}
 
 			}
-		} else {
+		} else { //cookie规则限流检测
 			cookies, err := proxywasm.GetHttpRequestHeader("cookie")
 			if err == nil && cookies != "" {
 				cSub := bytes.NewBufferString(rule.key)
@@ -179,7 +166,6 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 					if cookieValue != "" {
 
 						if rule.isBlockAll {
-							//isBlock = true
 							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 							return types.ActionContinue
 						}
@@ -189,10 +175,10 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 						cLimitKeyBuf.WriteString(":")
 						cLimitKeyBuf.WriteString(cookieValue)
 
+						// 将key hash为整数后取模，实现key到整数[0, maxKeyNum]范围的映射，限制key的内存上限
 						headerHs := murmur3.Sum64(cLimitKeyBuf.Bytes()) % maxKeyNum
 
-						if !getEntry("c:"+strconv.FormatUint(headerHs, 10), rule) {
-							//isBlock = true
+						if !getEntry(cookiePre+strconv.FormatUint(headerHs, 10), rule) {
 							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 							return types.ActionContinue
 						}
@@ -205,31 +191,36 @@ func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 	return types.ActionContinue
 }
 
-// data=[count:sRefillTime:mRefillTime:dRefillTime:isBlock:lastBlockTime]
+// 判断是否通过限流.
+// true:通过, false:未通过
 func getEntry(shareDataKey string, rule Rule) bool {
+
+	//shareData序列格式: "sRequestCount:mRequestCount:dRequestCount:sRefillTime:mRefillTime:dRefillTime:isBlock:lastBlockTime"
+	var sRequestCount int64 // 请求计数（秒）
+	var mRequestCount int64 // 请求计数（分）
+	var dRequestCount int64 // 请求计数（天）
+	var sRefillTime int64   // 请求计数最近一次刷新时间（秒）
+	var mRefillTime int64   // 请求计数最近一次刷新时间（分）
+	var dRefillTime int64   // 请求计数最近一次刷新时间（天）
+	var isBlock int         // 是否处于屏蔽状态. 1:屏蔽，0:未屏蔽
+	var lastBlockTime int64 //最近一次屏蔽时间
+
 	var data []byte
 	var cas uint32
-	var sRequestCount int64
-	var mRequestCount int64
-	var dRequestCount int64
-	var sRefillTime int64
-	var mRefillTime int64
-	var dRefillTime int64
-	var isBlock int
-	var lastBlockTime int64
-
 	var err error
 
 	for i := 0; i < maxGetTokenRetry; i++ {
+		isAllow := true //初始化是否通过限流
+
 		now := time.Now().UnixNano()
-		isAllow := true
 		data, cas, err = proxywasm.GetSharedData(shareDataKey)
 
 		if err != nil && err != types.ErrorStatusNotFound {
+			// 获取shareData错误，重试
 			continue
 		}
-
 		if err != nil && err == types.ErrorStatusNotFound {
+			// shareData不存在，初始化
 			sRequestCount = 1
 			mRequestCount = 1
 			dRequestCount = 1
@@ -241,7 +232,7 @@ func getEntry(shareDataKey string, rule Rule) bool {
 		}
 
 		if err == nil {
-			// Tokenize the string on :
+			// 反序列化
 			parts := strings.Split(string(data), ":")
 			sRequestCount, _ = strconv.ParseInt(parts[0], 0, 64)
 			mRequestCount, _ = strconv.ParseInt(parts[1], 0, 64)
@@ -252,19 +243,20 @@ func getEntry(shareDataKey string, rule Rule) bool {
 			isBlock, _ = strconv.Atoi(parts[6])
 			lastBlockTime, _ = strconv.ParseInt(parts[7], 0, 64)
 
-			if rule.needBlock {
-				if isBlock == 1 {
-					if now-lastBlockTime > rule.blockTime {
-						isBlock = 0
+			if rule.needBlock { // 规则要求屏蔽时
+				if isBlock == 1 { // 处于屏蔽状态
+					if now-lastBlockTime > rule.blockTime { //屏蔽时间结束
+						isBlock = 0 //解除屏蔽状态
 
+						// 请求数增加
 						sRequestCount++
 						mRequestCount++
 						dRequestCount++
-
-					} else {
-						isAllow = false
+					} else { //屏蔽时间未结束
+						isAllow = false //未通过限流
 					}
-				} else {
+				} else { // 未处于屏蔽状态
+					// lazyload(延迟计算)取代定时器，每次访问前更新“请求计数”和“请求计数最近一次刷新时间”
 					if rule.qps != 0 && now-sRefillTime > secondNano {
 						sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
 						sRequestCount = 0
@@ -278,26 +270,30 @@ func getEntry(shareDataKey string, rule Rule) bool {
 						dRequestCount = 0
 					}
 
+					// 判断当前周期的请求计数是否超过限制数量
 					if (rule.qps != 0 && sRequestCount+1 > rule.qps && now-sRefillTime < secondNano) ||
 						(rule.qpm != 0 && mRequestCount+1 > rule.qpm && now-mRefillTime < minuteNano) ||
 						(rule.qpd != 0 && dRequestCount+1 > rule.qpd && now-dRefillTime < dayNano) {
-						lastBlockTime = now
-						isBlock = 1
-						isAllow = false
+						lastBlockTime = now //更新最近一次屏蔽时间
+						isBlock = 1         //进入屏蔽状态
+						isAllow = false     //未通过限流
 
+						//重置请求计数
 						sRequestCount = 0
 						mRequestCount = 0
 						dRequestCount = 0
-						sRefillTime = now + lastBlockTime
-						mRefillTime = now + lastBlockTime
-						dRefillTime = now + lastBlockTime
+						//”计数刷新时间“更新为屏蔽解除时
+						sRefillTime = now + rule.blockTime
+						mRefillTime = now + rule.blockTime
+						dRefillTime = now + rule.blockTime
 					} else {
 						sRequestCount++
 						mRequestCount++
 						dRequestCount++
 					}
 				}
-			} else {
+			} else { //规则不要求屏蔽时
+				// lazyload(延迟计算)取代定时器，每次访问前更新“请求计数”和“请求计数最近一次刷新时间”
 				if rule.qps != 0 && now-sRefillTime > secondNano {
 					sRequestCount = 0
 					sRefillTime = (now-sRefillTime)/secondNano*secondNano + sRefillTime
@@ -311,18 +307,20 @@ func getEntry(shareDataKey string, rule Rule) bool {
 					dRefillTime = (now-dRefillTime)/dayNano*dayNano + dRefillTime
 				}
 
-				sRequestCount++
-				mRequestCount++
-				dRequestCount++
-
-				if (rule.qps != 0 && sRequestCount > rule.qps && now-sRefillTime < secondNano) ||
-					(rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano) ||
-					(rule.qpd != 0 && dRequestCount > rule.qpd && now-dRefillTime < dayNano) {
-					isAllow = false
+				// 判断当前周期的请求计数是否超过限制数量
+				if (rule.qps != 0 && sRequestCount+1 > rule.qps && now-sRefillTime < secondNano) ||
+					(rule.qpm != 0 && mRequestCount+1 > rule.qpm && now-mRefillTime < minuteNano) ||
+					(rule.qpd != 0 && dRequestCount+1 > rule.qpd && now-dRefillTime < dayNano) {
+					isAllow = false //未通过限流
+				} else {
+					sRequestCount++
+					mRequestCount++
+					dRequestCount++
 				}
 			}
 		}
 
+		//shareData序列化
 		newData := bytes.NewBufferString(strconv.FormatInt(sRequestCount, 10))
 		newData.WriteString(":")
 		newData.WriteString(strconv.FormatInt(mRequestCount, 10))

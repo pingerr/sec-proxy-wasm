@@ -56,7 +56,7 @@ static_resources:
                             "block_seconds": 6
                           }
                           {
-                            "cookie": "uid2",
+                            "cookie": "uid",
                             "qpm": 60
                           }
                         ]
