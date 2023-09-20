@@ -20,5 +20,5 @@ tinygo version = 0.27
 * 针对 gotestwaf 使用的 encoder，在规则中增加或实现对应的 decoder
 * 针对 gotestwaf 使用的 placeholder，在规则中增加对应参数的检测
 
-具体配置和实现见 local/envoy.yaml
+具体配置和实现见 local/envoy.yaml, 所有PINGER-8*.conf的规则为自定义规则
 
