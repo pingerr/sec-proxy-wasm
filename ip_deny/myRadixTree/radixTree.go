@@ -1,0 +1,259 @@
+package myRadixTree
+
+import (
+	"bytes"
+	"errors"
+)
+
+type node struct {
+	left, right *node
+	value       interface{}
+}
+
+// Tree implements radix tree for working with IP/mask. Thread safety is not guaranteed, you should choose your own style of protecting safety of operations.
+type Tree struct {
+	root *node
+
+	alloc []node
+}
+
+const startbit = uint32(0x80000000)
+
+var ErrBadIP = errors.New("bad IP address or mask")
+
+// NewTree creates Tree and preallocates (if preallocate not zero) number of nodes that would be ready to fill with data.
+func NewTree() *Tree {
+	tree := new(Tree)
+	tree.root = tree.newnode()
+
+	return tree
+}
+
+func (tree *Tree) SetCIDRb(cidr []byte, val interface{}) error {
+	ip, mask, err := parsecidr4(cidr)
+	if err != nil {
+		return err
+	}
+	return tree.insert32(ip, mask, val)
+}
+
+func (tree *Tree) FindCIDRb(cidr []byte) (interface{}, error) {
+	ip, mask, err := parsecidr4(cidr)
+	if err != nil {
+		return nil, err
+	}
+	return tree.find32(ip, mask), nil
+}
+
+func (tree *Tree) FindIpv4(ipstr []byte) (interface{}, error) {
+	var (
+		ip  uint32
+		oct uint32
+		b   byte
+	)
+	for _, b = range ipstr {
+		if b == '.' {
+			ip = ip<<8 + oct
+			oct = 0
+		} else {
+			oct = oct*10 + uint32(b-'0')
+		}
+	}
+	ip = ip<<8 + oct
+
+	bit := startbit
+	node := tree.root
+	var value interface{}
+	for node != nil {
+		if node.value != nil {
+			value = node.value
+		}
+		if ip&bit != 0 {
+			node = node.right
+		} else {
+			node = node.left
+		}
+		if maskConst&bit == 0 {
+			break
+		}
+		bit >>= 1
+	}
+	return value, nil
+}
+
+func (tree *Tree) insert32(key, mask uint32, value interface{}) error {
+	bit := startbit
+	node := tree.root
+	next := tree.root
+	for bit&mask != 0 {
+		if key&bit != 0 {
+			next = node.right
+		} else {
+			next = node.left
+		}
+		if next == nil {
+			break
+		}
+		bit = bit >> 1
+		node = next
+	}
+	if next != nil {
+		node.value = value
+		return nil
+	}
+	for bit&mask != 0 {
+		next = tree.newnode()
+		if key&bit != 0 {
+			node.right = next
+		} else {
+			node.left = next
+		}
+		bit >>= 1
+		node = next
+	}
+	node.value = value
+
+	return nil
+}
+
+func (tree *Tree) find32(key, mask uint32) (value interface{}) {
+	bit := startbit
+	node := tree.root
+	for node != nil {
+		if node.value != nil {
+			value = node.value
+		}
+		if key&bit != 0 {
+			node = node.right
+		} else {
+			node = node.left
+		}
+		if mask&bit == 0 {
+			break
+		}
+		bit >>= 1
+	}
+	return value
+}
+
+//func (tree *Tree) FindIpv4Once(ipstr []byte) (interface{}, error) {
+//	var (
+//		ip  uint32
+//		oct uint32
+//		b   byte
+//	)
+//
+//	for _, b = range ipstr {
+//		if b != '.' {
+//			oct = oct*10 + uint32(b-'0')
+//		} else {
+//			ip = ip<<8 + oct
+//			oct = 0
+//		}
+//	}
+//
+//	ip = ip<<8 + oct
+//
+//	mask := maskConst
+//
+//	bit := startbit
+//	node := tree.root
+//	var value interface{}
+//	for node != nil {
+//		if node.value != nil {
+//			value = node.value
+//		}
+//		if ip&bit != 0 {
+//			node = node.right
+//		} else {
+//			node = node.left
+//		}
+//		if mask&bit == 0 {
+//			break
+//		}
+//		bit >>= 1
+//	}
+//	return value, nil
+//}
+
+func (tree *Tree) newnode() (p *node) {
+
+	ln := len(tree.alloc)
+	if ln == cap(tree.alloc) {
+		// filled one row, make bigger one
+		tree.alloc = make([]node, ln+200)[:1] // 200, 600, 1400, 3000, 6200, 12600 ...
+		ln = 0
+	} else {
+		tree.alloc = tree.alloc[:ln+1]
+	}
+	return &(tree.alloc[ln])
+}
+
+func loadip4(ipstr []byte) (uint32, error) {
+	var (
+		ip  uint32
+		oct uint32
+		b   byte
+		num byte
+	)
+
+	for _, b = range ipstr {
+		switch {
+		case b == '.':
+			num++
+			if 0xffffffff-ip < oct {
+				return 0, ErrBadIP
+			}
+			ip = ip<<8 + oct
+			oct = 0
+		case b >= '0' && b <= '9':
+			oct = oct*10 + uint32(b-'0')
+			if oct > 255 {
+				return 0, ErrBadIP
+			}
+		default:
+			return 0, ErrBadIP
+		}
+	}
+	if num != 3 {
+		return 0, ErrBadIP
+	}
+	if 0xffffffff-ip < oct {
+		return 0, ErrBadIP
+	}
+	return ip<<8 + oct, nil
+}
+
+func parsecidr4(cidr []byte) (uint32, uint32, error) {
+	var mask uint32
+	p := bytes.IndexByte(cidr, '/')
+	var item byte
+	if p > 0 {
+		for _, item = range cidr[p+1:] {
+			if item < '0' || item > '9' {
+				return 0, 0, ErrBadIP
+			}
+			mask = mask*10 + uint32(item-'0')
+		}
+		mask = 0xffffffff << (32 - mask)
+		cidr = cidr[:p]
+	} else {
+		mask = 0xffffffff
+	}
+	ip, err := loadip4(cidr)
+	if err != nil {
+		return 0, 0, err
+	}
+	return ip, mask, nil
+}
+
+const maskConst uint32 = 0xffffffff
+
+func parseIpv4(cidr []byte) (uint32, uint32, error) {
+
+	ip, err := loadip4(cidr)
+	if err != nil {
+		return 0, 0, err
+	}
+	return ip, maskConst, nil
+}
