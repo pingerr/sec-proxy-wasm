@@ -389,8 +389,12 @@ aliyun cc 防护逻辑参考
 32
 
 1.5.1 feat:cc qps qpm qpd 独立释放
+32
 
 1.5.2 feat:cc qps qpm qpd 包含释放
+32
+
+2.0.0
 
 
 [feat:ip-lc trie] todo
