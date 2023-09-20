@@ -288,9 +288,9 @@ func getEntry(shareDataKey string, rule Rule) bool {
 						sRequestCount = 0
 						mRequestCount = 0
 						dRequestCount = 0
-						sRefillTime = now + rule.blockTime
-						mRefillTime = now + rule.blockTime
-						dRefillTime = now + rule.blockTime
+						sRefillTime = now + lastBlockTime
+						mRefillTime = now + lastBlockTime
+						dRefillTime = now + lastBlockTime
 					} else {
 						sRequestCount++
 						mRequestCount++
