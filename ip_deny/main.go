@@ -5,7 +5,5 @@ import (
 )
 
 func main() {
-	//myRadixTree.FilterStart()
-	//ipLook.FilterStart()
 	ipLook.OncePluginStart()
 }
