@@ -83,24 +83,24 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 	for i := range results {
 		curMap := results[i].Map()
 		if curMap["header"].Exists() {
-			var rule Rule
+			rule := Rule{}
 			rule.isHeader = true
 			rule.key = curMap["header"].String()
 			if curMap["qps"].Exists() {
 				rule.qps = curMap["qps"].Int()
-				if rule.qps == 0 {
+				if rule.qps == int64(0) {
 					rule.isBlockAll = true
 				}
 			}
 			if curMap["qpm"].Exists() {
 				rule.qpm = curMap["qpm"].Int()
-				if rule.qpm == 0 {
+				if rule.qpm == int64(0) {
 					rule.isBlockAll = true
 				}
 			}
 			if curMap["qpd"].Exists() {
 				rule.qpd = curMap["qpd"].Int()
-				if rule.qpd == 0 {
+				if rule.qpd == int64(0) {
 					rule.isBlockAll = true
 				}
 			}
@@ -110,24 +110,24 @@ func (p *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlugi
 			}
 			p.rules = append(p.rules, rule)
 		} else if curMap["cookie"].Exists() {
-			var rule Rule
+			rule := Rule{}
 			rule.isHeader = false
 			rule.key = curMap["cookie"].String()
 			if curMap["qps"].Exists() {
 				rule.qps = curMap["qps"].Int()
-				if rule.qps == 0 {
+				if rule.qps == int64(0) {
 					rule.isBlockAll = true
 				}
 			}
 			if curMap["qpm"].Exists() {
 				rule.qpm = curMap["qpm"].Int()
-				if rule.qpm == 0 {
+				if rule.qpm == int64(0) {
 					rule.isBlockAll = true
 				}
 			}
 			if curMap["qpd"].Exists() {
 				rule.qpd = curMap["qpd"].Int()
-				if rule.qpd == 0 {
+				if rule.qpd == int64(0) {
 					rule.isBlockAll = true
 				}
 			}
@@ -215,7 +215,7 @@ func getEntry(shareDataKey string, rule Rule) bool {
 	var sRefillTime int64
 	var mRefillTime int64
 	var dRefillTime int64
-	var isBlock int
+	var isBlock int64
 	var lastBlockTime int64
 
 	var err error
@@ -249,11 +249,11 @@ func getEntry(shareDataKey string, rule Rule) bool {
 			sRefillTime, _ = strconv.ParseInt(parts[3], 0, 64)
 			mRefillTime, _ = strconv.ParseInt(parts[4], 0, 64)
 			dRefillTime, _ = strconv.ParseInt(parts[5], 0, 64)
-			isBlock, _ = strconv.Atoi(parts[6])
+			isBlock, _ = strconv.ParseInt(parts[6], 0, 64)
 			lastBlockTime, _ = strconv.ParseInt(parts[7], 0, 64)
 
 			if rule.needBlock {
-				if isBlock == 1 {
+				if isBlock == int64(1) {
 					if now-lastBlockTime > rule.blockTime {
 						isBlock = 0
 
@@ -335,7 +335,7 @@ func getEntry(shareDataKey string, rule Rule) bool {
 		newData.WriteString(":")
 		newData.WriteString(strconv.FormatInt(dRefillTime, 10))
 		newData.WriteString(":")
-		newData.WriteString(strconv.FormatInt(int64(isBlock), 10))
+		newData.WriteString(strconv.FormatInt(isBlock, 10))
 		newData.WriteString(":")
 		newData.WriteString(strconv.FormatInt(lastBlockTime, 10))
 
