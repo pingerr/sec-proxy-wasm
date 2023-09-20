@@ -383,7 +383,9 @@ aliyun cc 防护逻辑参考
 32
 
 1.3.2 feat:cc 一致性hash，防止内存占满无法存储新的key, 10000 key,only header
+8
 
+1.4.1 feat:cc 小黑屋全部block
 
 
 
