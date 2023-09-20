@@ -8,6 +8,7 @@ import (
 	"waf_deny/pingerPlugins/utils"
 )
 
+// RegisterPingerTransformations “=” 好像还原不了
 func RegisterPingerTransformations() error {
 
 	base64flatDecode := func(input string) (string, bool, error) {

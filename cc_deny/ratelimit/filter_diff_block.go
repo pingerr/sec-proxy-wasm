@@ -1,11 +1,9 @@
 package ratelimit
 
 //
-//
 //import (
 //	"bytes"
-//	"crypto/md5"
-//	"encoding/hex"
+//	"github.com/spaolacci/murmur3"
 //	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 //	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 //	"github.com/tidwall/gjson"
@@ -26,6 +24,8 @@ package ratelimit
 //
 //	cookiePre = "c:"
 //	headerPre = "h:"
+//
+//	maxKeyNum = 10000
 //
 //	maxGetTokenRetry = 10
 //)
@@ -106,12 +106,8 @@ package ratelimit
 //				}
 //			}
 //			if curMap["block_seconds"].Exists() {
+//				rule.needBlock = true
 //				rule.blockTime = curMap["block_seconds"].Int() * secondNano
-//				if rule.blockTime == 0 {
-//					rule.needBlock = false
-//				} else {
-//					rule.needBlock = true
-//				}
 //			}
 //			p.rules = append(p.rules, rule)
 //		} else if curMap["cookie"].Exists() {
@@ -137,12 +133,8 @@ package ratelimit
 //				}
 //			}
 //			if curMap["block_seconds"].Exists() {
+//				rule.needBlock = true
 //				rule.blockTime = curMap["block_seconds"].Int() * secondNano
-//				if rule.blockTime == 0 {
-//					rule.needBlock = false
-//				} else {
-//					rule.needBlock = true
-//				}
 //			}
 //			p.rules = append(p.rules, rule)
 //		}
@@ -153,10 +145,6 @@ package ratelimit
 //
 //func (ctx *httpContext) OnHttpRequestHeaders(_ int, _ bool) types.Action {
 //
-//	now := time.Now().UnixNano()
-//
-//	//isBlock := false
-//	var md5Str string
 //	for _, rule := range ctx.p.rules {
 //		if rule.isHeader {
 //			headerValue, err := proxywasm.GetHttpRequestHeader(rule.key)
@@ -173,10 +161,9 @@ package ratelimit
 //				hLimitKeyBuf.WriteString(":")
 //				hLimitKeyBuf.WriteString(headerValue)
 //
-//				sum := md5.Sum(hLimitKeyBuf.Bytes())
-//				md5Str = hex.EncodeToString(sum[:])
+//				headerHs := murmur3.Sum64(hLimitKeyBuf.Bytes()) % maxKeyNum
 //
-//				if !getEntry(md5Str, rule, now) {
+//				if !getEntry("h:"+strconv.FormatUint(headerHs, 10), rule) {
 //					//isBlock = true
 //					_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 //					return types.ActionContinue
@@ -203,10 +190,9 @@ package ratelimit
 //						cLimitKeyBuf.WriteString(":")
 //						cLimitKeyBuf.WriteString(cookieValue)
 //
-//						sum := md5.Sum(cLimitKeyBuf.Bytes())
-//						md5Str = hex.EncodeToString(sum[:])
+//						headerHs := murmur3.Sum64(cLimitKeyBuf.Bytes()) % maxKeyNum
 //
-//						if !getEntry(md5Str, rule, now) {
+//						if !getEntry("c:"+strconv.FormatUint(headerHs, 10), rule) {
 //							//isBlock = true
 //							_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
 //							return types.ActionContinue
@@ -216,15 +202,12 @@ package ratelimit
 //			}
 //		}
 //	}
-//	//if isBlock {
-//	//	_ = proxywasm.SendHttpResponse(403, nil, []byte("denied by cc"), -1)
-//	//}
 //
 //	return types.ActionContinue
 //}
 //
 //// data=[count:sRefillTime:mRefillTime:dRefillTime:isBlock:lastBlockTime]
-//func getEntry(shareDataKey string, rule Rule, now int64) bool {
+//func getEntry(shareDataKey string, rule Rule) bool {
 //	var data []byte
 //	var cas uint32
 //	var sRequestCount int64
@@ -239,6 +222,7 @@ package ratelimit
 //	var err error
 //
 //	for i := 0; i < maxGetTokenRetry; i++ {
+//		now := time.Now().UnixNano()
 //		isAllow := true
 //		data, cas, err = proxywasm.GetSharedData(shareDataKey)
 //
@@ -274,25 +258,12 @@ package ratelimit
 //					if now-lastBlockTime > rule.blockTime {
 //						isBlock = 0
 //
-//						sRequestCount = 0
-//						mRequestCount = 0
-//						dRequestCount = 0
-//						if now-(lastBlockTime+rule.blockTime) > secondNano {
-//							sRefillTime = (now-(lastBlockTime+rule.blockTime))/secondNano*secondNano + lastBlockTime + rule.blockTime
-//						} else {
-//							sRefillTime = lastBlockTime + rule.blockTime
-//						}
-//						if now-(lastBlockTime+rule.blockTime) > minuteNano {
-//							mRefillTime = (now-(lastBlockTime+rule.blockTime))/minuteNano*minuteNano + lastBlockTime + rule.blockTime
-//						} else {
-//							mRefillTime = lastBlockTime + rule.blockTime
-//						}
-//						if now-(lastBlockTime+rule.blockTime) > dayNano {
-//							dRefillTime = (now-(lastBlockTime+rule.blockTime))/dayNano*dayNano + lastBlockTime + rule.blockTime
-//						} else {
-//							dRefillTime = lastBlockTime + rule.blockTime
-//						}
+//						sRequestCount++
+//						mRequestCount++
+//						dRequestCount++
 //
+//					} else {
+//						isAllow = false
 //					}
 //				} else {
 //					if rule.qps != 0 && now-sRefillTime > secondNano {
@@ -312,12 +283,34 @@ package ratelimit
 //					mRequestCount++
 //					dRequestCount++
 //
-//					if (rule.qps != 0 && sRequestCount > rule.qps && now-sRefillTime < secondNano) ||
-//						(rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano) ||
-//						(rule.qpd != 0 && dRequestCount > rule.qpd && now-dRefillTime < dayNano) {
+//					if rule.qps != 0 && sRequestCount > rule.qps && now-sRefillTime < secondNano {
 //						lastBlockTime = now
 //						isBlock = 1
 //						isAllow = false
+//						if rule.blockTime > secondNano {
+//							sRefillTime = now
+//							sRequestCount = 0
+//						}
+//					}
+//
+//					if rule.qpm != 0 && mRequestCount > rule.qpm && now-mRefillTime < minuteNano {
+//						lastBlockTime = now
+//						isBlock = 1
+//						isAllow = false
+//						if rule.blockTime > minuteNano {
+//							mRefillTime = now
+//							mRequestCount = 0
+//						}
+//					}
+//
+//					if rule.qpd != 0 && dRequestCount > rule.qpd && now-dRefillTime < dayNano {
+//						lastBlockTime = now
+//						isBlock = 1
+//						isAllow = false
+//						if rule.blockTime > dayNano {
+//							dRefillTime = now
+//							dRequestCount = 0
+//						}
 //					}
 //				}
 //			} else {
@@ -369,5 +362,5 @@ package ratelimit
 //
 //		return isAllow
 //	}
-//	return true
+//	return false
 //}
