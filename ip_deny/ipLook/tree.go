@@ -5,44 +5,41 @@ import (
 	"net"
 )
 
-// bitslen contstant must be a power of 2. It indicates how much space will be taken by a tree and maximum number of hops (treenode accesses).
-// When bitslen is 4, the maximum number of hops will be 32 / bitslen and one node takes 1<< bitslen * (sizeof SID and *treenode).
-// So current constant (4) will make maximum 8 hops and every node consumes 256 bytes.
+// bitslen 常数表示每个节点存储bit子串的长度，必须是2的指数次幂
+// 当 bitslen 为 4 时，最大跳数将为32 / bitslen，一个节点占用1<< bitslen *（SID和*treenode的大小）。
+// 因此，当前常数（4）最大跳数为8
+// IP subnet 的前缀长度只能是 bitslen的倍数，当前bitslen(4)的 subnet的前缀长度只能是4、8、12、16...
 const bitslen = 4
 
-// SID type contains a list of corresponding service indexes.
-// Every nth bit indicates nth service. So 0x1 stores (0),
-// 0x2 stores (1), 0x3 stores (0, 1) services and etc.
-// So you can handle up to 64 services.
-// 0 indicates that there are no service.
-// Example: service has index 6, then its SID representation will be 1<<6
+// SID SID表示对应节点的状态，每一位表示1种状态。
+// uint8 表示可以存储8个状态。0表示没有服务。
+// ip 黑名单场景，只用了1和0两个状态
 type SID uint8
 
 type Tree struct {
 	root *treenode
 }
 
+// treenode bit树节点
+// 如果每个节点保存4个bit（bitslen=4）的信息，即"0 or 1, 0 or 1, 0 or 1, 0 or 1",则有1<<4= 16种排列组合，相当于16叉树
 type treenode struct {
 	srvs [1 << bitslen]SID
 	ptrs [1 << bitslen]*treenode
 }
 
-// New creates new IP subnet tree. It only works with IP v4
+// New 建立新的IP subnet tree，仅实现IPv4。
 func New() *Tree {
 	tree := &Tree{&treenode{}}
 	return tree
 }
 
-// Add adds ip subnet to the tree.
-// service should contain only one true bit (anyway it works well with multiple bits).
-// ipnet.IP must be of the length 4 (IP v4).
-// It is up to you to handle this.
-// This method does not compress subnets - if you put 1.1.1.1/24 and 1.1.1.1/23
-// of the same service, it will hold both subnets.
+// Add 将IP subnet添加到树中
+// 状态应该只包含一个真正的位（即使使用多个位也可以正常工作）
+// ipnet.IP必须长度为4（IPv4）
 func (tree *Tree) Add(service SID, ipnet net.IPNet) {
 	node := tree.root
 
-	prefixLen, _ := ipnet.Mask.Size() //24
+	prefixLen, _ := ipnet.Mask.Size() //比如24
 	curLen := bitslen                 //4
 	for i := 0; i < 32/bitslen; i++ { //i<8
 		if curLen >= prefixLen {
@@ -67,9 +64,7 @@ func (tree *Tree) Add(service SID, ipnet net.IPNet) {
 	}
 }
 
-// Get returns SID which corresponds to this ip v4
-// ipv4 must be of length 4 and it is up to you to
-// handle this.
+// Get 获得IPv4对应的SID值，IPv4必须为长度为4
 func (tree *Tree) Get(ipv4 []byte) SID {
 	var ans SID
 	cur := tree.root
@@ -85,8 +80,8 @@ func (tree *Tree) Get(ipv4 []byte) SID {
 	return ans
 }
 
-// getSubstring is helper function that returns substring of bits placed in range [index * bitslen, index * bitslen + bitslen)
-// getSubstring是一个辅助函数，它返回位于范围[index * bitslen，index * bitslen + bitslen]中的bits substring。
+// getSubstring 获取在区间 [index * bitslen, index * bitslen + bitslen) 内的bit子串的值
+// 例如. 11101111111111111111111111111111, 区间[0, 4)，子串为1110，结果为 14
 func getSubstring(ipv4 []byte, index uint8) uint32 {
 	var ans = binary.BigEndian.Uint32(ipv4)
 	ans = ans << (bitslen * index)
