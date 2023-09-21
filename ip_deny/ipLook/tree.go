@@ -42,11 +42,13 @@ func (tree *Tree) Add(service SID, ipnet net.IPNet) {
 	for i := 0; i < 32/bitsLen; i++ { //i范围[0,8)
 		if curLen >= prefixLen {
 			//当前节点为叶子结点，填充状态值
+			//例子 ip为 1001 1100 1000 1000 1000 1000 1000 1000, prefixLen = 7
+			// curLen=8时，最后一段“1100” start=6, 由于前缀只到“110”，所以还要考虑 “1101”，即end=7，多种情况都要计算
 			start := getSubstring(ipnet.IP, uint8(i))
 			end := start + (1 << uint(curLen-prefixLen)) - 1
 
 			for j := start; j <= end; j++ {
-				node.srvs[j] = node.srvs[j] | service
+				node.srvs[j] = node.srvs[j] | service // 赋值为 service，即 1
 			}
 			break
 		}
@@ -69,7 +71,7 @@ func (tree *Tree) Get(ipv4 []byte) SID {
 
 	for i := 0; i < 32/bitsLen; i++ {
 		ind := getSubstring(ipv4, uint8(i))
-		ans = ans | cur.srvs[ind] //非叶子节点的ans都为0
+		ans = ans | cur.srvs[ind] // 非叶子节点的ans都为0
 		if cur = cur.ptrs[ind]; cur == nil {
 			break
 		}
