@@ -43,7 +43,7 @@ func (tree *Tree) Add(service SID, ipnet net.IPNet) {
 		if curLen >= prefixLen {
 			//当前节点为叶子结点，填充状态值
 			//例子 ip为 1001 1100 1000 1000 1000 1000 1000 1000, prefixLen = 7
-			// curLen=8时，最后一段“1100” start=6, 由于前缀只到“110”，所以还要考虑 “1101”，即end=7，多种情况都要计算
+			// curLen=8时，前缀最后4bit为“1100” start=6, 由于前缀只到“110”，所以还要考虑 “1101”，即end=7，多种情况都要计算
 			start := getSubstring(ipnet.IP, uint8(i))
 			end := start + (1 << uint(curLen-prefixLen)) - 1
 
