@@ -62,15 +62,15 @@
 
 ### IP 黑名单
 
-<img src="README.assets/ip-radix.png" alt="ip-radix" style="zoom:38%;" />
+![ip-树](README.assets/ip-树.png)
 
-<img src="README.assets/ip-位运算.png" alt="ip-位运算" style="zoom: 20%;" />
+![ip-位运算](README.assets/ip-位运算.png)
 
 ### CC 防护
 
-<img src="README.assets/cc-限流器.png" alt="cc-限流器" style="zoom:40%;" />
+![cc-限流器](README.assets/cc-限流器.png)
 
-<img src="README.assets/cc-并发.png" alt="cc-并发" style="zoom:25%;" />
+![cc-并发](README.assets/cc-并发.png)
 
 ### WAF 规则防护
 
