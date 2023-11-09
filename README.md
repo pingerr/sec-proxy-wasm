@@ -11,7 +11,7 @@
 基于 Alibaba 开源的下一代云原生网关 [Higress](https://github.com/alibaba/higress?spm=a2c22.12281978.0.0.42376745sRKLLz) 实现 3 个 WebAssembly 插件：
 
 1. **IP 黑名单**：插件要求配置海量 IP 黑名单的 CIDR，并通过 x-real-ip 请求头判断是否命中规则.
-```json
+```
 {
   "ip_blacklist": [
     "1.1.1.1",
@@ -23,7 +23,7 @@
 
 2. **CC 防护**：针对大流量高频 CC 攻击，通过限制请求频率进行防护，规则如下：
 
-```json
+```
 {
   "cc_rules": [
     {
