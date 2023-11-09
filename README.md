@@ -4,7 +4,7 @@
 
 参赛团队：CETC CST
 
-代码地址：https://github.com/pingerr/app-sec-wasm
+代码地址：https://github.com/pingerr/sec-proxy-wasm
 
 ## 赛题简介
 
