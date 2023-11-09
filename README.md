@@ -1,4 +1,4 @@
-## 2023云原生编程挑战赛赛道2-面向应用安全防护领域设计Wasm插件 4th 方案
+# 2023云原生编程挑战赛赛道2-面向应用安全防护领域设计Wasm插件 4th 方案
 
 竞赛官网：https://tianchi.aliyun.com/competition/entrance/532104
 
@@ -6,7 +6,7 @@
 
 代码地址：https://github.com/pingerr/app-sec-wasm
 
-### 赛题简介
+## 赛题简介
 
 基于 Alibaba 开源的下一代云原生网关 [Higress](https://github.com/alibaba/higress?spm=a2c22.12281978.0.0.42376745sRKLLz) 实现 3 个 WebAssembly 插件：
 
@@ -15,7 +15,7 @@
 {
   "ip_blacklist": [
     "1.1.1.1",
-    "10.2.0.0/16"
+    "10.2.0.0/16",
     ......
   ] 
 }
@@ -26,7 +26,7 @@
 ```json
 {
   "cc_rules": [
-	  {
+    {
       // 从特定 header 识别调用方
       "header": "user-agent",
       // 每个调用方每秒最多 10 次
@@ -58,24 +58,20 @@
 |   CC 防护功能    | 40%  |   同时考察功能与性能得分，占比分别为40%、60%   |
 | WAF 规则防护功能 | 40%  |   同时考察功能与性能得分，占比分别为40%、60%   |
 
-### 解题思路
+## 解题思路
 
-##### IP 黑名单
+### IP 黑名单
 
 <img src="README.assets/ip-radix.png" alt="ip-radix" style="zoom:38%;" />
 
-<img src="README.assets/ip-位运算.png" alt="ip-位运算" style="zoom: 36%;" />
+<img src="README.assets/ip-位运算.png" alt="ip-位运算" style="zoom: 20%;" />
 
-##### CC 防护
+### CC 防护
 
-<img src="README.assets/cc-限流器.png" alt="cc-限流器" style="zoom:38%;" />
+<img src="README.assets/cc-限流器.png" alt="cc-限流器" style="zoom:40%;" />
 
-<img src="README.assets/cc-并发.png" alt="cc-并发" style="zoom:38%;" />
+<img src="README.assets/cc-并发.png" alt="cc-并发" style="zoom:25%;" />
 
-##### WAF 规则防护
+### WAF 规则防护
 
 ![waf](README.assets/waf.png)
-
-### 参赛感想
-
-云原生是当下热门的技术方向，且阿里云是国内云计算领域的先行者。以学习的初衷报名了安全相关的赛道，3个月的角逐，相对于脑力的比拼，更多是耐力的考验。很庆幸参加了这次比赛，从"将流量调度、服务治理、安全防护三合一的下一代云原生网关——Higress"到"一切可编译为 WebAssembly 的，终将被编译为 WebAssembly"的Ending定律，在感受到云原生技术带来的冲击的同时，也开拓了自己的技术视野。感谢云原生挑战赛以及阿里云提供这个平台！
